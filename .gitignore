@@ -1,0 +1,5 @@
+# Visual Studio Code folder
+.vscode/
+
+# Build output
+build/
