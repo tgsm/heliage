@@ -34,6 +34,8 @@ public:
     void SetHalfCarryFlag(bool b);
     void SetCarryFlag(bool b);
 
+    bool HasFlag(Flags flag);
+
     void StackPush(u16* word_reg);
     void StackPop(u16* word_reg);
 

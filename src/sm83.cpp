@@ -69,6 +69,10 @@ void SM83::SetCarryFlag(bool b) {
     }
 }
 
+bool SM83::HasFlag(Flags flag) {
+    return f & static_cast<u8>(flag);
+}
+
 void SM83::StackPush(u16* word_reg) {
     sp--;
     mmu.Write8(sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
@@ -482,10 +486,10 @@ void SM83::DumpRegisters() {
     if (!f) {
         LFATAL("Flags: none");
     } else {
-        LFATAL("Flags: [%s%s%s%s]", (f & static_cast<u8>(Flags::Zero)) ? "Z" : " ",
-                                    (f & static_cast<u8>(Flags::Negate)) ? "N" : " ",
-                                    (f & static_cast<u8>(Flags::HalfCarry)) ? "H" : " ",
-                                    (f & static_cast<u8>(Flags::Carry)) ? "C" : " ");
+        LFATAL("Flags: [%s%s%s%s]", (HasFlag(Flags::Zero)) ? "Z" : " ",
+                                    (HasFlag(Flags::Negate)) ? "N" : " ",
+                                    (HasFlag(Flags::HalfCarry)) ? "H" : " ",
+                                    (HasFlag(Flags::Carry)) ? "C" : " ");
     }
 }
 
@@ -493,7 +497,7 @@ void SM83::adc_a_d8() {
     u8 value = GetByteFromPC();
     LTRACE("ADC A, 0x%02X", value);
 
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
     u16 full = a + value + carry;
     u8 result = static_cast<u8>(full);
 
@@ -594,7 +598,7 @@ void SM83::call_nz_a16() {
     u16 address = GetWordFromPC();
     LTRACE("CALL NZ, 0x%04X", address);
 
-    if (!(f & static_cast<u8>(Flags::Zero))) {
+    if (!HasFlag(Flags::Zero)) {
         StackPush(&pc);
         pc = address;
     }
@@ -845,7 +849,7 @@ void SM83::jp_nz_a16() {
     u16 addr = GetWordFromPC();
     LTRACE("JP NZ, 0x%04X", addr);
 
-    if (!(f & static_cast<u8>(Flags::Zero))) {
+    if (!HasFlag(Flags::Zero)) {
         pc = addr;
     }
 }
@@ -863,7 +867,7 @@ void SM83::jr_c_r8() {
     u16 potential_pc = pc + offset;
     LTRACE("JR C, 0x%04X", potential_pc);
 
-    if (f & static_cast<u8>(Flags::Carry)) {
+    if (HasFlag(Flags::Carry)) {
         pc = potential_pc;
     }
 }
@@ -873,7 +877,7 @@ void SM83::jr_nc_r8() {
     u16 potential_pc = pc + offset;
     LTRACE("JR NC, 0x%04X", potential_pc);
 
-    if (!(f & static_cast<u8>(Flags::Carry))) {
+    if (!HasFlag(Flags::Carry)) {
         pc = potential_pc;
     }
 }
@@ -883,7 +887,7 @@ void SM83::jr_nz_r8() {
     u16 potential_pc = pc + offset;
     LTRACE("JR NZ, 0x%04X", potential_pc);
 
-    if (!(f & static_cast<s8>(Flags::Zero))) {
+    if (!HasFlag(Flags::Zero)) {
         pc = potential_pc;
     }
 }
@@ -893,7 +897,7 @@ void SM83::jr_z_r8() {
     u16 potential_pc = pc + offset;
     LTRACE("JR Z, 0x%04X", potential_pc);
 
-    if (f & static_cast<u8>(Flags::Zero)) {
+    if (HasFlag(Flags::Zero)) {
         pc = potential_pc;
     }
 }
@@ -1500,7 +1504,7 @@ void SM83::ret() {
 void SM83::ret_c() {
     LTRACE("RET C");
 
-    if (f & static_cast<u8>(Flags::Carry)) {
+    if (HasFlag(Flags::Carry)) {
         StackPop(&pc);
     }
 }
@@ -1508,7 +1512,7 @@ void SM83::ret_c() {
 void SM83::ret_nc() {
     LTRACE("RET NC");
     
-    if (!(f & static_cast<u8>(Flags::Carry))) {
+    if (!HasFlag(Flags::Carry)) {
         StackPop(&pc);
     }
 }
@@ -1516,7 +1520,7 @@ void SM83::ret_nc() {
 void SM83::ret_z() {
     LTRACE("RET Z");
 
-    if (f & static_cast<u8>(Flags::Zero)) {
+    if (HasFlag(Flags::Zero)) {
         StackPop(&pc);
     }
 }
@@ -1524,7 +1528,7 @@ void SM83::ret_z() {
 void SM83::rl_c() {
     LTRACE("RL C");
 
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     bool should_carry = c & static_cast<u8>(Flags::Zero);
     SetCarryFlag(should_carry);
@@ -1542,7 +1546,7 @@ void SM83::rl_c() {
 void SM83::rla() {
     LTRACE("RLA");
 
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     bool should_carry = a & static_cast<u8>(Flags::Zero);
     SetCarryFlag(should_carry);
@@ -1559,7 +1563,7 @@ void SM83::rla() {
 
 void SM83::rr_c() {
     LTRACE("RR C");
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     SetCarryFlag(c & 0x1);
 
@@ -1575,7 +1579,7 @@ void SM83::rr_c() {
 
 void SM83::rr_d() {
     LTRACE("RR D");
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     SetCarryFlag(d & 0x1);
 
@@ -1591,7 +1595,7 @@ void SM83::rr_d() {
 
 void SM83::rr_e() {
     LTRACE("RR E");
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     SetCarryFlag(e & 0x1);
 
@@ -1607,7 +1611,7 @@ void SM83::rr_e() {
 
 void SM83::rra() {
     LTRACE("RRA");
-    bool carry = f & static_cast<u8>(Flags::Carry);
+    bool carry = HasFlag(Flags::Carry);
 
     SetCarryFlag(a & 0x1);
 
