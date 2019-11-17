@@ -229,6 +229,7 @@ private:
     void or_a();
     void or_b();
     void or_c();
+    void or_d8();
     void or_dhl();
 
     void pop_af();
@@ -257,6 +258,8 @@ private:
     void rr_e();
 
     void rra();
+
+    void sbc_a_d8();
 
     void set(u8 bit, u8* reg);
 

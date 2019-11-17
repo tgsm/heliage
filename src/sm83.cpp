@@ -244,6 +244,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
         INSTR(0xD8, ret_c());
+        INSTR(0xDE, sbc_a_d8());
         INSTR(0xE0, ldh_da8_a());
         INSTR(0xE1, pop_hl());
         INSTR(0xE2, ld_dc_a());
@@ -256,6 +257,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xF1, pop_af());
         INSTR(0xF3, di());
         INSTR(0xF5, push_af());
+        INSTR(0xF6, or_d8());
         INSTR(0xF9, ld_sp_hl());
         INSTR(0xFA, ld_a_da16());
         INSTR(0xFB, ei());
@@ -1438,6 +1440,18 @@ void SM83::or_c() {
     SetCarryFlag(false);
 }
 
+void SM83::or_d8() {
+    u8 value = GetByteFromPC();
+    LTRACE("OR 0x%02X", value);
+
+    a |= value;
+
+    SetZeroFlag(a == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(false);
+}
+
 void SM83::or_dhl() {
     LTRACE("OR (HL)");
 
@@ -1639,6 +1653,22 @@ void SM83::swap_a() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+}
+
+void SM83::sbc_a_d8() {
+    u8 value = GetByteFromPC();
+    LTRACE("SBC A, 0x%02X", value);
+
+    bool carry = HasFlag(Flags::Carry);
+    u16 full = a - value - carry;
+    u8 result = static_cast<u8>(full);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(true);
+    SetHalfCarryFlag(((a & 0xF) < (value & 0xF) + carry) != 0);
+    SetCarryFlag(full > 0xFF);
+
+    a = result;
 }
 
 void SM83::set(u8 bit, u8* reg) {
