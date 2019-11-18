@@ -77,23 +77,30 @@ private:
     MMU& mmu;
 
     void adc_a_d8();
+    void adc_a_r(u8 reg);
 
     void add_a_d8();
     void add_a_dhl();
+    void add_a_r(u8 reg);
     void add_hl_bc();
     void add_hl_de();
     void add_hl_hl();
 
     void and_d8();
+    void and_r(u8 reg);
 
     void bit(u8 bit, u8* reg);
 
     void call_a16();
     void call_nz_a16();
 
+    void ccf();
+
     void cp_d8();
     void cp_dhl();
-    void cp_e();
+    void cp_r(u8 reg);
+
+    void cpl();
 
     void dec_a();
     void dec_b();
@@ -226,11 +233,9 @@ private:
 
     void nop();
 
-    void or_a();
-    void or_b();
-    void or_c();
     void or_d8();
     void or_dhl();
+    void or_r(u8 reg);
 
     void pop_af();
     void pop_bc();
@@ -260,19 +265,20 @@ private:
     void rra();
 
     void sbc_a_d8();
+    void sbc_r(u8 reg);
+
+    void scf();
 
     void set(u8 bit, u8* reg);
 
     void srl_b();
 
-    void sub_b();
     void sub_d8();
+    void sub_r(u8 reg);
 
-    void swap_a();
+    void swap_r(u8* reg);
 
-    void xor_a();
-    void xor_c();
     void xor_d8();
     void xor_dhl();
-    void xor_l();
+    void xor_r(u8 reg);
 };

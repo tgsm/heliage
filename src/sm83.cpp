@@ -143,17 +143,20 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x2C, inc_l());
         INSTR(0x2D, dec_l());
         INSTR(0x2E, ld_l_d8());
+        INSTR(0x2F, cpl());
         INSTR(0x30, jr_nc_r8());
         INSTR(0x31, ld_sp_d16());
         INSTR(0x32, ld_dhld_a());
         INSTR(0x33, inc_sp());
         INSTR(0x35, dec_dhl());
         INSTR(0x36, ld_dhl_d8());
+        INSTR(0x37, scf());
         INSTR(0x38, jr_c_r8());
         INSTR(0x3A, ld_a_dhld());
         INSTR(0x3C, inc_a());
         INSTR(0x3D, dec_a());
         INSTR(0x3E, ld_a_d8());
+        INSTR(0x3F, ccf());
         INSTR(0x40, ld_b_b());
         INSTR(0x41, ld_b_c());
         INSTR(0x42, ld_b_d());
@@ -213,22 +216,70 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x79, ld_a_c());
         INSTR(0x7A, ld_a_d());
         INSTR(0x7B, ld_a_e());
-        INSTR(0x7C, ld_a_h ());
+        INSTR(0x7C, ld_a_h());
         INSTR(0x7D, ld_a_l());
         INSTR(0x7E, ld_a_dhl());
         INSTR(0x7F, ld_a_a());
+        INSTR(0x80, LTRACE("ADD A, B"); add_a_r(b));
+        INSTR(0x81, LTRACE("ADD A, C"); add_a_r(c));
+        INSTR(0x82, LTRACE("ADD A, D"); add_a_r(d));
+        INSTR(0x83, LTRACE("ADD A, E"); add_a_r(e));
+        INSTR(0x84, LTRACE("ADD A, H"); add_a_r(h));
+        INSTR(0x85, LTRACE("ADD A, L"); add_a_r(l));
         INSTR(0x86, add_a_dhl());
-        INSTR(0x90, sub_b());
-        INSTR(0xA9, xor_c());
-        INSTR(0xAD, xor_l());
+        INSTR(0x87, LTRACE("ADD A, A"); add_a_r(a));
+        INSTR(0x88, LTRACE("ADC A, B"); adc_a_r(b));
+        INSTR(0x89, LTRACE("ADC A, C"); adc_a_r(c));
+        INSTR(0x8A, LTRACE("ADC A, D"); adc_a_r(d));
+        INSTR(0x8B, LTRACE("ADC A, E"); adc_a_r(e));
+        INSTR(0x8C, LTRACE("ADC A, H"); adc_a_r(h));
+        INSTR(0x8D, LTRACE("ADC A, L"); adc_a_r(l));
+        INSTR(0x8F, LTRACE("ADC A, A"); adc_a_r(a));
+        INSTR(0x90, LTRACE("SUB B"); sub_r(b));
+        INSTR(0x91, LTRACE("SUB C"); sub_r(c));
+        INSTR(0x92, LTRACE("SUB D"); sub_r(d));
+        INSTR(0x93, LTRACE("SUB E"); sub_r(e));
+        INSTR(0x94, LTRACE("SUB H"); sub_r(h));
+        INSTR(0x95, LTRACE("SUB L"); sub_r(l));
+        INSTR(0x97, LTRACE("SUB A"); sub_r(a));
+        INSTR(0x98, LTRACE("SBC B"); sbc_r(b));
+        INSTR(0x99, LTRACE("SBC C"); sbc_r(c));
+        INSTR(0x9A, LTRACE("SBC D"); sbc_r(d));
+        INSTR(0x9B, LTRACE("SBC E"); sbc_r(e));
+        INSTR(0x9C, LTRACE("SBC H"); sbc_r(h));
+        INSTR(0x9D, LTRACE("SBC L"); sbc_r(l));
+        INSTR(0x9F, LTRACE("SBC A"); sbc_r(a));
+        INSTR(0xA0, LTRACE("AND B"); and_r(b));
+        INSTR(0xA1, LTRACE("AND C"); and_r(c));
+        INSTR(0xA2, LTRACE("AND D"); and_r(d));
+        INSTR(0xA3, LTRACE("AND E"); and_r(e));
+        INSTR(0xA4, LTRACE("AND H"); and_r(h));
+        INSTR(0xA5, LTRACE("AND L"); and_r(l));
+        INSTR(0xA7, LTRACE("AND A"); and_r(a));
+        INSTR(0xA8, LTRACE("XOR B"); xor_r(b));
+        INSTR(0xA9, LTRACE("XOR C"); xor_r(c));
+        INSTR(0xAA, LTRACE("XOR D"); xor_r(d));
+        INSTR(0xAB, LTRACE("XOR E"); xor_r(e));
+        INSTR(0xAC, LTRACE("XOR H"); xor_r(h));
+        INSTR(0xAD, LTRACE("XOR L"); xor_r(l));
         INSTR(0xAE, xor_dhl());
-        INSTR(0xAF, xor_a());
-        INSTR(0xB0, or_b());
-        INSTR(0xB1, or_c());
+        INSTR(0xAF, LTRACE("XOR A"); xor_r(a));
+        INSTR(0xB0, LTRACE("OR B"); or_r(b));
+        INSTR(0xB1, LTRACE("OR C"); or_r(c));
+        INSTR(0xB2, LTRACE("OR D"); or_r(d));
+        INSTR(0xB3, LTRACE("OR E"); or_r(e));
+        INSTR(0xB4, LTRACE("OR H"); or_r(h));
+        INSTR(0xB5, LTRACE("OR L"); or_r(l));
         INSTR(0xB6, or_dhl());
-        INSTR(0xB7, or_a());
-        INSTR(0xBB, cp_e());
+        INSTR(0xB7, LTRACE("OR A"); or_r(a));
+        INSTR(0xB8, LTRACE("CP R"); cp_r(b));
+        INSTR(0xB9, LTRACE("CP R"); cp_r(c));
+        INSTR(0xBA, LTRACE("CP R"); cp_r(d));
+        INSTR(0xBB, LTRACE("CP R"); cp_r(e));
+        INSTR(0xBC, LTRACE("CP R"); cp_r(h));
+        INSTR(0xBD, LTRACE("CP R"); cp_r(l));
         INSTR(0xBE, cp_dhl());
+        INSTR(0xBF, LTRACE("CP A"); cp_r(a));
         INSTR(0xC1, pop_bc());
         INSTR(0xC2, jp_nz_a16());
         INSTR(0xC3, jp_a16());
@@ -294,7 +345,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x19, rr_c());
         INSTR(0x1A, rr_d());
         INSTR(0x1B, rr_e());
-        INSTR(0x37, swap_a());
+        INSTR(0x37, LTRACE("SWAP A"); swap_r(&a));
         INSTR(0x38, srl_b());
         INSTR(0x40, LTRACE("BIT 0, B"); bit(0, &b));
         INSTR(0x41, LTRACE("BIT 0, C"); bit(0, &c));
@@ -511,6 +562,19 @@ void SM83::adc_a_d8() {
     a = result;
 }
 
+void SM83::adc_a_r(u8 reg) {
+    bool carry = HasFlag(Flags::Carry);
+    u16 full = a + reg + carry;
+    u8 result = static_cast<u8>(full);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(((a & 0xF) + (reg & 0xF) + carry) > 0xF);
+    SetCarryFlag(full > 0xFF);
+
+    a = result;
+}
+
 void SM83::add_a_d8() {
     u8 value = GetByteFromPC();
     LTRACE("ADD A, (0x%02X)", value);
@@ -532,6 +596,17 @@ void SM83::add_a_dhl() {
     SetZeroFlag(static_cast<u8>(result) == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((a & 0xF) + (value & 0xF) > 0xF);
+    SetCarryFlag(result > 0xFF);
+
+    a = static_cast<u8>(result);
+}
+
+void SM83::add_a_r(u8 reg) {
+    u16 result = a + reg;
+
+    SetZeroFlag(static_cast<u8>(result) == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag((a & 0xF) + (reg & 0xF) > 0xF);
     SetCarryFlag(result > 0xFF);
 
     a = static_cast<u8>(result);
@@ -582,6 +657,15 @@ void SM83::and_d8() {
     SetCarryFlag(false);
 }
 
+void SM83::and_r(u8 reg) {
+    a &= reg;
+
+    SetZeroFlag(a == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(true);
+    SetCarryFlag(false);
+}
+
 void SM83::bit(u8 bit, u8* reg) {
     SetZeroFlag(!(*reg & (1 << bit)));
     SetNegateFlag(false);
@@ -606,6 +690,14 @@ void SM83::call_nz_a16() {
     }
 }
 
+void SM83::ccf() {
+    LTRACE("CCF");
+
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(!HasFlag(Flags::Carry));
+}
+
 void SM83::cp_d8() {
     u8 value = GetByteFromPC();
     LTRACE("CP A, 0x%02X", value);
@@ -627,13 +719,20 @@ void SM83::cp_dhl() {
     SetCarryFlag(a < value);
 }
 
-void SM83::cp_e() {
-    LTRACE("CP E");
-
-    SetZeroFlag(a == e);
+void SM83::cp_r(u8 reg) {
+    SetZeroFlag(a == reg);
     SetNegateFlag(true);
-    SetHalfCarryFlag((a & 0xF) < (e & 0xF));
-    SetCarryFlag(a < e);
+    SetHalfCarryFlag((a & 0xF) < (reg & 0xF));
+    SetCarryFlag(a < reg);
+}
+
+void SM83::cpl() {
+    LTRACE("CPL");
+
+    a = ~a;
+
+    SetNegateFlag(true);
+    SetHalfCarryFlag(true);
 }
 
 void SM83::dec_a() {
@@ -1407,39 +1506,6 @@ void SM83::nop() {
     LTRACE("NOP");
 }
 
-void SM83::or_a() {
-    LTRACE("OR A");
-
-    a |= a;
-
-    SetZeroFlag(a == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag(false);
-    SetCarryFlag(false);
-}
-
-void SM83::or_b() {
-    LTRACE("OR B");
-
-    a |= b;
-
-    SetZeroFlag(a == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag(false);
-    SetCarryFlag(false);
-}
-
-void SM83::or_c() {
-    LTRACE("OR C");
-
-    a |= c;
-
-    SetZeroFlag(a == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag(false);
-    SetCarryFlag(false);
-}
-
 void SM83::or_d8() {
     u8 value = GetByteFromPC();
     LTRACE("OR 0x%02X", value);
@@ -1456,6 +1522,15 @@ void SM83::or_dhl() {
     LTRACE("OR (HL)");
 
     a |= mmu.Read8(hl);
+
+    SetZeroFlag(a == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(false);
+}
+
+void SM83::or_r(u8 reg) {
+    a |= reg;
 
     SetZeroFlag(a == 0);
     SetNegateFlag(false);
@@ -1639,15 +1714,13 @@ void SM83::rra() {
     a = result;
 }
 
-void SM83::swap_a() {
-    LTRACE("SWAP A");
-
-    u8 low = a & 0x0F;
-    u8 high = (a & 0xF0) >> 4;
+void SM83::swap_r(u8* reg) {
+    u8 low = *reg & 0x0F;
+    u8 high = (*reg & 0xF0) >> 4;
 
     u8 result = static_cast<u8>((low << 4) | high);
 
-    a = result;
+    *reg = result;
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
@@ -1671,6 +1744,27 @@ void SM83::sbc_a_d8() {
     a = result;
 }
 
+void SM83::sbc_r(u8 reg) {
+    bool carry = HasFlag(Flags::Carry);
+    u16 full = a - reg - carry;
+    u8 result = static_cast<u8>(full);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(true);
+    SetHalfCarryFlag(((a & 0xF) < (reg & 0xF) + carry) != 0);
+    SetCarryFlag(full > 0xFF);
+
+    a = result;
+}
+
+void SM83::scf() {
+    LTRACE("SCF");
+
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(true);
+}
+
 void SM83::set(u8 bit, u8* reg) {
     *reg |= (1 << bit);
 }
@@ -1686,15 +1780,13 @@ void SM83::srl_b() {
     b = result;
 }
 
-void SM83::sub_b() {
-    LTRACE("SUB B");
-    
-    u8 result = a - b;
+void SM83::sub_r(u8 reg) {
+    u8 result = a - reg;
 
     SetZeroFlag(a == 0);
     SetNegateFlag(true);
-    SetHalfCarryFlag(((a & 0xF) - (b & 0xF)) < 0);
-    SetCarryFlag(a < b);
+    SetHalfCarryFlag(((a & 0xF) - (reg & 0xF)) < 0);
+    SetCarryFlag(a < reg);
 
     a = result;
 }
@@ -1709,32 +1801,6 @@ void SM83::sub_d8() {
     SetNegateFlag(true);
     SetHalfCarryFlag(((a & 0xF) - (value & 0xF)) < 0);
     SetCarryFlag(a < value);
-
-    a = result;
-}
-
-void SM83::xor_a() {
-    LTRACE("XOR A");
-
-    u8 result = a ^ a;
-
-    SetZeroFlag(result == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag(false);
-    SetCarryFlag(false);
-
-    a = result;
-}
-
-void SM83::xor_c() {
-    LTRACE("XOR C");
-
-    u8 result = a ^ c;
-
-    SetZeroFlag(result == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag(false);
-    SetCarryFlag(false);
 
     a = result;
 }
@@ -1766,10 +1832,8 @@ void SM83::xor_dhl() {
     a = result;
 }
 
-void SM83::xor_l() {
-    LTRACE("XOR L");
-
-    u8 result = a ^ l;
+void SM83::xor_r(u8 reg) {
+    u8 result = a ^ reg;
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
