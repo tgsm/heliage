@@ -254,15 +254,21 @@ private:
     void ret_nc();
     void ret_z();
 
-    void rl_c();
+    void rl_r(u8* reg);
 
     void rla();
 
-    void rr_c();
-    void rr_d();
-    void rr_e();
+    void rlc_r(u8* reg);
+
+    void rlca();
+
+    void rr_r(u8* reg);
 
     void rra();
+
+    void rrc_r(u8* reg);
+
+    void rrca();
 
     void sbc_a_d8();
     void sbc_r(u8 reg);
@@ -271,7 +277,11 @@ private:
 
     void set(u8 bit, u8* reg);
 
-    void srl_b();
+    void sla_r(u8* reg);
+
+    void sra_r(u8* reg);
+
+    void srl_r(u8* reg);
 
     void sub_d8();
     void sub_r(u8 reg);

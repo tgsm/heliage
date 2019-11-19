@@ -107,6 +107,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x04, inc_b());
         INSTR(0x05, dec_b());
         INSTR(0x06, ld_b_d8());
+        INSTR(0x07, rlca());
         INSTR(0x08, ld_da16_sp());
         INSTR(0x09, add_hl_bc());
         INSTR(0x0A, ld_a_dbc());
@@ -114,6 +115,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x0C, inc_c());
         INSTR(0x0D, dec_c());
         INSTR(0x0E, ld_c_d8());
+        INSTR(0x0F, rrca());
         INSTR(0x11, ld_de_d16());
         INSTR(0x12, ld_dde_a());
         INSTR(0x13, inc_de());
@@ -341,12 +343,62 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
 
 bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
     switch (opcode) {
-        INSTR(0x11, rl_c());
-        INSTR(0x19, rr_c());
-        INSTR(0x1A, rr_d());
-        INSTR(0x1B, rr_e());
+        INSTR(0x00, LTRACE("RLC B"); rlc_r(&b));
+        INSTR(0x01, LTRACE("RLC C"); rlc_r(&c));
+        INSTR(0x02, LTRACE("RLC D"); rlc_r(&d));
+        INSTR(0x03, LTRACE("RLC E"); rlc_r(&e));
+        INSTR(0x04, LTRACE("RLC H"); rlc_r(&h));
+        INSTR(0x05, LTRACE("RLC L"); rlc_r(&l));
+        INSTR(0x07, LTRACE("RLC A"); rlc_r(&a));
+        INSTR(0x08, LTRACE("RRC B"); rrc_r(&b));
+        INSTR(0x09, LTRACE("RRC C"); rrc_r(&c));
+        INSTR(0x0A, LTRACE("RRC D"); rrc_r(&d));
+        INSTR(0x0B, LTRACE("RRC E"); rrc_r(&e));
+        INSTR(0x0C, LTRACE("RRC H"); rrc_r(&h));
+        INSTR(0x0D, LTRACE("RRC L"); rrc_r(&l));
+        INSTR(0x0F, LTRACE("RRC A"); rrc_r(&a));
+        INSTR(0x10, LTRACE("RL B"); rl_r(&b));
+        INSTR(0x11, LTRACE("RL C"); rl_r(&c));
+        INSTR(0x12, LTRACE("RL D"); rl_r(&d));
+        INSTR(0x13, LTRACE("RL E"); rl_r(&e));
+        INSTR(0x14, LTRACE("RL H"); rl_r(&h));
+        INSTR(0x15, LTRACE("RL L"); rl_r(&l));
+        INSTR(0x17, LTRACE("RL A"); rl_r(&a));
+        INSTR(0x18, LTRACE("RR B"); rr_r(&b));
+        INSTR(0x19, LTRACE("RR C"); rr_r(&c));
+        INSTR(0x1A, LTRACE("RR D"); rr_r(&d));
+        INSTR(0x1B, LTRACE("RR E"); rr_r(&e));
+        INSTR(0x1C, LTRACE("RR H"); rr_r(&h));
+        INSTR(0x1D, LTRACE("RR L"); rr_r(&l));
+        INSTR(0x1F, LTRACE("RR A"); rr_r(&a));
+        INSTR(0x20, LTRACE("SLA B"); sla_r(&b));
+        INSTR(0x21, LTRACE("SLA C"); sla_r(&c));
+        INSTR(0x22, LTRACE("SLA D"); sla_r(&d));
+        INSTR(0x23, LTRACE("SLA E"); sla_r(&e));
+        INSTR(0x24, LTRACE("SLA H"); sla_r(&h));
+        INSTR(0x25, LTRACE("SLA L"); sla_r(&l));
+        INSTR(0x27, LTRACE("SLA A"); sla_r(&a));
+        INSTR(0x28, LTRACE("SRA B"); sra_r(&b));
+        INSTR(0x29, LTRACE("SRA C"); sra_r(&c));
+        INSTR(0x2A, LTRACE("SRA D"); sra_r(&d));
+        INSTR(0x2B, LTRACE("SRA E"); sra_r(&e));
+        INSTR(0x2C, LTRACE("SRA H"); sra_r(&h));
+        INSTR(0x2D, LTRACE("SRA L"); sra_r(&l));
+        INSTR(0x2F, LTRACE("SRA A"); sra_r(&a));
+        INSTR(0x30, LTRACE("SWAP B"); swap_r(&b));
+        INSTR(0x31, LTRACE("SWAP C"); swap_r(&c));
+        INSTR(0x32, LTRACE("SWAP D"); swap_r(&d));
+        INSTR(0x33, LTRACE("SWAP E"); swap_r(&e));
+        INSTR(0x34, LTRACE("SWAP H"); swap_r(&h));
+        INSTR(0x35, LTRACE("SWAP L"); swap_r(&l));
         INSTR(0x37, LTRACE("SWAP A"); swap_r(&a));
-        INSTR(0x38, srl_b());
+        INSTR(0x38, LTRACE("SRL B"); srl_r(&b));
+        INSTR(0x39, LTRACE("SRL C"); srl_r(&c));
+        INSTR(0x3A, LTRACE("SRL D"); srl_r(&d));
+        INSTR(0x3B, LTRACE("SRL E"); srl_r(&e));
+        INSTR(0x3C, LTRACE("SRL H"); srl_r(&h));
+        INSTR(0x3D, LTRACE("SRL L"); srl_r(&l));
+        INSTR(0x3F, LTRACE("SRL A"); srl_r(&a));
         INSTR(0x40, LTRACE("BIT 0, B"); bit(0, &b));
         INSTR(0x41, LTRACE("BIT 0, C"); bit(0, &c));
         INSTR(0x42, LTRACE("BIT 0, D"); bit(0, &d));
@@ -1614,22 +1666,20 @@ void SM83::ret_z() {
     }
 }
 
-void SM83::rl_c() {
-    LTRACE("RL C");
-
+void SM83::rl_r(u8* reg) {
     bool carry = HasFlag(Flags::Carry);
 
-    bool should_carry = c & static_cast<u8>(Flags::Zero);
+    bool should_carry = *reg & (1 << 7);
     SetCarryFlag(should_carry);
 
-    u8 result = c << 1;
+    u8 result = *reg << 1;
     result |= carry;
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
 
-    c = result;
+    *reg = result;
 }
 
 void SM83::rla() {
@@ -1637,7 +1687,7 @@ void SM83::rla() {
 
     bool carry = HasFlag(Flags::Carry);
 
-    bool should_carry = a & static_cast<u8>(Flags::Zero);
+    bool should_carry = a & (1 << 7);
     SetCarryFlag(should_carry);
 
     u8 result = a << 1;
@@ -1650,66 +1700,82 @@ void SM83::rla() {
     a = result;
 }
 
-void SM83::rr_c() {
-    LTRACE("RR C");
-    bool carry = HasFlag(Flags::Carry);
+void SM83::rlc_r(u8* reg) {
+    u8 result = *reg << 1;
+    bool should_carry = *reg & (1 << 7);
 
-    SetCarryFlag(c & 0x1);
-
-    u8 result = c >> 1;
-    result |= (carry << 7);
-
-    SetZeroFlag(result == 0);
+    SetZeroFlag(*reg == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
 
-    c = result;
+    *reg = (result | should_carry);
 }
 
-void SM83::rr_d() {
-    LTRACE("RR D");
-    bool carry = HasFlag(Flags::Carry);
+void SM83::rlca() {
+    LTRACE("RLCA");
+    u8 result = a << 1;
+    bool should_carry = a & (1 << 7);
 
-    SetCarryFlag(d & 0x1);
-
-    u8 result = d >> 1;
-    result |= (carry << 7);
-
-    SetZeroFlag(result == 0);
+    SetZeroFlag(false);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
 
-    d = result;
+    a = (result | should_carry);
 }
 
-void SM83::rr_e() {
-    LTRACE("RR E");
+void SM83::rr_r(u8* reg) {
     bool carry = HasFlag(Flags::Carry);
 
-    SetCarryFlag(e & 0x1);
+    SetCarryFlag(*reg & 0x1);
 
-    u8 result = e >> 1;
+    u8 result = *reg >> 1;
     result |= (carry << 7);
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
 
-    e = result;
+    *reg = result;
 }
 
 void SM83::rra() {
     LTRACE("RRA");
     bool carry = HasFlag(Flags::Carry);
 
-    SetCarryFlag(a & 0x1);
-
     u8 result = a >> 1;
     result |= (carry << 7);
+
+    SetZeroFlag(false);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(a & 0x1);
+
+    a = result;
+}
+
+void SM83::rrc_r(u8* reg) {
+    bool should_carry = *reg & 0x1;
+    u8 result = (*reg >> 1) | (should_carry << 7);
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
+
+    *reg = result;
+}
+
+void SM83::rrca() {
+    LTRACE("RRCA");
+    bool carry = a & 0x1;
+    u8 result = static_cast<u8>((a >> 1) | (carry << 7));
+
+    SetZeroFlag(false);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(carry);
 
     a = result;
 }
@@ -1769,23 +1835,47 @@ void SM83::set(u8 bit, u8* reg) {
     *reg |= (1 << bit);
 }
 
-void SM83::srl_b() {
-    u8 result = b >> 1;
+void SM83::sla_r(u8* reg) {
+    bool should_carry = *reg & (1 << 7);
+    u8 result = *reg << 1;
 
-    SetZeroFlag(b == 0);
+    SetZeroFlag(result == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
-    SetCarryFlag(b & 0x1);
+    SetCarryFlag(should_carry);
 
-    b = result;
+    *reg = result;
+}
+
+void SM83::sra_r(u8* reg) {
+    u8 bit7 = *reg & (1 << 7);
+    u8 result = *reg >> 1;
+
+    SetZeroFlag((result | bit7) == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(*reg & 0x1);
+
+    *reg = (result | bit7);
+}
+
+void SM83::srl_r(u8* reg) {
+    u8 result = *reg >> 1;
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(*reg & 0x1);
+
+    *reg = result;
 }
 
 void SM83::sub_r(u8 reg) {
     u8 result = a - reg;
 
-    SetZeroFlag(a == 0);
+    SetZeroFlag(a == reg);
     SetNegateFlag(true);
-    SetHalfCarryFlag(((a & 0xF) - (reg & 0xF)) < 0);
+    SetHalfCarryFlag((a & 0xF) < (reg & 0xF));
     SetCarryFlag(a < reg);
 
     a = result;
