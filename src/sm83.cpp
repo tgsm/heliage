@@ -1887,9 +1887,9 @@ void SM83::sub_d8() {
 
     u8 result = a - value;
 
-    SetZeroFlag(a == 0);
+    SetZeroFlag(a == value);
     SetNegateFlag(true);
-    SetHalfCarryFlag(((a & 0xF) - (value & 0xF)) < 0);
+    SetHalfCarryFlag((a & 0xF) < (value & 0xF));
     SetCarryFlag(a < value);
 
     a = result;
