@@ -150,6 +150,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x31, ld_sp_d16());
         INSTR(0x32, ld_dhld_a());
         INSTR(0x33, inc_sp());
+        INSTR(0x34, inc_dhl());
         INSTR(0x35, dec_dhl());
         INSTR(0x36, ld_dhl_d8());
         INSTR(0x37, scf());
@@ -236,6 +237,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x8B, LTRACE("ADC A, E"); adc_a_r(e));
         INSTR(0x8C, LTRACE("ADC A, H"); adc_a_r(h));
         INSTR(0x8D, LTRACE("ADC A, L"); adc_a_r(l));
+        INSTR(0x8E, LTRACE("ADC A, (HL)"); adc_a_r(mmu.Read8(hl)));
         INSTR(0x8F, LTRACE("ADC A, A"); adc_a_r(a));
         INSTR(0x90, LTRACE("SUB B"); sub_r(b));
         INSTR(0x91, LTRACE("SUB C"); sub_r(c));
@@ -243,6 +245,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x93, LTRACE("SUB E"); sub_r(e));
         INSTR(0x94, LTRACE("SUB H"); sub_r(h));
         INSTR(0x95, LTRACE("SUB L"); sub_r(l));
+        INSTR(0x96, LTRACE("SUB (HL)"); sub_r(mmu.Read8(hl)));
         INSTR(0x97, LTRACE("SUB A"); sub_r(a));
         INSTR(0x98, LTRACE("SBC B"); sbc_r(b));
         INSTR(0x99, LTRACE("SBC C"); sbc_r(c));
@@ -250,6 +253,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x9B, LTRACE("SBC E"); sbc_r(e));
         INSTR(0x9C, LTRACE("SBC H"); sbc_r(h));
         INSTR(0x9D, LTRACE("SBC L"); sbc_r(l));
+        INSTR(0x9E, LTRACE("SBC (HL)"); sbc_r(mmu.Read8(hl)));
         INSTR(0x9F, LTRACE("SBC A"); sbc_r(a));
         INSTR(0xA0, LTRACE("AND B"); and_r(b));
         INSTR(0xA1, LTRACE("AND C"); and_r(c));
@@ -257,6 +261,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xA3, LTRACE("AND E"); and_r(e));
         INSTR(0xA4, LTRACE("AND H"); and_r(h));
         INSTR(0xA5, LTRACE("AND L"); and_r(l));
+        INSTR(0xA6, LTRACE("AND (HL)"); and_r(mmu.Read8(hl)));
         INSTR(0xA7, LTRACE("AND A"); and_r(a));
         INSTR(0xA8, LTRACE("XOR B"); xor_r(b));
         INSTR(0xA9, LTRACE("XOR C"); xor_r(c));
@@ -349,6 +354,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x03, LTRACE("RLC E"); rlc_r(&e));
         INSTR(0x04, LTRACE("RLC H"); rlc_r(&h));
         INSTR(0x05, LTRACE("RLC L"); rlc_r(&l));
+        INSTR(0x06, rlc_dhl());
         INSTR(0x07, LTRACE("RLC A"); rlc_r(&a));
         INSTR(0x08, LTRACE("RRC B"); rrc_r(&b));
         INSTR(0x09, LTRACE("RRC C"); rrc_r(&c));
@@ -356,6 +362,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x0B, LTRACE("RRC E"); rrc_r(&e));
         INSTR(0x0C, LTRACE("RRC H"); rrc_r(&h));
         INSTR(0x0D, LTRACE("RRC L"); rrc_r(&l));
+        INSTR(0x0E, rrc_dhl());
         INSTR(0x0F, LTRACE("RRC A"); rrc_r(&a));
         INSTR(0x10, LTRACE("RL B"); rl_r(&b));
         INSTR(0x11, LTRACE("RL C"); rl_r(&c));
@@ -363,6 +370,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x13, LTRACE("RL E"); rl_r(&e));
         INSTR(0x14, LTRACE("RL H"); rl_r(&h));
         INSTR(0x15, LTRACE("RL L"); rl_r(&l));
+        INSTR(0x16, rl_dhl());
         INSTR(0x17, LTRACE("RL A"); rl_r(&a));
         INSTR(0x18, LTRACE("RR B"); rr_r(&b));
         INSTR(0x19, LTRACE("RR C"); rr_r(&c));
@@ -370,6 +378,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x1B, LTRACE("RR E"); rr_r(&e));
         INSTR(0x1C, LTRACE("RR H"); rr_r(&h));
         INSTR(0x1D, LTRACE("RR L"); rr_r(&l));
+        INSTR(0x1E, rr_dhl());
         INSTR(0x1F, LTRACE("RR A"); rr_r(&a));
         INSTR(0x20, LTRACE("SLA B"); sla_r(&b));
         INSTR(0x21, LTRACE("SLA C"); sla_r(&c));
@@ -377,6 +386,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x23, LTRACE("SLA E"); sla_r(&e));
         INSTR(0x24, LTRACE("SLA H"); sla_r(&h));
         INSTR(0x25, LTRACE("SLA L"); sla_r(&l));
+        INSTR(0x26, sla_dhl());
         INSTR(0x27, LTRACE("SLA A"); sla_r(&a));
         INSTR(0x28, LTRACE("SRA B"); sra_r(&b));
         INSTR(0x29, LTRACE("SRA C"); sra_r(&c));
@@ -384,6 +394,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x2B, LTRACE("SRA E"); sra_r(&e));
         INSTR(0x2C, LTRACE("SRA H"); sra_r(&h));
         INSTR(0x2D, LTRACE("SRA L"); sra_r(&l));
+        INSTR(0x2E, sra_dhl());
         INSTR(0x2F, LTRACE("SRA A"); sra_r(&a));
         INSTR(0x30, LTRACE("SWAP B"); swap_r(&b));
         INSTR(0x31, LTRACE("SWAP C"); swap_r(&c));
@@ -391,6 +402,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x33, LTRACE("SWAP E"); swap_r(&e));
         INSTR(0x34, LTRACE("SWAP H"); swap_r(&h));
         INSTR(0x35, LTRACE("SWAP L"); swap_r(&l));
+        INSTR(0x36, swap_dhl());
         INSTR(0x37, LTRACE("SWAP A"); swap_r(&a));
         INSTR(0x38, LTRACE("SRL B"); srl_r(&b));
         INSTR(0x39, LTRACE("SRL C"); srl_r(&c));
@@ -398,6 +410,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x3B, LTRACE("SRL E"); srl_r(&e));
         INSTR(0x3C, LTRACE("SRL H"); srl_r(&h));
         INSTR(0x3D, LTRACE("SRL L"); srl_r(&l));
+        INSTR(0x3E, srl_dhl());
         INSTR(0x3F, LTRACE("SRL A"); srl_r(&a));
         INSTR(0x40, LTRACE("BIT 0, B"); bit(0, &b));
         INSTR(0x41, LTRACE("BIT 0, C"); bit(0, &c));
@@ -405,6 +418,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x43, LTRACE("BIT 0, E"); bit(0, &e));
         INSTR(0x44, LTRACE("BIT 0, H"); bit(0, &h));
         INSTR(0x45, LTRACE("BIT 0, L"); bit(0, &l));
+        INSTR(0x46, bit_dhl(0));
         INSTR(0x47, LTRACE("BIT 0, A"); bit(0, &a));
         INSTR(0x48, LTRACE("BIT 1, B"); bit(1, &b));
         INSTR(0x49, LTRACE("BIT 1, C"); bit(1, &c));
@@ -412,6 +426,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x4B, LTRACE("BIT 1, E"); bit(1, &e));
         INSTR(0x4C, LTRACE("BIT 1, H"); bit(1, &h));
         INSTR(0x4D, LTRACE("BIT 1, L"); bit(1, &l));
+        INSTR(0x4E, bit_dhl(1));
         INSTR(0x4F, LTRACE("BIT 1, A"); bit(1, &a));
         INSTR(0x50, LTRACE("BIT 2, B"); bit(2, &b));
         INSTR(0x51, LTRACE("BIT 2, C"); bit(2, &c));
@@ -419,6 +434,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x53, LTRACE("BIT 2, E"); bit(2, &e));
         INSTR(0x54, LTRACE("BIT 2, H"); bit(2, &h));
         INSTR(0x55, LTRACE("BIT 2, L"); bit(2, &l));
+        INSTR(0x56, bit_dhl(2));
         INSTR(0x57, LTRACE("BIT 2, A"); bit(2, &a));
         INSTR(0x58, LTRACE("BIT 3, B"); bit(3, &b));
         INSTR(0x59, LTRACE("BIT 3, C"); bit(3, &c));
@@ -426,6 +442,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x5B, LTRACE("BIT 3, E"); bit(3, &e));
         INSTR(0x5C, LTRACE("BIT 3, H"); bit(3, &h));
         INSTR(0x5D, LTRACE("BIT 3, L"); bit(3, &l));
+        INSTR(0x5E, bit_dhl(3));
         INSTR(0x5F, LTRACE("BIT 3, A"); bit(3, &a));
         INSTR(0x60, LTRACE("BIT 4, B"); bit(4, &b));
         INSTR(0x61, LTRACE("BIT 4, C"); bit(4, &c));
@@ -433,6 +450,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x63, LTRACE("BIT 4, E"); bit(4, &e));
         INSTR(0x64, LTRACE("BIT 4, H"); bit(4, &h));
         INSTR(0x65, LTRACE("BIT 4, L"); bit(4, &l));
+        INSTR(0x66, bit_dhl(4));
         INSTR(0x67, LTRACE("BIT 4, A"); bit(4, &a));
         INSTR(0x68, LTRACE("BIT 5, B"); bit(5, &b));
         INSTR(0x69, LTRACE("BIT 5, C"); bit(5, &c));
@@ -440,6 +458,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x6B, LTRACE("BIT 5, E"); bit(5, &e));
         INSTR(0x6C, LTRACE("BIT 5, H"); bit(5, &h));
         INSTR(0x6D, LTRACE("BIT 5, L"); bit(5, &l));
+        INSTR(0x6E, bit_dhl(5));
         INSTR(0x6F, LTRACE("BIT 5, A"); bit(5, &a));
         INSTR(0x70, LTRACE("BIT 6, B"); bit(6, &b));
         INSTR(0x71, LTRACE("BIT 6, C"); bit(6, &c));
@@ -447,6 +466,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x73, LTRACE("BIT 6, E"); bit(6, &e));
         INSTR(0x74, LTRACE("BIT 6, H"); bit(6, &h));
         INSTR(0x75, LTRACE("BIT 6, L"); bit(6, &l));
+        INSTR(0x76, bit_dhl(6));
         INSTR(0x77, LTRACE("BIT 6, A"); bit(6, &a));
         INSTR(0x78, LTRACE("BIT 7, B"); bit(7, &b));
         INSTR(0x79, LTRACE("BIT 7, C"); bit(7, &c));
@@ -454,6 +474,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x7B, LTRACE("BIT 7, E"); bit(7, &e));
         INSTR(0x7C, LTRACE("BIT 7, H"); bit(7, &h));
         INSTR(0x7D, LTRACE("BIT 7, L"); bit(7, &l));
+        INSTR(0x7E, bit_dhl(7));
         INSTR(0x7F, LTRACE("BIT 7, A"); bit(7, &a));
         INSTR(0x80, LTRACE("RES 0, B"); res(0, &b));
         INSTR(0x81, LTRACE("RES 0, C"); res(0, &c));
@@ -461,6 +482,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x83, LTRACE("RES 0, E"); res(0, &e));
         INSTR(0x84, LTRACE("RES 0, H"); res(0, &h));
         INSTR(0x85, LTRACE("RES 0, L"); res(0, &l));
+        INSTR(0x86, res_dhl(0));
         INSTR(0x87, LTRACE("RES 0, A"); res(0, &a));
         INSTR(0x88, LTRACE("RES 1, B"); res(1, &b));
         INSTR(0x89, LTRACE("RES 1, C"); res(1, &c));
@@ -468,6 +490,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x8B, LTRACE("RES 1, E"); res(1, &e));
         INSTR(0x8C, LTRACE("RES 1, H"); res(1, &h));
         INSTR(0x8D, LTRACE("RES 1, L"); res(1, &l));
+        INSTR(0x8E, res_dhl(1));
         INSTR(0x8F, LTRACE("RES 1, A"); res(1, &a));
         INSTR(0x90, LTRACE("RES 2, B"); res(2, &b));
         INSTR(0x91, LTRACE("RES 2, C"); res(2, &c));
@@ -475,6 +498,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x93, LTRACE("RES 2, E"); res(2, &e));
         INSTR(0x94, LTRACE("RES 2, H"); res(2, &h));
         INSTR(0x95, LTRACE("RES 2, L"); res(2, &l));
+        INSTR(0x96, res_dhl(2));
         INSTR(0x97, LTRACE("RES 2, A"); res(2, &a));
         INSTR(0x98, LTRACE("RES 3, B"); res(3, &b));
         INSTR(0x99, LTRACE("RES 3, C"); res(3, &c));
@@ -482,6 +506,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0x9B, LTRACE("RES 3, E"); res(3, &e));
         INSTR(0x9C, LTRACE("RES 3, H"); res(3, &h));
         INSTR(0x9D, LTRACE("RES 3, L"); res(3, &l));
+        INSTR(0x9E, res_dhl(3));
         INSTR(0x9F, LTRACE("RES 3, A"); res(3, &a));
         INSTR(0xA0, LTRACE("RES 4, B"); res(4, &b));
         INSTR(0xA1, LTRACE("RES 4, C"); res(4, &c));
@@ -489,6 +514,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xA3, LTRACE("RES 4, E"); res(4, &e));
         INSTR(0xA4, LTRACE("RES 4, H"); res(4, &h));
         INSTR(0xA5, LTRACE("RES 4, L"); res(4, &l));
+        INSTR(0xA6, res_dhl(4));
         INSTR(0xA7, LTRACE("RES 4, A"); res(4, &a));
         INSTR(0xA8, LTRACE("RES 5, B"); res(5, &b));
         INSTR(0xA9, LTRACE("RES 5, C"); res(5, &c));
@@ -496,6 +522,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xAB, LTRACE("RES 5, E"); res(5, &e));
         INSTR(0xAC, LTRACE("RES 5, H"); res(5, &h));
         INSTR(0xAD, LTRACE("RES 5, L"); res(5, &l));
+        INSTR(0xAE, res_dhl(5));
         INSTR(0xAF, LTRACE("RES 5, A"); res(5, &a));
         INSTR(0xB0, LTRACE("RES 6, B"); res(6, &b));
         INSTR(0xB1, LTRACE("RES 6, C"); res(6, &c));
@@ -503,6 +530,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xB3, LTRACE("RES 6, E"); res(6, &e));
         INSTR(0xB4, LTRACE("RES 6, H"); res(6, &h));
         INSTR(0xB5, LTRACE("RES 6, L"); res(6, &l));
+        INSTR(0xB6, res_dhl(6));
         INSTR(0xB7, LTRACE("RES 6, A"); res(6, &a));
         INSTR(0xB8, LTRACE("RES 7, B"); res(7, &b));
         INSTR(0xB9, LTRACE("RES 7, C"); res(7, &c));
@@ -510,6 +538,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xBB, LTRACE("RES 7, E"); res(7, &e));
         INSTR(0xBC, LTRACE("RES 7, H"); res(7, &h));
         INSTR(0xBD, LTRACE("RES 7, L"); res(7, &l));
+        INSTR(0xBE, res_dhl(7));
         INSTR(0xBF, LTRACE("RES 7, A"); res(7, &a));
         INSTR(0xC0, LTRACE("SET 0, B"); set(0, &b));
         INSTR(0xC1, LTRACE("SET 0, C"); set(0, &c));
@@ -517,6 +546,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xC3, LTRACE("SET 0, E"); set(0, &e));
         INSTR(0xC4, LTRACE("SET 0, H"); set(0, &h));
         INSTR(0xC5, LTRACE("SET 0, L"); set(0, &l));
+        INSTR(0xC6, set_dhl(0));
         INSTR(0xC7, LTRACE("SET 0, A"); set(0, &a));
         INSTR(0xC8, LTRACE("SET 1, B"); set(1, &b));
         INSTR(0xC9, LTRACE("SET 1, C"); set(1, &c));
@@ -524,6 +554,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xCB, LTRACE("SET 1, E"); set(1, &e));
         INSTR(0xCC, LTRACE("SET 1, H"); set(1, &h));
         INSTR(0xCD, LTRACE("SET 1, L"); set(1, &l));
+        INSTR(0xCE, set_dhl(1));
         INSTR(0xCF, LTRACE("SET 1, A"); set(1, &a));
         INSTR(0xD0, LTRACE("SET 2, B"); set(2, &b));
         INSTR(0xD1, LTRACE("SET 2, C"); set(2, &c));
@@ -531,6 +562,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xD3, LTRACE("SET 2, E"); set(2, &e));
         INSTR(0xD4, LTRACE("SET 2, H"); set(2, &h));
         INSTR(0xD5, LTRACE("SET 2, L"); set(2, &l));
+        INSTR(0xD6, set_dhl(2));
         INSTR(0xD7, LTRACE("SET 2, A"); set(2, &a));
         INSTR(0xD8, LTRACE("SET 3, B"); set(3, &b));
         INSTR(0xD9, LTRACE("SET 3, C"); set(3, &c));
@@ -538,6 +570,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xDB, LTRACE("SET 3, E"); set(3, &e));
         INSTR(0xDC, LTRACE("SET 3, H"); set(3, &h));
         INSTR(0xDD, LTRACE("SET 3, L"); set(3, &l));
+        INSTR(0xDE, set_dhl(3));
         INSTR(0xDF, LTRACE("SET 3, A"); set(3, &a));
         INSTR(0xE0, LTRACE("SET 4, B"); set(4, &b));
         INSTR(0xE1, LTRACE("SET 4, C"); set(4, &c));
@@ -545,6 +578,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xE3, LTRACE("SET 4, E"); set(4, &e));
         INSTR(0xE4, LTRACE("SET 4, H"); set(4, &h));
         INSTR(0xE5, LTRACE("SET 4, L"); set(4, &l));
+        INSTR(0xE6, set_dhl(4));
         INSTR(0xE7, LTRACE("SET 4, A"); set(4, &a));
         INSTR(0xE8, LTRACE("SET 5, B"); set(5, &b));
         INSTR(0xE9, LTRACE("SET 5, C"); set(5, &c));
@@ -552,6 +586,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xEB, LTRACE("SET 5, E"); set(5, &e));
         INSTR(0xEC, LTRACE("SET 5, H"); set(5, &h));
         INSTR(0xED, LTRACE("SET 5, L"); set(5, &l));
+        INSTR(0xEE, set_dhl(5));
         INSTR(0xEF, LTRACE("SET 5, A"); set(5, &a));
         INSTR(0xF0, LTRACE("SET 6, B"); set(6, &b));
         INSTR(0xF1, LTRACE("SET 6, C"); set(6, &c));
@@ -559,6 +594,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xF3, LTRACE("SET 6, E"); set(6, &e));
         INSTR(0xF4, LTRACE("SET 6, H"); set(6, &h));
         INSTR(0xF5, LTRACE("SET 6, L"); set(6, &l));
+        INSTR(0xF6, set_dhl(6));
         INSTR(0xF7, LTRACE("SET 6, A"); set(6, &a));
         INSTR(0xF8, LTRACE("SET 7, B"); set(7, &b));
         INSTR(0xF9, LTRACE("SET 7, C"); set(7, &c));
@@ -566,6 +602,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
         INSTR(0xFB, LTRACE("SET 7, E"); set(7, &e));
         INSTR(0xFC, LTRACE("SET 7, H"); set(7, &h));
         INSTR(0xFD, LTRACE("SET 7, L"); set(7, &l));
+        INSTR(0xFE, set_dhl(7));
         INSTR(0xFF, LTRACE("SET 7, A"); set(7, &a));
 #undef INSTR
         default:
@@ -720,6 +757,15 @@ void SM83::and_r(u8 reg) {
 
 void SM83::bit(u8 bit, u8* reg) {
     SetZeroFlag(!(*reg & (1 << bit)));
+    SetNegateFlag(false);
+    SetHalfCarryFlag(true);
+}
+
+void SM83::bit_dhl(u8 bit) {
+    LTRACE("BIT %u, (HL)", bit);
+    u8 value = mmu.Read8(hl);
+
+    SetZeroFlag(!(value & (1 << bit)));
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
 }
@@ -944,6 +990,18 @@ void SM83::inc_d() {
 void SM83::inc_de() {
     LTRACE("INC DE");
     de++;
+}
+
+void SM83::inc_dhl() {
+    LTRACE("INC (HL)");
+
+    u8 value = mmu.Read8(hl);
+    value++;
+    mmu.Write8(hl, value);
+
+    SetZeroFlag(value == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag((value & 0x0F) == 0x00);
 }
 
 void SM83::inc_e() {
@@ -1637,6 +1695,14 @@ void SM83::res(u8 bit, u8* reg) {
     *reg &= ~(1 << bit);
 }
 
+void SM83::res_dhl(u8 bit) {
+    LTRACE("RES %u, (HL)", bit);
+    u8 value = mmu.Read8(hl);
+
+    value &= ~(1 << bit);
+    mmu.Write8(hl, value);
+}
+
 void SM83::ret() {
     LTRACE("RET");
     StackPop(&pc);
@@ -1664,6 +1730,25 @@ void SM83::ret_z() {
     if (HasFlag(Flags::Zero)) {
         StackPop(&pc);
     }
+}
+
+void SM83::rl_dhl() {
+    LTRACE("RL (HL)");
+
+    u8 value = mmu.Read8(hl);
+    bool carry = HasFlag(Flags::Carry);
+
+    bool should_carry = value & (1 << 7);
+    SetCarryFlag(should_carry);
+
+    u8 result = value << 1;
+    result |= carry;
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+
+    mmu.Write8(hl, result);
 }
 
 void SM83::rl_r(u8* reg) {
@@ -1700,6 +1785,21 @@ void SM83::rla() {
     a = result;
 }
 
+void SM83::rlc_dhl() {
+    LTRACE("RLC (HL)");
+
+    u8 reg = mmu.Read8(hl);
+    u8 result = reg << 1;
+    bool should_carry = reg & (1 << 7);
+
+    SetZeroFlag(reg == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
+
+    mmu.Write8(hl, result | should_carry);
+}
+
 void SM83::rlc_r(u8* reg) {
     u8 result = *reg << 1;
     bool should_carry = *reg & (1 << 7);
@@ -1723,6 +1823,24 @@ void SM83::rlca() {
     SetCarryFlag(should_carry);
 
     a = (result | should_carry);
+}
+
+void SM83::rr_dhl() {
+    LTRACE("RR (HL)");
+
+    u8 value = mmu.Read8(hl);
+    bool carry = HasFlag(Flags::Carry);
+
+    SetCarryFlag(value & 0x1);
+
+    u8 result = value >> 1;
+    result |= (carry << 7);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+
+    mmu.Write8(hl, result);
 }
 
 void SM83::rr_r(u8* reg) {
@@ -1755,6 +1873,21 @@ void SM83::rra() {
     a = result;
 }
 
+void SM83::rrc_dhl() {
+    LTRACE("RRC (HL)");
+
+    u8 reg = mmu.Read8(hl);
+    bool should_carry = reg & 0x1;
+    u8 result = (reg >> 1) | (should_carry << 7);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
+
+    mmu.Write8(hl, result);
+}
+
 void SM83::rrc_r(u8* reg) {
     bool should_carry = *reg & 0x1;
     u8 result = (*reg >> 1) | (should_carry << 7);
@@ -1778,6 +1911,23 @@ void SM83::rrca() {
     SetCarryFlag(carry);
 
     a = result;
+}
+
+void SM83::swap_dhl() {
+    LTRACE("SWAP (HL)");
+
+    u8 value = mmu.Read8(hl);
+    u8 low = value & 0x0F;
+    u8 high = (value & 0xF0) >> 4;
+
+    u8 result = static_cast<u8>((low << 4) | high);
+
+    mmu.Write8(hl, result);
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(false);
 }
 
 void SM83::swap_r(u8* reg) {
@@ -1831,8 +1981,31 @@ void SM83::scf() {
     SetCarryFlag(true);
 }
 
+void SM83::set_dhl(u8 bit) {
+    LTRACE("SET %u, (HL)", bit);
+    u8 value = mmu.Read8(hl);
+
+    value |= (1 << bit);
+    mmu.Write8(hl, value);
+}
+
 void SM83::set(u8 bit, u8* reg) {
     *reg |= (1 << bit);
+}
+
+void SM83::sla_dhl() {
+    LTRACE("SLA (HL)");
+
+    u8 value = mmu.Read8(hl);
+    bool should_carry = value & (1 << 7);
+    u8 result = value << 1;
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(should_carry);
+
+    mmu.Write8(hl, result);
 }
 
 void SM83::sla_r(u8* reg) {
@@ -1847,6 +2020,21 @@ void SM83::sla_r(u8* reg) {
     *reg = result;
 }
 
+void SM83::sra_dhl() {
+    LTRACE("SRA (HL)");
+
+    u8 value = mmu.Read8(hl);
+    u8 bit7 = value & (1 << 7);
+    u8 result = value >> 1;
+
+    SetZeroFlag((result | bit7) == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(value & 0x1);
+
+    mmu.Write8(hl, result | bit7);
+}
+
 void SM83::sra_r(u8* reg) {
     u8 bit7 = *reg & (1 << 7);
     u8 result = *reg >> 1;
@@ -1857,6 +2045,20 @@ void SM83::sra_r(u8* reg) {
     SetCarryFlag(*reg & 0x1);
 
     *reg = (result | bit7);
+}
+
+void SM83::srl_dhl() {
+    LTRACE("SRL (HL)");
+
+    u8 value = mmu.Read8(hl);
+    u8 result = value >> 1;
+
+    SetZeroFlag(result == 0);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(false);
+    SetCarryFlag(value & 0x1);
+
+    mmu.Write8(hl, result);
 }
 
 void SM83::srl_r(u8* reg) {

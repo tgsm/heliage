@@ -90,6 +90,7 @@ private:
     void and_r(u8 reg);
 
     void bit(u8 bit, u8* reg);
+    void bit_dhl(u8 bit);
 
     void call_a16();
     void call_nz_a16();
@@ -124,6 +125,7 @@ private:
     void inc_c();
     void inc_d();
     void inc_de();
+    void inc_dhl();
     void inc_e();
     void inc_h();
     void inc_hl();
@@ -248,24 +250,29 @@ private:
     void push_hl();
 
     void res(u8 bit, u8* reg);
+    void res_dhl(u8 bit);
 
     void ret();
     void ret_c();
     void ret_nc();
     void ret_z();
 
+    void rl_dhl();
     void rl_r(u8* reg);
 
     void rla();
 
+    void rlc_dhl();
     void rlc_r(u8* reg);
 
     void rlca();
 
+    void rr_dhl();
     void rr_r(u8* reg);
 
     void rra();
 
+    void rrc_dhl();
     void rrc_r(u8* reg);
 
     void rrca();
@@ -275,17 +282,22 @@ private:
 
     void scf();
 
+    void set_dhl(u8 bit);
     void set(u8 bit, u8* reg);
 
+    void sla_dhl();
     void sla_r(u8* reg);
 
+    void sra_dhl();
     void sra_r(u8* reg);
 
+    void srl_dhl();
     void srl_r(u8* reg);
 
     void sub_d8();
     void sub_r(u8 reg);
 
+    void swap_dhl();
     void swap_r(u8* reg);
 
     void xor_d8();
