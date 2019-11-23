@@ -103,6 +103,8 @@ private:
 
     void cpl();
 
+    void daa();
+
     void dec_a();
     void dec_b();
     void dec_bc();

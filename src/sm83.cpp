@@ -138,6 +138,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x24, inc_h());
         INSTR(0x25, dec_h());
         INSTR(0x26, ld_h_d8());
+        INSTR(0x27, daa());
         INSTR(0x28, jr_z_r8());
         INSTR(0x29, add_hl_hl());
         INSTR(0x2A, ld_a_dhli());
@@ -831,6 +832,44 @@ void SM83::cpl() {
 
     SetNegateFlag(true);
     SetHalfCarryFlag(true);
+}
+
+void SM83::daa() {
+    LTRACE("DAA");
+    // lifted from SameBoy.
+    // this is one nutty instruction
+    // TODO: come up with an original implementation
+
+    uint16_t result = a;
+    a = 0;
+
+    if (HasFlag(Flags::Negate)) {
+        if (HasFlag(Flags::HalfCarry)) {
+            result -= 0x06;
+            result &= 0xFF;
+        }
+
+        if (HasFlag(Flags::Carry)) {
+            result -= 0x60;
+        }
+    } else {
+        if (HasFlag(Flags::HalfCarry) || (result & 0x0F) >= 0x0A) {
+            result += 0x06;
+        }
+
+        if (HasFlag(Flags::Carry) || result >= 0xA0) {
+            result += 0x60;
+        }
+    }
+
+    SetZeroFlag((result & 0xFF) == 0);
+    SetHalfCarryFlag(false);
+    if ((result & 0x100) == 0x100) {
+        // don't set carry flag to false if the result isn't 16 bit
+        SetCarryFlag(true);
+    }
+
+    a |= result;
 }
 
 void SM83::dec_a() {
