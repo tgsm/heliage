@@ -2,11 +2,12 @@
 
 #include <array>
 #include "cartridge.h"
+#include "ppu.h"
 #include "types.h"
 
 class MMU {
 public:
-    MMU(Cartridge& cartridge);
+    MMU(Cartridge& cartridge, PPU& ppu);
 
     u8 Read8(u16 addr);
     void Write8(u16 addr, u8 value);
@@ -24,4 +25,5 @@ private:
     std::array<u8, 0x10000> memory;
 
     Cartridge& cartridge;
+    PPU& ppu;
 };

@@ -10,18 +10,28 @@ SM83::SM83(MMU& mmu)
     sp = 0;
     pc = 0;
     pc_at_opcode = 0;
-    interrupts_enabled = false;
+    ime = false;
 }
 
-void SM83::Tick() {
+u8 SM83::Tick() {
+    cycles_to_advance = 0;
     HandleInterrupts();
+
+    if (ime_delay) {
+        ime = true;
+        ime_delay = false;
+        LDEBUG("IME has been enabled");
+    }
 
     pc_at_opcode = pc;
     u8 opcode = GetByteFromPC();
+
     // LTRACE("executing opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
     if (!ExecuteOpcode(opcode, pc_at_opcode)) {
         std::exit(0);
     }
+
+    return cycles_to_advance;
 }
 
 u8 SM83::GetByteFromPC() {
@@ -116,6 +126,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x0D, dec_c());
         INSTR(0x0E, ld_c_d8());
         INSTR(0x0F, rrca());
+        // 0x10 STOP
         INSTR(0x11, ld_de_d16());
         INSTR(0x12, ld_dde_a());
         INSTR(0x13, inc_de());
@@ -156,7 +167,9 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x36, ld_dhl_d8());
         INSTR(0x37, scf());
         INSTR(0x38, jr_c_r8());
+        // 0x39 ADD HL, SP
         INSTR(0x3A, ld_a_dhld());
+        // 0x3B DEC SP
         INSTR(0x3C, inc_a());
         INSTR(0x3D, dec_a());
         INSTR(0x3E, ld_a_d8());
@@ -215,6 +228,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x73, ld_dhl_e());
         INSTR(0x74, ld_dhl_h());
         INSTR(0x75, ld_dhl_l());
+        // 0x76 HALT
         INSTR(0x77, ld_dhl_a());
         INSTR(0x78, ld_a_b());
         INSTR(0x79, ld_a_c());
@@ -238,7 +252,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x8B, LTRACE("ADC A, E"); adc_a_r(e));
         INSTR(0x8C, LTRACE("ADC A, H"); adc_a_r(h));
         INSTR(0x8D, LTRACE("ADC A, L"); adc_a_r(l));
-        INSTR(0x8E, LTRACE("ADC A, (HL)"); adc_a_r(mmu.Read8(hl)));
+        INSTR(0x8E, adc_a_dhl());
         INSTR(0x8F, LTRACE("ADC A, A"); adc_a_r(a));
         INSTR(0x90, LTRACE("SUB B"); sub_r(b));
         INSTR(0x91, LTRACE("SUB C"); sub_r(c));
@@ -254,7 +268,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x9B, LTRACE("SBC E"); sbc_r(e));
         INSTR(0x9C, LTRACE("SBC H"); sbc_r(h));
         INSTR(0x9D, LTRACE("SBC L"); sbc_r(l));
-        INSTR(0x9E, LTRACE("SBC (HL)"); sbc_r(mmu.Read8(hl)));
+        INSTR(0x9E, sbc_dhl());
         INSTR(0x9F, LTRACE("SBC A"); sbc_r(a));
         INSTR(0xA0, LTRACE("AND B"); and_r(b));
         INSTR(0xA1, LTRACE("AND C"); and_r(c));
@@ -280,66 +294,82 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xB5, LTRACE("OR L"); or_r(l));
         INSTR(0xB6, or_dhl());
         INSTR(0xB7, LTRACE("OR A"); or_r(a));
-        INSTR(0xB8, LTRACE("CP R"); cp_r(b));
-        INSTR(0xB9, LTRACE("CP R"); cp_r(c));
-        INSTR(0xBA, LTRACE("CP R"); cp_r(d));
-        INSTR(0xBB, LTRACE("CP R"); cp_r(e));
-        INSTR(0xBC, LTRACE("CP R"); cp_r(h));
-        INSTR(0xBD, LTRACE("CP R"); cp_r(l));
+        INSTR(0xB8, LTRACE("CP B"); cp_r(b));
+        INSTR(0xB9, LTRACE("CP C"); cp_r(c));
+        INSTR(0xBA, LTRACE("CP D"); cp_r(d));
+        INSTR(0xBB, LTRACE("CP E"); cp_r(e));
+        INSTR(0xBC, LTRACE("CP H"); cp_r(h));
+        INSTR(0xBD, LTRACE("CP L"); cp_r(l));
         INSTR(0xBE, cp_dhl());
         INSTR(0xBF, LTRACE("CP A"); cp_r(a));
+        INSTR(0xC0, ret_nz());
         INSTR(0xC1, pop_bc());
         INSTR(0xC2, jp_nz_a16());
         INSTR(0xC3, jp_a16());
         INSTR(0xC4, call_nz_a16());
         INSTR(0xC5, push_bc());
         INSTR(0xC6, add_a_d8());
+        // 0xC7 RST 00
         INSTR(0xC8, ret_z());
         INSTR(0xC9, ret());
+        INSTR(0xCA, jp_z_a16());
+        // INSTR(0xCB) is handled above
+        // 0xCC CALL Z, u16
         INSTR(0xCD, call_a16());
         INSTR(0xCE, adc_a_d8());
+        INSTR(0xCF, rst(0x08));
         INSTR(0xD0, ret_nc());
         INSTR(0xD1, pop_de());
+        // 0xD2 JP NC, u16
+        INSTR(0xD3, ill(0xD3); return false);
+        INSTR(0xD4, call_nc_a16());
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
+        // 0xD7 RST 10
         INSTR(0xD8, ret_c());
+        INSTR(0xD9, reti());
+        // 0xDA JP C, u16
+        INSTR(0xDB, ill(0xDB); return false);
+        // 0xDC CALL C, u16
+        INSTR(0xDD, ill(0xDD); return false);
         INSTR(0xDE, sbc_a_d8());
+        // 0xDF RST 18
         INSTR(0xE0, ldh_da8_a());
         INSTR(0xE1, pop_hl());
         INSTR(0xE2, ld_dc_a());
+        INSTR(0xE3, ill(0xE3); return false);
+        INSTR(0xE4, ill(0xE4); return false);
         INSTR(0xE5, push_hl());
         INSTR(0xE6, and_d8());
+        // 0xE7 RST 20
+        // 0xE8 ADD SP, i8
         INSTR(0xE9, jp_hl());
         INSTR(0xEA, ld_da16_a());
+        INSTR(0xEB, ill(0xEB); return false);
+        INSTR(0xEC, ill(0xEC); return false);
+        INSTR(0xED, ill(0xED); return false);
         INSTR(0xEE, xor_d8());
+        INSTR(0xEF, rst(0x28));
         INSTR(0xF0, ldh_a_da8());
         INSTR(0xF1, pop_af());
+        // 0xF2 LD A, (FF00+C)
         INSTR(0xF3, di());
+        INSTR(0xF4, ill(0xF4); return false);
         INSTR(0xF5, push_af());
         INSTR(0xF6, or_d8());
+        // 0xF7 RST 30
+        INSTR(0xF8, ld_hl_sp_d8());
         INSTR(0xF9, ld_sp_hl());
         INSTR(0xFA, ld_a_da16());
         INSTR(0xFB, ei());
+        INSTR(0xFC, ill(0xFC); return false);
+        INSTR(0xFD, ill(0xFD); return false);
         INSTR(0xFE, cp_d8());
+        // 0xFF RST 38
 
-        case 0xD3:
-        case 0xDB:
-        case 0xDD:
-        case 0xE3:
-        case 0xE4:
-        case 0xEB:
-        case 0xEC:
-        case 0xED:
-        case 0xF4:
-        case 0xFC:
-        case 0xFD:
-            DumpRegisters();
-            mmu.DumpMemoryToFile();
-            LFATAL("illegal opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
-            return false;
         default:
             DumpRegisters();
-            mmu.DumpMemoryToFile();
+            // mmu.DumpMemoryToFile();
             LFATAL("unimplemented opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
             return false;
     }
@@ -617,11 +647,51 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
 }
 
 void SM83::HandleInterrupts() {
-    if (!interrupts_enabled) {
+    u8 interrupt_flags = mmu.Read8(0xFF0F);
+    u8 interrupt_enable = mmu.Read8(0xFFFF);
+    u8 potential_interrupts = interrupt_flags & interrupt_enable;
+    // LFATAL("if=%02X ie=%02X pi=%02X", interrupt_flags, interrupt_enable, potential_interrupts);
+    if (!potential_interrupts) {
         return;
     }
 
-    LERROR("TODO: interrupts!");
+    // there are 5 different kinds of interrupts
+    for (u8 i = 0; i < 5; i++) {
+        u8 flag = 1 << i;
+        if (!(potential_interrupts & flag)) {
+            continue;
+        }
+
+        if (!ime) {
+            // TODO: check if halted and if so, unhalt
+            return;
+        }
+
+        mmu.Write8(0xFF0F, interrupt_flags & ~flag);
+        ime = false;
+
+        uint16_t address = 0x0000;
+
+#define ADDR(bit, addr) if (i == bit) address = static_cast<u16>(InterruptAddresses::addr)
+        ADDR(0, VBlank);
+        ADDR(1, LCDCStatus);
+        ADDR(2, Timer);
+        ADDR(3, Serial);
+        ADDR(4, Joypad);
+#undef ADDR
+
+        StackPush(&pc);
+        pc = address;
+
+        // TODO: unhalt
+
+        // TODO: remove this line
+        LFATAL("jumping to 0x%04X", address);
+    }
+}
+
+void SM83::AdvanceCycles(u8 cycles) {
+    cycles_to_advance += cycles;
 }
 
 void SM83::DumpRegisters() {
@@ -634,6 +704,12 @@ void SM83::DumpRegisters() {
                                     (HasFlag(Flags::HalfCarry)) ? "H" : " ",
                                     (HasFlag(Flags::Carry)) ? "C" : " ");
     }
+}
+
+void SM83::ill(const u8 opcode) {
+    DumpRegisters();
+    mmu.DumpMemoryToFile();
+    LFATAL("illegal opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
 }
 
 void SM83::adc_a_d8() {
@@ -650,6 +726,14 @@ void SM83::adc_a_d8() {
     SetCarryFlag(full > 0xFF);
 
     a = result;
+
+    AdvanceCycles(8);
+}
+
+void SM83::adc_a_dhl() {
+    LTRACE("ADC A, (HL)");
+    AdvanceCycles(4);
+    adc_a_r(mmu.Read8(hl));
 }
 
 void SM83::adc_a_r(u8 reg) {
@@ -663,11 +747,13 @@ void SM83::adc_a_r(u8 reg) {
     SetCarryFlag(full > 0xFF);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::add_a_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("ADD A, (0x%02X)", value);
+    LTRACE("ADD A, 0x%02X", value);
     u16 result = a + value;
 
     SetZeroFlag(static_cast<u8>(result) == 0);
@@ -676,6 +762,8 @@ void SM83::add_a_d8() {
     SetCarryFlag(result > 0xFF);
 
     a = static_cast<u8>(result);
+
+    AdvanceCycles(8);
 }
 
 void SM83::add_a_dhl() {
@@ -689,6 +777,8 @@ void SM83::add_a_dhl() {
     SetCarryFlag(result > 0xFF);
 
     a = static_cast<u8>(result);
+
+    AdvanceCycles(8);
 }
 
 void SM83::add_a_r(u8 reg) {
@@ -700,6 +790,8 @@ void SM83::add_a_r(u8 reg) {
     SetCarryFlag(result > 0xFF);
 
     a = static_cast<u8>(result);
+
+    AdvanceCycles(4);
 }
 
 void SM83::add_hl_bc() {
@@ -711,6 +803,8 @@ void SM83::add_hl_bc() {
     SetCarryFlag((result & 0x10000) != 0);
 
     hl = static_cast<u16>(result);
+
+    AdvanceCycles(8);
 }
 
 void SM83::add_hl_de() {
@@ -722,6 +816,8 @@ void SM83::add_hl_de() {
     SetCarryFlag((result & 0x10000) != 0);
 
     hl = static_cast<u16>(result);
+
+    AdvanceCycles(8);
 }
 
 void SM83::add_hl_hl() {
@@ -733,6 +829,8 @@ void SM83::add_hl_hl() {
     SetCarryFlag((result & 0x10000) != 0);
 
     hl = static_cast<u16>(result);
+
+    AdvanceCycles(8);
 }
 
 void SM83::and_d8() {
@@ -745,6 +843,8 @@ void SM83::and_d8() {
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
     SetCarryFlag(false);
+
+    AdvanceCycles(8);
 }
 
 void SM83::and_r(u8 reg) {
@@ -754,12 +854,16 @@ void SM83::and_r(u8 reg) {
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
     SetCarryFlag(false);
+
+    AdvanceCycles(4);
 }
 
 void SM83::bit(u8 bit, u8* reg) {
     SetZeroFlag(!(*reg & (1 << bit)));
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
+
+    AdvanceCycles(8);
 }
 
 void SM83::bit_dhl(u8 bit) {
@@ -769,6 +873,8 @@ void SM83::bit_dhl(u8 bit) {
     SetZeroFlag(!(value & (1 << bit)));
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
+
+    AdvanceCycles(12);
 }
 
 void SM83::call_a16() {
@@ -777,6 +883,21 @@ void SM83::call_a16() {
 
     StackPush(&pc);
     pc = address;
+
+    AdvanceCycles(24);
+}
+
+void SM83::call_nc_a16() {
+    u16 address = GetWordFromPC();
+    LTRACE("CALL NC, 0x%04X", address);
+
+    if (!HasFlag(Flags::Carry)) {
+        StackPush(&pc);
+        pc = address;
+        AdvanceCycles(24);
+    } else {
+        AdvanceCycles(12);
+    }
 }
 
 void SM83::call_nz_a16() {
@@ -786,6 +907,9 @@ void SM83::call_nz_a16() {
     if (!HasFlag(Flags::Zero)) {
         StackPush(&pc);
         pc = address;
+        AdvanceCycles(24);
+    } else {
+        AdvanceCycles(12);
     }
 }
 
@@ -795,6 +919,8 @@ void SM83::ccf() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(!HasFlag(Flags::Carry));
+
+    AdvanceCycles(4);
 }
 
 void SM83::cp_d8() {
@@ -805,6 +931,8 @@ void SM83::cp_d8() {
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0xF) < (value & 0xF));
     SetCarryFlag(a < value);
+
+    AdvanceCycles(8);
 }
 
 void SM83::cp_dhl() {
@@ -816,6 +944,8 @@ void SM83::cp_dhl() {
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0xF) < (value & 0xF));
     SetCarryFlag(a < value);
+
+    AdvanceCycles(8);
 }
 
 void SM83::cp_r(u8 reg) {
@@ -823,6 +953,8 @@ void SM83::cp_r(u8 reg) {
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0xF) < (reg & 0xF));
     SetCarryFlag(a < reg);
+
+    AdvanceCycles(4);
 }
 
 void SM83::cpl() {
@@ -832,6 +964,8 @@ void SM83::cpl() {
 
     SetNegateFlag(true);
     SetHalfCarryFlag(true);
+
+    AdvanceCycles(4);
 }
 
 void SM83::daa() {
@@ -870,6 +1004,8 @@ void SM83::daa() {
     }
 
     a |= result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_a() {
@@ -880,6 +1016,8 @@ void SM83::dec_a() {
     SetZeroFlag(a == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_b() {
@@ -890,11 +1028,15 @@ void SM83::dec_b() {
     SetZeroFlag(b == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((b & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_bc() {
     LTRACE("DEC BC");
     bc--;
+
+    AdvanceCycles(8);
 }
 
 void SM83::dec_c() {
@@ -905,6 +1047,8 @@ void SM83::dec_c() {
     SetZeroFlag(c == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((c & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_d() {
@@ -915,11 +1059,15 @@ void SM83::dec_d() {
     SetZeroFlag(d == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((d & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_de() {
     LTRACE("DEC DE");
     de--;
+
+    AdvanceCycles(8);
 }
 
 void SM83::dec_dhl() {
@@ -932,6 +1080,8 @@ void SM83::dec_dhl() {
     SetZeroFlag(value == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((value & 0x0F) == 0x0F);
+
+    AdvanceCycles(12);
 }
 
 void SM83::dec_e() {
@@ -942,6 +1092,8 @@ void SM83::dec_e() {
     SetZeroFlag(e == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((e & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_h() {
@@ -952,11 +1104,15 @@ void SM83::dec_h() {
     SetZeroFlag(h == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((h & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::dec_hl() {
     LTRACE("DEC HL");
     hl--;
+
+    AdvanceCycles(8);
 }
 
 void SM83::dec_l() {
@@ -967,18 +1123,24 @@ void SM83::dec_l() {
     SetZeroFlag(l == 0);
     SetNegateFlag(true);
     SetHalfCarryFlag((l & 0x0F) == 0x0F);
+
+    AdvanceCycles(4);
 }
 
 void SM83::di() {
     LTRACE("DI");
-    interrupts_enabled = false;
-    LINFO("interrupts have been disabled");
+    ime = false;
+    ime_delay = false;
+    LDEBUG("IME has been disabled");
+
+    AdvanceCycles(4);
 }
 
 void SM83::ei() {
     LTRACE("EI");
-    interrupts_enabled = true;
-    LINFO("interrupts have been enabled");
+    ime_delay = true;
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_a() {
@@ -989,6 +1151,8 @@ void SM83::inc_a() {
     SetZeroFlag(a == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((a & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_b() {
@@ -999,11 +1163,15 @@ void SM83::inc_b() {
     SetZeroFlag(b == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((b & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_bc() {
     LTRACE("INC BC");
     bc++;
+
+    AdvanceCycles(8);
 }
 
 void SM83::inc_c() {
@@ -1014,6 +1182,8 @@ void SM83::inc_c() {
     SetZeroFlag(c == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((c & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_d() {
@@ -1024,11 +1194,15 @@ void SM83::inc_d() {
     SetZeroFlag(d == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((d & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_de() {
     LTRACE("INC DE");
     de++;
+
+    AdvanceCycles(8);
 }
 
 void SM83::inc_dhl() {
@@ -1041,6 +1215,8 @@ void SM83::inc_dhl() {
     SetZeroFlag(value == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((value & 0x0F) == 0x00);
+
+    AdvanceCycles(12);
 }
 
 void SM83::inc_e() {
@@ -1051,6 +1227,8 @@ void SM83::inc_e() {
     SetZeroFlag(e == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((e & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_h() {
@@ -1061,11 +1239,15 @@ void SM83::inc_h() {
     SetZeroFlag(h == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((h & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_hl() {
     LTRACE("INC HL");
     hl++;
+
+    AdvanceCycles(8);
 }
 
 void SM83::inc_l() {
@@ -1076,6 +1258,8 @@ void SM83::inc_l() {
     SetZeroFlag(l == 0);
     SetNegateFlag(false);
     SetHalfCarryFlag((l & 0x0F) == 0x00);
+
+    AdvanceCycles(4);
 }
 
 void SM83::inc_sp() {
@@ -1088,11 +1272,15 @@ void SM83::jp_a16() {
     LTRACE("JP 0x%04X", addr);
 
     pc = addr;
+
+    AdvanceCycles(16);
 }
 
 void SM83::jp_hl() {
     LTRACE("JP HL");
     pc = hl;
+
+    AdvanceCycles(4);
 }
 
 void SM83::jp_nz_a16() {
@@ -1101,6 +1289,21 @@ void SM83::jp_nz_a16() {
 
     if (!HasFlag(Flags::Zero)) {
         pc = addr;
+        AdvanceCycles(16);
+    } else {
+        AdvanceCycles(12);
+    }
+}
+
+void SM83::jp_z_a16() {
+    u16 addr = GetWordFromPC();
+    LTRACE("JP Z, 0x%04X", addr);
+
+    if (HasFlag(Flags::Zero)) {
+        pc = addr;
+        AdvanceCycles(16);
+    } else {
+        AdvanceCycles(12);
     }
 }
 
@@ -1110,6 +1313,8 @@ void SM83::jr_r8() {
     LTRACE("JR 0x%04X", new_pc);
 
     pc = new_pc;
+
+    AdvanceCycles(12);
 }
 
 void SM83::jr_c_r8() {
@@ -1119,6 +1324,9 @@ void SM83::jr_c_r8() {
 
     if (HasFlag(Flags::Carry)) {
         pc = potential_pc;
+        AdvanceCycles(12);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
@@ -1129,6 +1337,9 @@ void SM83::jr_nc_r8() {
 
     if (!HasFlag(Flags::Carry)) {
         pc = potential_pc;
+        AdvanceCycles(12);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
@@ -1139,6 +1350,9 @@ void SM83::jr_nz_r8() {
 
     if (!HasFlag(Flags::Zero)) {
         pc = potential_pc;
+        AdvanceCycles(12);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
@@ -1149,27 +1363,38 @@ void SM83::jr_z_r8() {
 
     if (HasFlag(Flags::Zero)) {
         pc = potential_pc;
+        AdvanceCycles(12);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
 void SM83::ld_d_a() {
     LTRACE("LD D, A");
     d = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_b() {
     LTRACE("LD D, B");
     d = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_c() {
     LTRACE("LD D, C");
     d = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_d() {
     LTRACE("LD D, D");
     d = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_d8() {
@@ -1177,26 +1402,36 @@ void SM83::ld_d_d8() {
     LTRACE("LD D, 0x%02X", value);
 
     d = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_d_dhl() {
     LTRACE("LD D, (HL)");
     d = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_d_e() {
     LTRACE("LD D, E");
     d = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_h() {
     LTRACE("LD D, H");
     d = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_d_l() {
     LTRACE("LD D, L");
     d = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_da16_a() {
@@ -1204,6 +1439,8 @@ void SM83::ld_da16_a() {
     LTRACE("LD (0x%04X), A", address);
 
     mmu.Write8(address, a);
+
+    AdvanceCycles(16);
 }
 
 void SM83::ld_da16_sp() {
@@ -1211,6 +1448,8 @@ void SM83::ld_da16_sp() {
     LTRACE("LD (0x%04X), SP", address);
 
     mmu.Write16(address, sp);
+
+    AdvanceCycles(20);
 }
 
 void SM83::ld_dbc_a() {
@@ -1224,12 +1463,16 @@ void SM83::ld_dc_a() {
     u16 address = 0xFF00 + c;
 
     mmu.Write8(address, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dde_a() {
     LTRACE("LD (DE), A");
     
     mmu.Write8(de, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_de_d16() {
@@ -1237,30 +1480,40 @@ void SM83::ld_de_d16() {
     LTRACE("LD DE, 0x%04X", value);
 
     de = value;
+
+    AdvanceCycles(12);
 }
 
 void SM83::ld_dhl_a() {
     LTRACE("LD (HL), A");
 
     mmu.Write8(hl, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_b() {
     LTRACE("LD (HL), B");
 
     mmu.Write8(hl, b);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_c() {
     LTRACE("LD (HL), C");
 
     mmu.Write8(hl, c);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_d() {
     LTRACE("LD (HL), D");
 
     mmu.Write8(hl, d);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_d8() {
@@ -1268,36 +1521,48 @@ void SM83::ld_dhl_d8() {
     LTRACE("LD (HL), 0x%02X", value);
 
     mmu.Write8(hl, value);
+
+    AdvanceCycles(12);
 }
 
 void SM83::ld_dhl_e() {
     LTRACE("LD (HL), E");
     
     mmu.Write8(hl, e);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_h() {
     LTRACE("LD (HL), H");
     
     mmu.Write8(hl, h);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhl_l() {
     LTRACE("LD (HL), L");
     
     mmu.Write8(hl, l);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhld_a() {
     LTRACE("LD (HL-), A");
         
     mmu.Write8(hl--, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dhli_a() {
     LTRACE("LD (HL+), A");
 
     mmu.Write8(hl++, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_da16() {
@@ -1305,26 +1570,36 @@ void SM83::ld_a_da16() {
     LTRACE("LD A, (0x%04X)", addr);
 
     a = mmu.Read8(addr);
+
+    AdvanceCycles(16);
 }
 
 void SM83::ld_a_a() {
     LTRACE("LD A, A");
     a = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_b() {
     LTRACE("LD A, B");
     a = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_c() {
     LTRACE("LD A, C");
     a = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_d() {
     LTRACE("LD A, D");
     a = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_d8() {
@@ -1332,21 +1607,29 @@ void SM83::ld_a_d8() {
     LTRACE("LD A, 0x%02X", value);
 
     a = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_dbc() {
     LTRACE("LD A, (BC)");
     a = mmu.Read8(bc);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_dde() {
     LTRACE("LD A, (DE)");
     a = mmu.Read8(de);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_dhl() {
     LTRACE("LD A, (HL)");
     a = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_dhld() {
@@ -1357,68 +1640,94 @@ void SM83::ld_a_dhld() {
 void SM83::ld_a_dhli() {
     LTRACE("LD A, (HL+)");
     a = mmu.Read8(hl++);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_e() {
     LTRACE("LD A, E");
     a = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_h() {
     LTRACE("LD A, H");
     a = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_a_l() {
     LTRACE("LD A, L");
     a = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_a() {
     LTRACE("LD B, A");
     b = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_b() {
     LTRACE("LD B, B");
     b = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_c() {
     LTRACE("LD B, C");
     b = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_d() {
     LTRACE("LD B, D");
     b = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD B, $%02X", value);
+    LTRACE("LD B, 0x%02X", value);
 
     b = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_b_dhl() {
     LTRACE("LD B, (HL)");
     b = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_b_e() {
     LTRACE("LD B, E");
     b = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_h() {
     LTRACE("LD B, H");
     b = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_b_l() {
     LTRACE("LD B, L");
     b = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_bc_d16() {
@@ -1426,26 +1735,36 @@ void SM83::ld_bc_d16() {
     LTRACE("LD BC, 0x%04X", value);
 
     bc = value;
+
+    AdvanceCycles(12);
 }
 
 void SM83::ld_c_a() {
     LTRACE("LD C, A");
     c = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_b() {
     LTRACE("LD C, B");
     c = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_c() {
     LTRACE("LD C, C");
     c = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_d() {
     LTRACE("LD C, D");
     c = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_d8() {
@@ -1453,46 +1772,64 @@ void SM83::ld_c_d8() {
     LTRACE("LD C, 0x%02X", value);
 
     c = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_c_e() {
     LTRACE("LD C, E");
     c = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_h() {
     LTRACE("LD C, H");
     c = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_l() {
     LTRACE("LD C, L");
     c = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_c_dhl() {
     LTRACE("LD C, (HL)");
     c = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_e_a() {
     LTRACE("LD E, A");
     e = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_b() {
     LTRACE("LD E, B");
     e = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_c() {
     LTRACE("LD E, C");
     e = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_d() {
     LTRACE("LD E, D");
     e = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_d8() {
@@ -1500,46 +1837,64 @@ void SM83::ld_e_d8() {
     LTRACE("LD E, 0x%02X", value);
 
     e = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_e_dhl() {
     LTRACE("LD E, (HL)");
     e = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_e_e() {
     LTRACE("LD E, E");
     e = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_h() {
     LTRACE("LD E, H");
     e = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_e_l() {
     LTRACE("LD E, L");
     e = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_a() {
     LTRACE("LD H, A");
     h = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_b() {
     LTRACE("LD H, B");
     h = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_c() {
     LTRACE("LD H, C");
     h = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_d() {
     LTRACE("LD H, D");
     h = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_d8() {
@@ -1547,6 +1902,8 @@ void SM83::ld_h_d8() {
     LTRACE("LD H, 0x%02X", value);
 
     h = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_h_dhl() {
@@ -1557,16 +1914,22 @@ void SM83::ld_h_dhl() {
 void SM83::ld_h_e() {
     LTRACE("LD H, E");
     h = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_h() {
     LTRACE("LD H, H");
     h = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_h_l() {
     LTRACE("LD H, L");
     h = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_hl_d16() {
@@ -1574,26 +1937,36 @@ void SM83::ld_hl_d16() {
     LTRACE("LD HL, 0x%04X", value);
 
     hl = value;
+
+    AdvanceCycles(12);
 }
 
 void SM83::ld_l_a() {
     LTRACE("LD L, A");
     l = a;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_b() {
     LTRACE("LD L, B");
     l = b;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_c() {
     LTRACE("LD L, C");
     l = c;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_d() {
     LTRACE("LD L, D");
     l = d;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_d8() {
@@ -1601,26 +1974,36 @@ void SM83::ld_l_d8() {
     LTRACE("LD L, 0x%02X", value);
 
     l = value;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_l_dhl() {
     LTRACE("LD L, (HL)");
     l = mmu.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_l_e() {
     LTRACE("LD L, E");
     l = e;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_h() {
     LTRACE("LD L, H");
     l = h;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_l_l() {
     LTRACE("LD L, L");
     l = l;
+
+    AdvanceCycles(4);
 }
 
 void SM83::ld_sp_d16() {
@@ -1628,11 +2011,31 @@ void SM83::ld_sp_d16() {
     LTRACE("LD SP, 0x%04X", value);
 
     sp = value;
+
+    AdvanceCycles(12);
+}
+
+void SM83::ld_hl_sp_d8() {
+    s8 value = static_cast<s8>(GetByteFromPC());
+    LTRACE("LD HL, SP+0x%02X", value);
+
+    u32 result = sp + value;
+
+    SetZeroFlag(false);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(((sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10);
+    SetCarryFlag(((sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100);
+
+    hl = static_cast<u16>(result);
+
+    AdvanceCycles(12);
 }
 
 void SM83::ld_sp_hl() {
     LTRACE("LD SP, HL");
     sp = hl;
+
+    AdvanceCycles(8);
 }
 
 void SM83::ldh_a_da8() {
@@ -1641,6 +2044,8 @@ void SM83::ldh_a_da8() {
     LTRACE("LDH A, (0xFF00+0x%02X)", offset);
 
     a = mmu.Read8(address);
+
+    AdvanceCycles(12);
 }
 
 void SM83::ldh_da8_a() {
@@ -1649,10 +2054,14 @@ void SM83::ldh_da8_a() {
     LTRACE("LDH (0xFF00+0x%02X), A", offset);
 
     mmu.Write8(address, a);
+
+    AdvanceCycles(12);
 }
 
 void SM83::nop() {
     LTRACE("NOP");
+
+    AdvanceCycles(4);
 }
 
 void SM83::or_d8() {
@@ -1665,6 +2074,8 @@ void SM83::or_d8() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+
+    AdvanceCycles(8);
 }
 
 void SM83::or_dhl() {
@@ -1676,6 +2087,8 @@ void SM83::or_dhl() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+
+    AdvanceCycles(8);
 }
 
 void SM83::or_r(u8 reg) {
@@ -1685,6 +2098,8 @@ void SM83::or_r(u8 reg) {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+
+    AdvanceCycles(4);
 }
 
 void SM83::pop_af() {
@@ -1693,45 +2108,63 @@ void SM83::pop_af() {
 
     // TODO: find an actually readable way to do this
     f &= 0xF0;
+
+    AdvanceCycles(12);
 }
 
 void SM83::pop_bc() {
     LTRACE("POP BC");
     StackPop(&bc);
+
+    AdvanceCycles(12);
 }
 
 void SM83::pop_de() {
     LTRACE("POP DE");
     StackPop(&de);
+
+    AdvanceCycles(12);
 }
 
 void SM83::pop_hl() {
     LTRACE("POP HL");
     StackPop(&hl);
+
+    AdvanceCycles(12);
 }
 
 void SM83::push_af() {
     LTRACE("PUSH AF");
     StackPush(&af);
+
+    AdvanceCycles(16);
 }
 
 void SM83::push_bc() {
     LTRACE("PUSH BC");
     StackPush(&bc);
+
+    AdvanceCycles(16);
 }
 
 void SM83::push_de() {
     LTRACE("PUSH DE");
     StackPush(&de);
+
+    AdvanceCycles(16);
 }
 
 void SM83::push_hl() {
     LTRACE("PUSH HL");
     StackPush(&hl);
+
+    AdvanceCycles(16);
 }
 
 void SM83::res(u8 bit, u8* reg) {
     *reg &= ~(1 << bit);
+
+    AdvanceCycles(8);
 }
 
 void SM83::res_dhl(u8 bit) {
@@ -1740,11 +2173,15 @@ void SM83::res_dhl(u8 bit) {
 
     value &= ~(1 << bit);
     mmu.Write8(hl, value);
+
+    AdvanceCycles(16);
 }
 
 void SM83::ret() {
     LTRACE("RET");
     StackPop(&pc);
+
+    AdvanceCycles(16);
 }
 
 void SM83::ret_c() {
@@ -1752,6 +2189,9 @@ void SM83::ret_c() {
 
     if (HasFlag(Flags::Carry)) {
         StackPop(&pc);
+        AdvanceCycles(20);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
@@ -1760,6 +2200,9 @@ void SM83::ret_nc() {
     
     if (!HasFlag(Flags::Carry)) {
         StackPop(&pc);
+        AdvanceCycles(20);
+    } else {
+        AdvanceCycles(8);
     }
 }
 
@@ -1768,7 +2211,30 @@ void SM83::ret_z() {
 
     if (HasFlag(Flags::Zero)) {
         StackPop(&pc);
+        AdvanceCycles(20);
+    } else {
+        AdvanceCycles(8);
     }
+}
+
+void SM83::ret_nz() {
+    LTRACE("RET NZ");
+
+    if (!HasFlag(Flags::Zero)) {
+        StackPop(&pc);
+        AdvanceCycles(20);
+    } else {
+        AdvanceCycles(8);
+    }
+}
+
+void SM83::reti() {
+    LTRACE("RETI");
+
+    StackPop(&pc);
+    ime_delay = true;
+
+    AdvanceCycles(16);
 }
 
 void SM83::rl_dhl() {
@@ -1804,6 +2270,8 @@ void SM83::rl_r(u8* reg) {
     SetHalfCarryFlag(false);
 
     *reg = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::rla() {
@@ -1822,6 +2290,8 @@ void SM83::rla() {
     SetHalfCarryFlag(false);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::rlc_dhl() {
@@ -1849,6 +2319,8 @@ void SM83::rlc_r(u8* reg) {
     SetCarryFlag(should_carry);
 
     *reg = (result | should_carry);
+
+    AdvanceCycles(8);
 }
 
 void SM83::rlca() {
@@ -1862,6 +2334,8 @@ void SM83::rlca() {
     SetCarryFlag(should_carry);
 
     a = (result | should_carry);
+
+    AdvanceCycles(4);
 }
 
 void SM83::rr_dhl() {
@@ -1895,6 +2369,8 @@ void SM83::rr_r(u8* reg) {
     SetHalfCarryFlag(false);
 
     *reg = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::rra() {
@@ -1910,6 +2386,8 @@ void SM83::rra() {
     SetCarryFlag(a & 0x1);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::rrc_dhl() {
@@ -1925,6 +2403,8 @@ void SM83::rrc_dhl() {
     SetCarryFlag(should_carry);
 
     mmu.Write8(hl, result);
+
+    AdvanceCycles(16);
 }
 
 void SM83::rrc_r(u8* reg) {
@@ -1937,6 +2417,8 @@ void SM83::rrc_r(u8* reg) {
     SetCarryFlag(should_carry);
 
     *reg = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::rrca() {
@@ -1950,6 +2432,8 @@ void SM83::rrca() {
     SetCarryFlag(carry);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::swap_dhl() {
@@ -1967,6 +2451,8 @@ void SM83::swap_dhl() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+
+    AdvanceCycles(16);
 }
 
 void SM83::swap_r(u8* reg) {
@@ -1981,6 +2467,17 @@ void SM83::swap_r(u8* reg) {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(false);
+
+    AdvanceCycles(8);
+}
+
+void SM83::rst(u8 addr) {
+    LTRACE("RST 0x%02X", addr);
+
+    StackPush(&pc);
+    pc = static_cast<u16>(addr);
+
+    AdvanceCycles(16);
 }
 
 void SM83::sbc_a_d8() {
@@ -1997,6 +2494,14 @@ void SM83::sbc_a_d8() {
     SetCarryFlag(full > 0xFF);
 
     a = result;
+
+    AdvanceCycles(8);
+}
+
+void SM83::sbc_dhl() {
+    LTRACE("SBC A, (HL)");
+    AdvanceCycles(4);
+    sbc_r(mmu.Read16(hl));
 }
 
 void SM83::sbc_r(u8 reg) {
@@ -2010,6 +2515,8 @@ void SM83::sbc_r(u8 reg) {
     SetCarryFlag(full > 0xFF);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::scf() {
@@ -2018,6 +2525,8 @@ void SM83::scf() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
     SetCarryFlag(true);
+
+    AdvanceCycles(4);
 }
 
 void SM83::set_dhl(u8 bit) {
@@ -2026,10 +2535,14 @@ void SM83::set_dhl(u8 bit) {
 
     value |= (1 << bit);
     mmu.Write8(hl, value);
+
+    AdvanceCycles(16);
 }
 
 void SM83::set(u8 bit, u8* reg) {
     *reg |= (1 << bit);
+
+    AdvanceCycles(8);
 }
 
 void SM83::sla_dhl() {
@@ -2045,6 +2558,8 @@ void SM83::sla_dhl() {
     SetCarryFlag(should_carry);
 
     mmu.Write8(hl, result);
+
+    AdvanceCycles(16);
 }
 
 void SM83::sla_r(u8* reg) {
@@ -2057,6 +2572,8 @@ void SM83::sla_r(u8* reg) {
     SetCarryFlag(should_carry);
 
     *reg = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::sra_dhl() {
@@ -2072,6 +2589,8 @@ void SM83::sra_dhl() {
     SetCarryFlag(value & 0x1);
 
     mmu.Write8(hl, result | bit7);
+
+    AdvanceCycles(16);
 }
 
 void SM83::sra_r(u8* reg) {
@@ -2084,6 +2603,8 @@ void SM83::sra_r(u8* reg) {
     SetCarryFlag(*reg & 0x1);
 
     *reg = (result | bit7);
+
+    AdvanceCycles(8);
 }
 
 void SM83::srl_dhl() {
@@ -2109,6 +2630,8 @@ void SM83::srl_r(u8* reg) {
     SetCarryFlag(*reg & 0x1);
 
     *reg = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::sub_r(u8 reg) {
@@ -2120,6 +2643,8 @@ void SM83::sub_r(u8 reg) {
     SetCarryFlag(a < reg);
 
     a = result;
+
+    AdvanceCycles(4);
 }
 
 void SM83::sub_d8() {
@@ -2134,6 +2659,8 @@ void SM83::sub_d8() {
     SetCarryFlag(a < value);
 
     a = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::xor_d8() {
@@ -2148,6 +2675,8 @@ void SM83::xor_d8() {
     SetCarryFlag(false);
 
     a = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::xor_dhl() {
@@ -2161,6 +2690,8 @@ void SM83::xor_dhl() {
     SetCarryFlag(false);
 
     a = result;
+
+    AdvanceCycles(8);
 }
 
 void SM83::xor_r(u8 reg) {
@@ -2172,4 +2703,6 @@ void SM83::xor_r(u8 reg) {
     SetCarryFlag(false);
 
     a = result;
+
+    AdvanceCycles(4);
 }

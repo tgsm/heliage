@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mmu.h"
+#include "ppu.h"
 #include "sm83.h"
 
 class GB {
@@ -10,5 +11,8 @@ public:
     void Run();
 private:
     MMU mmu;
+    PPU ppu;
     SM83 sm83;
+
+    u64 cycles;
 };

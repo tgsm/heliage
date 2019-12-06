@@ -13,18 +13,18 @@ public:
         Carry = 1 << 4,
     };
 
-    enum class Interrupts : u8 {
-        VBlank = 0x40,
-        LCDCStatus = 0x48,
-        Timer = 0x50,
-        Serial = 0x58,
-        Joypad = 0x60,
+    enum class InterruptAddresses : u16 {
+        VBlank = 0x0040,
+        LCDCStatus = 0x0048,
+        Timer = 0x0050,
+        Serial = 0x0058,
+        Joypad = 0x0060,
     };
-    
+
     SM83(MMU& mmu);
 
     void Reset();
-    void Tick();
+    u8 Tick();
 
     u8 GetByteFromPC();
     u16 GetWordFromPC();
@@ -42,6 +42,8 @@ public:
     bool ExecuteOpcode(const u8 opcode, u16 pc_at_opcode);
     bool ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode);
     void HandleInterrupts();
+
+    void AdvanceCycles(u8 cycles);
 
     void DumpRegisters();
 private:
@@ -72,11 +74,18 @@ private:
     u16 pc;
     u16 pc_at_opcode; // used for debugging
 
-    bool interrupts_enabled;
+    u8 cycles_to_advance;
+
+    bool ime;
+    bool ime_delay; // EI enables interrupts one instruction after
 
     MMU& mmu;
 
+    // illegal instruction
+    void ill(const u8 opcode);
+
     void adc_a_d8();
+    void adc_a_dhl();
     void adc_a_r(u8 reg);
 
     void add_a_d8();
@@ -93,6 +102,7 @@ private:
     void bit_dhl(u8 bit);
 
     void call_a16();
+    void call_nc_a16();
     void call_nz_a16();
 
     void ccf();
@@ -137,6 +147,7 @@ private:
     void jp_a16();
     void jp_hl();
     void jp_nz_a16();
+    void jp_z_a16();
 
     void jr_r8();
     void jr_c_r8();
@@ -221,6 +232,7 @@ private:
     void ld_h_h();
     void ld_h_l();
     void ld_hl_d16();
+    void ld_hl_sp_d8();
     void ld_l_a();
     void ld_l_b();
     void ld_l_c();
@@ -258,6 +270,9 @@ private:
     void ret_c();
     void ret_nc();
     void ret_z();
+    void ret_nz();
+
+    void reti();
 
     void rl_dhl();
     void rl_r(u8* reg);
@@ -279,7 +294,10 @@ private:
 
     void rrca();
 
+    void rst(u8 addr);
+
     void sbc_a_d8();
+    void sbc_dhl();
     void sbc_r(u8 reg);
 
     void scf();

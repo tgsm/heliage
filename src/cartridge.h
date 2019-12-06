@@ -9,6 +9,7 @@ public:
     Cartridge(const std::string filename);
 
     std::string GetGameTitle(std::vector<char> rom);
+    const char* GetMBCType(u8 value);
 
     u8 Read8(u16 addr);
 private:
