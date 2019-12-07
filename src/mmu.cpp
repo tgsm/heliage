@@ -84,6 +84,11 @@ void MMU::Write8(u16 addr, u8 value) {
     if (addr >= 0xC000 && addr < 0xE000) {
         LDEBUG("writing 0x%02X to 0x%04X (WRAM)", value, addr);
         memory[addr] = value;
+
+        if (addr < 0xDE00) {
+            memory[addr + 0x2000] = value;
+        }
+
         return;
     }
 
