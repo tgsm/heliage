@@ -8,7 +8,6 @@ set(SOURCES
     src/bus.cpp
     src/cartridge.cpp
     src/gb.cpp
-    src/logging.cpp
     src/main.cpp
     src/ppu.cpp
     src/sm83.cpp
