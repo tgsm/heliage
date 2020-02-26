@@ -2232,7 +2232,7 @@ void SM83::reti() {
     LTRACE("RETI");
 
     StackPop(&pc);
-    ime_delay = true;
+    ime = true;
 
     AdvanceCycles(16);
 }
