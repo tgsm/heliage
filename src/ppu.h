@@ -2,18 +2,18 @@
 
 #include "types.h"
 
-class MMU;
+class Bus;
 
 class PPU {
 public:
-    PPU(MMU& mmu);
+    PPU(Bus& bus);
 
     void Tick(u8 cycles);
     void DrawBackground();
 
     u8 GetLY();
 private:
-    MMU& mmu;
+    Bus& bus;
     u64 vcycles;
     u8 ly;
 };

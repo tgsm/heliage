@@ -1,14 +1,14 @@
 #include <cstdio>
 #include "dmgboot.h"
 #include "logging.h"
-#include "mmu.h"
+#include "bus.h"
 
-MMU::MMU(Cartridge& cartridge, PPU& ppu)
+Bus::Bus(Cartridge& cartridge, PPU& ppu)
     : cartridge(cartridge), ppu(ppu) {
     memory = std::array<u8, 0x10000>();
 }
 
-u8 MMU::Read8(u16 addr) {
+u8 Bus::Read8(u16 addr) {
     if (addr <= 0x7FFF) {
         if (addr < 0x0100 && IsBootROMActive()) {
             return dmgboot[addr];
@@ -67,7 +67,7 @@ u8 MMU::Read8(u16 addr) {
     return 0xFF;
 }
 
-void MMU::Write8(u16 addr, u8 value) {
+void Bus::Write8(u16 addr, u8 value) {
     // VRAM
     if (addr >= 0x8000 && addr < 0xA000) {
         LDEBUG("writing 0x%02X to 0x%04X (VRAM)", value, addr);
@@ -132,12 +132,12 @@ void MMU::Write8(u16 addr, u8 value) {
     return;
 }
 
-u16 MMU::Read16(u16 addr) {
+u16 Bus::Read16(u16 addr) {
     LERROR("unrecognized read16 from 0x%04X", addr);
     return 0xFFFF;
 }
 
-void MMU::Write16(u16 addr, u16 value) {
+void Bus::Write16(u16 addr, u16 value) {
     u8 high = static_cast<u8>((value >> 4) & 0xFF);
     u8 low = static_cast<u8>(value & 0xFF);
 
@@ -145,7 +145,7 @@ void MMU::Write16(u16 addr, u16 value) {
     memory[addr + 1] = high;
 }
 
-u8 MMU::ReadIO(u16 addr) {
+u8 Bus::ReadIO(u16 addr) {
     switch (addr) {
         case 0xFF00:
             LDEBUG("reading 0x%02X from 0xFF00 (Joypad)", 0xFF);
@@ -170,7 +170,7 @@ u8 MMU::ReadIO(u16 addr) {
     }
 }
 
-void MMU::WriteIO(u16 addr, u8 value) {
+void Bus::WriteIO(u16 addr, u8 value) {
     switch (addr) {
         case 0xFF01:
             // used by blargg tests
@@ -206,12 +206,12 @@ void MMU::WriteIO(u16 addr, u8 value) {
     }
 }
 
-bool MMU::IsBootROMActive() {
+bool Bus::IsBootROMActive() {
     // boot ROM sets 0xFF50 to 1 at the end
     return Read8(0xFF50) != 0x1;
 }
 
-void MMU::DumpMemoryToFile() {
+void Bus::DumpMemoryToFile() {
     FILE* file = fopen("memdump.log", "w");
 
     for (u32 i = 0x0000; i < 0x10000; i += 0x10) {

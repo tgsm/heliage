@@ -1,10 +1,10 @@
 #include <cmath>
+#include "bus.h"
 #include "logging.h"
-#include "mmu.h"
 #include "ppu.h"
 
-PPU::PPU(MMU& mmu)
-    : mmu(mmu) {
+PPU::PPU(Bus& bus)
+    : bus(bus) {
     vcycles = 0;
     ly = 0x00;
 }
@@ -16,7 +16,7 @@ void PPU::Tick(u8 cycles) {
     vcycles += cycles;
 
     ly = floor(vcycles / 456);
-    mmu.Write8(0xFF44, ly);
+    bus.Write8(0xFF44, ly);
 
     if (vcycles >= 70220) {
         LTRACE("redraw!");
@@ -26,8 +26,8 @@ void PPU::Tick(u8 cycles) {
 
 void PPU::DrawBackground() {
     for (u16 i = 0x8000; i < 0xA000; i += 2) {
-        u8 line1 = mmu.Read8(i);
-        u8 line2 = mmu.Read8(i + 1);
+        u8 line1 = bus.Read8(i);
+        u8 line2 = bus.Read8(i + 1);
         for (u8 bit = 7; bit > 0; bit--) {
 
         }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmu.h"
+#include "bus.h"
 #include "ppu.h"
 #include "sm83.h"
 
@@ -10,7 +10,7 @@ public:
 
     void Run();
 private:
-    MMU mmu;
+    Bus bus;
     PPU ppu;
     SM83 sm83;
 

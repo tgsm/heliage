@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmu.h"
+#include "bus.h"
 #include "types.h"
 
 class SM83 {
@@ -21,7 +21,7 @@ public:
         Joypad = 0x0060,
     };
 
-    SM83(MMU& mmu);
+    SM83(Bus& bus);
 
     void Reset();
     u8 Tick();
@@ -79,7 +79,7 @@ private:
     bool ime;
     bool ime_delay; // EI enables interrupts one instruction after
 
-    MMU& mmu;
+    Bus& bus;
 
     // illegal instruction
     void ill(const u8 opcode);

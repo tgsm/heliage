@@ -5,20 +5,20 @@ project(${PROJECT})
 set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCES
+    src/bus.cpp
     src/cartridge.cpp
     src/gb.cpp
     src/logging.cpp
     src/main.cpp
-    src/mmu.cpp
     src/ppu.cpp
     src/sm83.cpp
 )
 
 set(HEADERS
+    src/bus.h
     src/cartridge.h
     src/gb.h
     src/logging.h
-    src/mmu.h
     src/ppu.h
     src/sm83.h
     src/types.h

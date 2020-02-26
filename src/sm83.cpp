@@ -1,8 +1,8 @@
 #include "sm83.h"
 #include "logging.h"
 
-SM83::SM83(MMU& mmu)
-    : mmu(mmu) {
+SM83::SM83(Bus& bus)
+    : bus(bus) {
     af = 0;
     bc = 0;
     de = 0;
@@ -35,7 +35,7 @@ u8 SM83::Tick() {
 }
 
 u8 SM83::GetByteFromPC() {
-    u8 byte = mmu.Read8(pc++);
+    u8 byte = bus.Read8(pc++);
     return byte;
 }
 
@@ -85,15 +85,15 @@ bool SM83::HasFlag(Flags flag) {
 
 void SM83::StackPush(u16* word_reg) {
     sp--;
-    mmu.Write8(sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
+    bus.Write8(sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
     sp--;
-    mmu.Write8(sp, static_cast<u8>(*word_reg & 0xFF));
+    bus.Write8(sp, static_cast<u8>(*word_reg & 0xFF));
 }
 
 void SM83::StackPop(u16* word_reg) {
-    u8 low = mmu.Read8(sp);
+    u8 low = bus.Read8(sp);
     sp++;
-    u8 high = mmu.Read8(sp);
+    u8 high = bus.Read8(sp);
     sp++;
 
     u16 value = (high << 8) | low;
@@ -260,7 +260,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x93, LTRACE("SUB E"); sub_r(e));
         INSTR(0x94, LTRACE("SUB H"); sub_r(h));
         INSTR(0x95, LTRACE("SUB L"); sub_r(l));
-        INSTR(0x96, LTRACE("SUB (HL)"); sub_r(mmu.Read8(hl)));
+        INSTR(0x96, LTRACE("SUB (HL)"); sub_r(bus.Read8(hl)));
         INSTR(0x97, LTRACE("SUB A"); sub_r(a));
         INSTR(0x98, LTRACE("SBC B"); sbc_r(b));
         INSTR(0x99, LTRACE("SBC C"); sbc_r(c));
@@ -276,7 +276,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xA3, LTRACE("AND E"); and_r(e));
         INSTR(0xA4, LTRACE("AND H"); and_r(h));
         INSTR(0xA5, LTRACE("AND L"); and_r(l));
-        INSTR(0xA6, LTRACE("AND (HL)"); and_r(mmu.Read8(hl)));
+        INSTR(0xA6, LTRACE("AND (HL)"); and_r(bus.Read8(hl)));
         INSTR(0xA7, LTRACE("AND A"); and_r(a));
         INSTR(0xA8, LTRACE("XOR B"); xor_r(b));
         INSTR(0xA9, LTRACE("XOR C"); xor_r(c));
@@ -369,7 +369,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
 
         default:
             DumpRegisters();
-            // mmu.DumpMemoryToFile();
+            // bus.DumpMemoryToFile();
             LFATAL("unimplemented opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
             return false;
     }
@@ -638,7 +638,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
 #undef INSTR
         default:
             DumpRegisters();
-            mmu.DumpMemoryToFile();
+            bus.DumpMemoryToFile();
             LFATAL("unimplemented CB opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
             return false;
     }
@@ -647,8 +647,8 @@ bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
 }
 
 void SM83::HandleInterrupts() {
-    u8 interrupt_flags = mmu.Read8(0xFF0F);
-    u8 interrupt_enable = mmu.Read8(0xFFFF);
+    u8 interrupt_flags = bus.Read8(0xFF0F);
+    u8 interrupt_enable = bus.Read8(0xFFFF);
     u8 potential_interrupts = interrupt_flags & interrupt_enable;
     // LFATAL("if=%02X ie=%02X pi=%02X", interrupt_flags, interrupt_enable, potential_interrupts);
     if (!potential_interrupts) {
@@ -667,7 +667,7 @@ void SM83::HandleInterrupts() {
             return;
         }
 
-        mmu.Write8(0xFF0F, interrupt_flags & ~flag);
+        bus.Write8(0xFF0F, interrupt_flags & ~flag);
         ime = false;
 
         uint16_t address = 0x0000;
@@ -708,7 +708,7 @@ void SM83::DumpRegisters() {
 
 void SM83::ill(const u8 opcode) {
     DumpRegisters();
-    mmu.DumpMemoryToFile();
+    bus.DumpMemoryToFile();
     LFATAL("illegal opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
 }
 
@@ -733,7 +733,7 @@ void SM83::adc_a_d8() {
 void SM83::adc_a_dhl() {
     LTRACE("ADC A, (HL)");
     AdvanceCycles(4);
-    adc_a_r(mmu.Read8(hl));
+    adc_a_r(bus.Read8(hl));
 }
 
 void SM83::adc_a_r(u8 reg) {
@@ -768,7 +768,7 @@ void SM83::add_a_d8() {
 
 void SM83::add_a_dhl() {
     LTRACE("ADD A, (HL)");
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     u16 result = a + value;
 
     SetZeroFlag(static_cast<u8>(result) == 0);
@@ -868,7 +868,7 @@ void SM83::bit(u8 bit, u8* reg) {
 
 void SM83::bit_dhl(u8 bit) {
     LTRACE("BIT %u, (HL)", bit);
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
 
     SetZeroFlag(!(value & (1 << bit)));
     SetNegateFlag(false);
@@ -938,7 +938,7 @@ void SM83::cp_d8() {
 void SM83::cp_dhl() {
     LTRACE("CP (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
 
     SetZeroFlag(a == value);
     SetNegateFlag(true);
@@ -1073,9 +1073,9 @@ void SM83::dec_de() {
 void SM83::dec_dhl() {
     LTRACE("DEC (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     value--;
-    mmu.Write8(hl, value);
+    bus.Write8(hl, value);
 
     SetZeroFlag(value == 0);
     SetNegateFlag(true);
@@ -1208,9 +1208,9 @@ void SM83::inc_de() {
 void SM83::inc_dhl() {
     LTRACE("INC (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     value++;
-    mmu.Write8(hl, value);
+    bus.Write8(hl, value);
 
     SetZeroFlag(value == 0);
     SetNegateFlag(false);
@@ -1408,7 +1408,7 @@ void SM83::ld_d_d8() {
 
 void SM83::ld_d_dhl() {
     LTRACE("LD D, (HL)");
-    d = mmu.Read8(hl);
+    d = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
@@ -1438,7 +1438,7 @@ void SM83::ld_da16_a() {
     u16 address = GetWordFromPC();
     LTRACE("LD (0x%04X), A", address);
 
-    mmu.Write8(address, a);
+    bus.Write8(address, a);
 
     AdvanceCycles(16);
 }
@@ -1447,7 +1447,7 @@ void SM83::ld_da16_sp() {
     u16 address = GetWordFromPC();
     LTRACE("LD (0x%04X), SP", address);
 
-    mmu.Write16(address, sp);
+    bus.Write16(address, sp);
 
     AdvanceCycles(20);
 }
@@ -1455,14 +1455,14 @@ void SM83::ld_da16_sp() {
 void SM83::ld_dbc_a() {
     LTRACE("LD (BC), A");
 
-    mmu.Write8(bc, a);
+    bus.Write8(bc, a);
 }
 
 void SM83::ld_dc_a() {
     LTRACE("LD (0xFF00+C), A");
     u16 address = 0xFF00 + c;
 
-    mmu.Write8(address, a);
+    bus.Write8(address, a);
 
     AdvanceCycles(8);
 }
@@ -1470,7 +1470,7 @@ void SM83::ld_dc_a() {
 void SM83::ld_dde_a() {
     LTRACE("LD (DE), A");
     
-    mmu.Write8(de, a);
+    bus.Write8(de, a);
 
     AdvanceCycles(8);
 }
@@ -1487,7 +1487,7 @@ void SM83::ld_de_d16() {
 void SM83::ld_dhl_a() {
     LTRACE("LD (HL), A");
 
-    mmu.Write8(hl, a);
+    bus.Write8(hl, a);
 
     AdvanceCycles(8);
 }
@@ -1495,7 +1495,7 @@ void SM83::ld_dhl_a() {
 void SM83::ld_dhl_b() {
     LTRACE("LD (HL), B");
 
-    mmu.Write8(hl, b);
+    bus.Write8(hl, b);
 
     AdvanceCycles(8);
 }
@@ -1503,7 +1503,7 @@ void SM83::ld_dhl_b() {
 void SM83::ld_dhl_c() {
     LTRACE("LD (HL), C");
 
-    mmu.Write8(hl, c);
+    bus.Write8(hl, c);
 
     AdvanceCycles(8);
 }
@@ -1511,7 +1511,7 @@ void SM83::ld_dhl_c() {
 void SM83::ld_dhl_d() {
     LTRACE("LD (HL), D");
 
-    mmu.Write8(hl, d);
+    bus.Write8(hl, d);
 
     AdvanceCycles(8);
 }
@@ -1520,7 +1520,7 @@ void SM83::ld_dhl_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD (HL), 0x%02X", value);
 
-    mmu.Write8(hl, value);
+    bus.Write8(hl, value);
 
     AdvanceCycles(12);
 }
@@ -1528,7 +1528,7 @@ void SM83::ld_dhl_d8() {
 void SM83::ld_dhl_e() {
     LTRACE("LD (HL), E");
     
-    mmu.Write8(hl, e);
+    bus.Write8(hl, e);
 
     AdvanceCycles(8);
 }
@@ -1536,7 +1536,7 @@ void SM83::ld_dhl_e() {
 void SM83::ld_dhl_h() {
     LTRACE("LD (HL), H");
     
-    mmu.Write8(hl, h);
+    bus.Write8(hl, h);
 
     AdvanceCycles(8);
 }
@@ -1544,7 +1544,7 @@ void SM83::ld_dhl_h() {
 void SM83::ld_dhl_l() {
     LTRACE("LD (HL), L");
     
-    mmu.Write8(hl, l);
+    bus.Write8(hl, l);
 
     AdvanceCycles(8);
 }
@@ -1552,7 +1552,7 @@ void SM83::ld_dhl_l() {
 void SM83::ld_dhld_a() {
     LTRACE("LD (HL-), A");
         
-    mmu.Write8(hl--, a);
+    bus.Write8(hl--, a);
 
     AdvanceCycles(8);
 }
@@ -1560,7 +1560,7 @@ void SM83::ld_dhld_a() {
 void SM83::ld_dhli_a() {
     LTRACE("LD (HL+), A");
 
-    mmu.Write8(hl++, a);
+    bus.Write8(hl++, a);
 
     AdvanceCycles(8);
 }
@@ -1569,7 +1569,7 @@ void SM83::ld_a_da16() {
     u16 addr = GetWordFromPC();
     LTRACE("LD A, (0x%04X)", addr);
 
-    a = mmu.Read8(addr);
+    a = bus.Read8(addr);
 
     AdvanceCycles(16);
 }
@@ -1613,33 +1613,33 @@ void SM83::ld_a_d8() {
 
 void SM83::ld_a_dbc() {
     LTRACE("LD A, (BC)");
-    a = mmu.Read8(bc);
+    a = bus.Read8(bc);
 
     AdvanceCycles(8);
 }
 
 void SM83::ld_a_dde() {
     LTRACE("LD A, (DE)");
-    a = mmu.Read8(de);
+    a = bus.Read8(de);
 
     AdvanceCycles(8);
 }
 
 void SM83::ld_a_dhl() {
     LTRACE("LD A, (HL)");
-    a = mmu.Read8(hl);
+    a = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
 
 void SM83::ld_a_dhld() {
     LTRACE("LD A, (HL-)");
-    a = mmu.Read8(hl--);
+    a = bus.Read8(hl--);
 }
 
 void SM83::ld_a_dhli() {
     LTRACE("LD A, (HL+)");
-    a = mmu.Read8(hl++);
+    a = bus.Read8(hl++);
 
     AdvanceCycles(8);
 }
@@ -1704,7 +1704,7 @@ void SM83::ld_b_d8() {
 
 void SM83::ld_b_dhl() {
     LTRACE("LD B, (HL)");
-    b = mmu.Read8(hl);
+    b = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
@@ -1799,7 +1799,7 @@ void SM83::ld_c_l() {
 
 void SM83::ld_c_dhl() {
     LTRACE("LD C, (HL)");
-    c = mmu.Read8(hl);
+    c = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
@@ -1843,7 +1843,7 @@ void SM83::ld_e_d8() {
 
 void SM83::ld_e_dhl() {
     LTRACE("LD E, (HL)");
-    e = mmu.Read8(hl);
+    e = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
@@ -1908,7 +1908,7 @@ void SM83::ld_h_d8() {
 
 void SM83::ld_h_dhl() {
     LTRACE("LD H, (HL)");
-    h = mmu.Read8(hl);
+    h = bus.Read8(hl);
 }
 
 void SM83::ld_h_e() {
@@ -1980,7 +1980,7 @@ void SM83::ld_l_d8() {
 
 void SM83::ld_l_dhl() {
     LTRACE("LD L, (HL)");
-    l = mmu.Read8(hl);
+    l = bus.Read8(hl);
 
     AdvanceCycles(8);
 }
@@ -2043,7 +2043,7 @@ void SM83::ldh_a_da8() {
     u16 address = 0xFF00 + offset;
     LTRACE("LDH A, (0xFF00+0x%02X)", offset);
 
-    a = mmu.Read8(address);
+    a = bus.Read8(address);
 
     AdvanceCycles(12);
 }
@@ -2053,7 +2053,7 @@ void SM83::ldh_da8_a() {
     u16 address = 0xFF00 + offset;
     LTRACE("LDH (0xFF00+0x%02X), A", offset);
 
-    mmu.Write8(address, a);
+    bus.Write8(address, a);
 
     AdvanceCycles(12);
 }
@@ -2081,7 +2081,7 @@ void SM83::or_d8() {
 void SM83::or_dhl() {
     LTRACE("OR (HL)");
 
-    a |= mmu.Read8(hl);
+    a |= bus.Read8(hl);
 
     SetZeroFlag(a == 0);
     SetNegateFlag(false);
@@ -2169,10 +2169,10 @@ void SM83::res(u8 bit, u8* reg) {
 
 void SM83::res_dhl(u8 bit) {
     LTRACE("RES %u, (HL)", bit);
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
 
     value &= ~(1 << bit);
-    mmu.Write8(hl, value);
+    bus.Write8(hl, value);
 
     AdvanceCycles(16);
 }
@@ -2240,7 +2240,7 @@ void SM83::reti() {
 void SM83::rl_dhl() {
     LTRACE("RL (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     bool carry = HasFlag(Flags::Carry);
 
     bool should_carry = value & (1 << 7);
@@ -2253,7 +2253,7 @@ void SM83::rl_dhl() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 }
 
 void SM83::rl_r(u8* reg) {
@@ -2297,7 +2297,7 @@ void SM83::rla() {
 void SM83::rlc_dhl() {
     LTRACE("RLC (HL)");
 
-    u8 reg = mmu.Read8(hl);
+    u8 reg = bus.Read8(hl);
     u8 result = reg << 1;
     bool should_carry = reg & (1 << 7);
 
@@ -2306,7 +2306,7 @@ void SM83::rlc_dhl() {
     SetHalfCarryFlag(false);
     SetCarryFlag(should_carry);
 
-    mmu.Write8(hl, result | should_carry);
+    bus.Write8(hl, result | should_carry);
 }
 
 void SM83::rlc_r(u8* reg) {
@@ -2341,7 +2341,7 @@ void SM83::rlca() {
 void SM83::rr_dhl() {
     LTRACE("RR (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     bool carry = HasFlag(Flags::Carry);
 
     SetCarryFlag(value & 0x1);
@@ -2353,7 +2353,7 @@ void SM83::rr_dhl() {
     SetNegateFlag(false);
     SetHalfCarryFlag(false);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 }
 
 void SM83::rr_r(u8* reg) {
@@ -2393,7 +2393,7 @@ void SM83::rra() {
 void SM83::rrc_dhl() {
     LTRACE("RRC (HL)");
 
-    u8 reg = mmu.Read8(hl);
+    u8 reg = bus.Read8(hl);
     bool should_carry = reg & 0x1;
     u8 result = (reg >> 1) | (should_carry << 7);
 
@@ -2402,7 +2402,7 @@ void SM83::rrc_dhl() {
     SetHalfCarryFlag(false);
     SetCarryFlag(should_carry);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 
     AdvanceCycles(16);
 }
@@ -2439,13 +2439,13 @@ void SM83::rrca() {
 void SM83::swap_dhl() {
     LTRACE("SWAP (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     u8 low = value & 0x0F;
     u8 high = (value & 0xF0) >> 4;
 
     u8 result = static_cast<u8>((low << 4) | high);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);
@@ -2501,7 +2501,7 @@ void SM83::sbc_a_d8() {
 void SM83::sbc_dhl() {
     LTRACE("SBC A, (HL)");
     AdvanceCycles(4);
-    sbc_r(mmu.Read16(hl));
+    sbc_r(bus.Read16(hl));
 }
 
 void SM83::sbc_r(u8 reg) {
@@ -2531,10 +2531,10 @@ void SM83::scf() {
 
 void SM83::set_dhl(u8 bit) {
     LTRACE("SET %u, (HL)", bit);
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
 
     value |= (1 << bit);
-    mmu.Write8(hl, value);
+    bus.Write8(hl, value);
 
     AdvanceCycles(16);
 }
@@ -2548,7 +2548,7 @@ void SM83::set(u8 bit, u8* reg) {
 void SM83::sla_dhl() {
     LTRACE("SLA (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     bool should_carry = value & (1 << 7);
     u8 result = value << 1;
 
@@ -2557,7 +2557,7 @@ void SM83::sla_dhl() {
     SetHalfCarryFlag(false);
     SetCarryFlag(should_carry);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 
     AdvanceCycles(16);
 }
@@ -2579,7 +2579,7 @@ void SM83::sla_r(u8* reg) {
 void SM83::sra_dhl() {
     LTRACE("SRA (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     u8 bit7 = value & (1 << 7);
     u8 result = value >> 1;
 
@@ -2588,7 +2588,7 @@ void SM83::sra_dhl() {
     SetHalfCarryFlag(false);
     SetCarryFlag(value & 0x1);
 
-    mmu.Write8(hl, result | bit7);
+    bus.Write8(hl, result | bit7);
 
     AdvanceCycles(16);
 }
@@ -2610,7 +2610,7 @@ void SM83::sra_r(u8* reg) {
 void SM83::srl_dhl() {
     LTRACE("SRL (HL)");
 
-    u8 value = mmu.Read8(hl);
+    u8 value = bus.Read8(hl);
     u8 result = value >> 1;
 
     SetZeroFlag(result == 0);
@@ -2618,7 +2618,7 @@ void SM83::srl_dhl() {
     SetHalfCarryFlag(false);
     SetCarryFlag(value & 0x1);
 
-    mmu.Write8(hl, result);
+    bus.Write8(hl, result);
 }
 
 void SM83::srl_r(u8* reg) {
@@ -2682,7 +2682,7 @@ void SM83::xor_d8() {
 void SM83::xor_dhl() {
     LTRACE("XOR (HL)");
 
-    u8 result = a ^ mmu.Read8(hl);
+    u8 result = a ^ bus.Read8(hl);
 
     SetZeroFlag(result == 0);
     SetNegateFlag(false);

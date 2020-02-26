@@ -4,7 +4,7 @@
 #include "ppu.h"
 
 GB::GB(Cartridge cartridge)
-    : mmu(cartridge, ppu), ppu(mmu), sm83(mmu) {
+    : bus(cartridge, ppu), ppu(bus), sm83(bus) {
     LINFO("powering on...");
     cycles = 0;
 }
@@ -17,5 +17,5 @@ void GB::Run() {
         ppu.Tick(c);
     }
 
-    mmu.DumpMemoryToFile();
+    bus.DumpMemoryToFile();
 }

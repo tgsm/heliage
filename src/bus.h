@@ -5,9 +5,9 @@
 #include "ppu.h"
 #include "types.h"
 
-class MMU {
+class Bus {
 public:
-    MMU(Cartridge& cartridge, PPU& ppu);
+    Bus(Cartridge& cartridge, PPU& ppu);
 
     u8 Read8(u16 addr);
     void Write8(u16 addr, u8 value);
