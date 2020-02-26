@@ -309,7 +309,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xC4, call_nz_a16());
         INSTR(0xC5, push_bc());
         INSTR(0xC6, add_a_d8());
-        // 0xC7 RST 00
+        INSTR(0xC7, rst(0x00));
         INSTR(0xC8, ret_z());
         INSTR(0xC9, ret());
         INSTR(0xCA, jp_z_a16());
@@ -325,7 +325,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xD4, call_nc_a16());
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
-        // 0xD7 RST 10
+        INSTR(0xD7, rst(0x10));
         INSTR(0xD8, ret_c());
         INSTR(0xD9, reti());
         // 0xDA JP C, u16
@@ -333,7 +333,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         // 0xDC CALL C, u16
         INSTR(0xDD, ill(0xDD); return false);
         INSTR(0xDE, sbc_a_d8());
-        // 0xDF RST 18
+        INSTR(0xDF, rst(0x18));
         INSTR(0xE0, ldh_da8_a());
         INSTR(0xE1, pop_hl());
         INSTR(0xE2, ld_dc_a());
@@ -341,7 +341,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xE4, ill(0xE4); return false);
         INSTR(0xE5, push_hl());
         INSTR(0xE6, and_d8());
-        // 0xE7 RST 20
+        INSTR(0xE7, rst(0x20));
         // 0xE8 ADD SP, i8
         INSTR(0xE9, jp_hl());
         INSTR(0xEA, ld_da16_a());
@@ -357,7 +357,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xF4, ill(0xF4); return false);
         INSTR(0xF5, push_af());
         INSTR(0xF6, or_d8());
-        // 0xF7 RST 30
+        INSTR(0xF7, rst(0x30));
         INSTR(0xF8, ld_hl_sp_d8());
         INSTR(0xF9, ld_sp_hl());
         INSTR(0xFA, ld_a_da16());
@@ -365,7 +365,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xFC, ill(0xFC); return false);
         INSTR(0xFD, ill(0xFD); return false);
         INSTR(0xFE, cp_d8());
-        // 0xFF RST 38
+        INSTR(0xFF, rst(0x38));
 
         default:
             DumpRegisters();
