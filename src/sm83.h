@@ -39,8 +39,8 @@ public:
     void StackPush(u16* word_reg);
     void StackPop(u16* word_reg);
 
-    bool ExecuteOpcode(const u8 opcode, u16 pc_at_opcode);
-    bool ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode);
+    bool ExecuteOpcode(const u8 opcode);
+    bool ExecuteCBOpcode(const u8 opcode);
     void HandleInterrupts();
 
     void AdvanceCycles(u8 cycles);
@@ -79,6 +79,8 @@ private:
     bool ime;
     bool ime_delay; // EI enables interrupts one instruction after
 
+    bool halted;
+
     Bus& bus;
 
     // illegal instruction
@@ -94,6 +96,8 @@ private:
     void add_hl_bc();
     void add_hl_de();
     void add_hl_hl();
+    void add_hl_sp();
+    void add_sp_d8();
 
     void and_d8();
     void and_r(u8 reg);
@@ -102,8 +106,10 @@ private:
     void bit_dhl(u8 bit);
 
     void call_a16();
+    void call_c_a16();
     void call_nc_a16();
     void call_nz_a16();
+    void call_z_a16();
 
     void ccf();
 
@@ -126,10 +132,13 @@ private:
     void dec_h();
     void dec_hl();
     void dec_l();
+    void dec_sp();
 
     void di();
 
     void ei();
+
+    void halt();
 
     void inc_a();
     void inc_b();
@@ -145,7 +154,9 @@ private:
     void inc_sp();
 
     void jp_a16();
+    void jp_c_a16();
     void jp_hl();
+    void jp_nc_a16();
     void jp_nz_a16();
     void jp_z_a16();
 
@@ -162,6 +173,7 @@ private:
     void ld_a_d8();
     void ld_a_da16();
     void ld_a_dbc();
+    void ld_a_dc();
     void ld_a_dde();
     void ld_a_dhl();
     void ld_a_dhld();

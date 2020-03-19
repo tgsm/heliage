@@ -1,44 +1,64 @@
+#include <fstream>
 #include "cartridge.h"
 #include "logging.h"
 
-Cartridge::Cartridge(const std::string filename) {
-    std::vector<char> data = ReadFileBytes(filename);
-    LINFO("loaded %u bytes (%u KB)", data.size(), data.size() / 1024);
+Cartridge::Cartridge(std::filesystem::path cartridge_path) {
+    LoadCartridge(cartridge_path);
+    // PrintMetadata();
 
-    rom = data;
+    bool logo_check = CheckNintendoLogo();
+    if (!logo_check) {
+        LERROR("Nintendo logo is wrong, this game will not make it past the bootrom");
+    }
 
-    LINFO("some metadata:");
-    LINFO("  title: %s", GetGameTitle(rom).c_str());
-    LINFO("  manufacturer code: 0x%02X%02X%02X%02X", rom[0x13F], rom[0x140], rom[0x141], rom[0x142]);
-    LINFO("  GBC compatibility: 0x%02X", rom[0x143] & 0xFF);
-    LINFO("  new licensee code: 0x%02X%02X", rom[0x144], rom[0x145]);
-    LINFO("  SGB compatibility: 0x%02X", rom[0x146]);
-    LINFO("  MBC type: %s", GetMBCType(rom[0x147]));
-    LINFO("  ROM size: 0x%02X", rom[0x148]);
-    LINFO("  RAM size: 0x%02X", rom[0x149]);
-    LINFO("  destination code: 0x%02X", rom[0x14A]);
-    LINFO("  old licensee code: 0x%02X", rom[0x14B]);
-    LINFO("  mask ROM version: 0x%02X", rom[0x14C]);
-    LINFO("  complement checksum: 0x%02X", rom[0x14D] & 0xFF);
-    LINFO("  checksum: 0x%02X%02X", rom[0x14E] & 0xFF, rom[0x14F] & 0xFF);
+    u8 header_checksum = CalculateHeaderChecksum();
+    if (header_checksum != rom[0x14D] ) {
+        LERROR("header checksum is wrong, this game will not make it past the bootrom (expected 0x%02X, got 0x%02X)", header_checksum, rom[0x14D]);
+    }
 
-    if (rom[0x147] != 0x00) {
-        LWARN("this cartridge uses an unimplemented MBC type: %s (0x%02X)", GetMBCType(rom[0x147]), rom[0x147]);
+    u16 rom_checksum = CalculateROMChecksum();
+    if (((rom_checksum >> 8) & 0xFF) != rom[0x14E] && (rom_checksum & 0xFF) != rom[0x14F]) {
+        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x%04X, got 0x%02X%02X)", rom_checksum, rom[0x14E], rom[0x14F]);
     }
 }
 
-std::vector<char> Cartridge::ReadFileBytes(const std::string filename) {
-    std::ifstream stream(filename.c_str(), std::ios::ate | std::ios::binary);
-    std::ifstream::pos_type position = stream.tellg();
-    std::vector<char> file(position);
+void Cartridge::LoadCartridge(std::filesystem::path cartridge_path) {
+    // TODO: use std::ifstream
 
-    stream.seekg(0, std::ios::beg);
-    stream.read(&file[0], position);
+    FILE *rom_file = fopen(cartridge_path.c_str(), "rb");
+    if (!rom_file) {
+        LFATAL("could not open ROM: %s", cartridge_path.c_str());
+        std::exit(1);
+        return;
+    }
 
-    return file;
+    rom_size = std::filesystem::file_size(cartridge_path);
+    fseek(rom_file, 0, SEEK_SET);
+    rom = static_cast<u8*>(malloc(rom_size * sizeof(u8)));
+    fread(rom, 1, rom_size, rom_file);
+
+    LINFO("cartridge: loaded %u bytes (%u KB)", rom_size, rom_size / 1024);
+    fclose(rom_file);
 }
 
-std::string Cartridge::GetGameTitle(std::vector<char> rom) {
+void Cartridge::PrintMetadata() {
+    LINFO("some metadata:");
+    LINFO("  title: %s", GetGameTitle().c_str());
+    LINFO("  manufacturer code: 0x%02X%02X%02X%02X", rom[0x13F], rom[0x140], rom[0x141], rom[0x142]);
+    LINFO("  GBC compatibility: 0x%02X", rom[0x143] & 0xFF);
+    LINFO("  new licensee code: %c%c", rom[0x144], rom[0x145]);
+    LINFO("  SGB compatibility: 0x%02X", rom[0x146]);
+    LINFO("  MBC type: 0x%02X (%s)", rom[0x147], GetMBCTypeString());
+    LINFO("  ROM size: 0x%02X (%s)", rom[0x148], GetROMSizeString(rom[0x148]));
+    LINFO("  RAM size: 0x%02X (%s)", rom[0x149], GetRAMSizeString(rom[0x149]));
+    LINFO("  destination code: 0x%02X", rom[0x14A]);
+    LINFO("  old licensee code: 0x%02X", rom[0x14B]);
+    LINFO("  mask ROM version: 0x%02X", rom[0x14C]);
+    LINFO("  header checksum: 0x%02X", rom[0x14D] & 0xFF);
+    LINFO("  ROM checksum: 0x%02X%02X", rom[0x14E] & 0xFF, rom[0x14F] & 0xFF);
+}
+
+std::string Cartridge::GetGameTitle() {
     char title[0x10] = {};
 
     for (int i = 0; i < 0x10; i++) {
@@ -48,7 +68,12 @@ std::string Cartridge::GetGameTitle(std::vector<char> rom) {
     return std::string(title);
 }
 
-const char* Cartridge::GetMBCType(u8 value) {
+u8 Cartridge::GetMBCType() {
+    return rom[0x147];
+}
+
+const char* Cartridge::GetMBCTypeString() {
+    u8 value = GetMBCType();
 
     switch (value) {
 #define MBC(value, mbc) case value: return mbc
@@ -86,6 +111,85 @@ const char* Cartridge::GetMBCType(u8 value) {
     }
 }
 
-u8 Cartridge::Read8(u16 addr) {
+const char* Cartridge::GetROMSizeString(u8 value) {
+    switch (value) {
+#define ROM(value, size) case value: return size
+        ROM(0x00, "32KB, 2 banks");
+        ROM(0x01, "64KB, 4 banks");
+        ROM(0x02, "128KB, 8 banks");
+        ROM(0x03, "256KB, 16 banks");
+        ROM(0x04, "512KB, 32 banks");
+        ROM(0x05, "1MB, 64 banks");
+        ROM(0x06, "2MB, 128 banks");
+        ROM(0x07, "4MB, 256 banks");
+        ROM(0x08, "8MB, 512 banks");
+        ROM(0x52, "1.1MB, 72 banks");
+        ROM(0x53, "1.2MB, 80 banks");
+        ROM(0x54, "1.5MB, 96 banks");
+#undef ROM
+        default:
+            return "Unknown";
+    }
+}
+
+const char* Cartridge::GetRAMSizeString(u8 value) {
+    switch (value) {
+#define RAM(value, size) case value: return size
+        RAM(0x00, "None");
+        RAM(0x01, "2KB");
+        RAM(0x02, "8KB");
+        RAM(0x03, "32KB, 4 banks");
+        RAM(0x04, "128KB, 16 banks");
+        RAM(0x05, "64KB, 8 banks");
+#undef RAM
+        default:
+            return "Unknown";
+    }
+}
+
+bool Cartridge::CheckNintendoLogo() {
+    u8 nintendo_logo[0x30] = {
+        0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
+        0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
+        0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E,
+        0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
+        0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC,
+        0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E,
+    };
+
+    for (u8 i = 0x00; i < 0x30; i++) {
+        if (rom[0x0104 + i] != nintendo_logo[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+u8 Cartridge::CalculateHeaderChecksum() {
+    u8 result = 0x00;
+    for (u16 i = 0x0134; i <= 0x014C; i++) {
+        result -= rom[i];
+        result--;
+    }
+
+    return result;
+}
+
+u16 Cartridge::CalculateROMChecksum() {
+    u16 result = 0x0000;
+
+    for (u32 i = 0x00000000; i < rom_size; i++) {
+        if (i == 0x014E || i == 0x014F) {
+            continue;
+        }
+
+        result += rom[i];
+    }
+
+    return result;
+}
+
+u8 Cartridge::Read(u32 addr) {
     return rom[addr];
 }

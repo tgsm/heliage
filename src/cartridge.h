@@ -1,18 +1,26 @@
 #pragma once
 
-#include <fstream>
+#include <filesystem>
 #include <vector>
 #include "types.h"
 
 class Cartridge {
 public:
-    Cartridge(const std::string filename);
+    Cartridge(std::filesystem::path cartridge_path);
 
-    std::string GetGameTitle(std::vector<char> rom);
-    const char* GetMBCType(u8 value);
+    void PrintMetadata();
+    std::string GetGameTitle();
+    u8 GetMBCType();
+    const char* GetMBCTypeString();
+    const char* GetROMSizeString(u8 value);
+    const char* GetRAMSizeString(u8 value);
+    bool CheckNintendoLogo();
+    u8 CalculateHeaderChecksum();
+    u16 CalculateROMChecksum();
 
-    u8 Read8(u16 addr);
+    u8 Read(u32 addr);
 private:
-    std::vector<char> ReadFileBytes(const std::string filename);
-    std::vector<char> rom;
+    void LoadCartridge(std::filesystem::path cartridge_path);
+    u8* rom = {};
+    u32 rom_size = 0; // ROMs range from 32KB to 8MB
 };

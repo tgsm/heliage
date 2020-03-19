@@ -3,31 +3,37 @@
 
 SM83::SM83(Bus& bus)
     : bus(bus) {
-    af = 0;
-    bc = 0;
-    de = 0;
-    hl = 0;
-    sp = 0;
-    pc = 0;
-    pc_at_opcode = 0;
+    af = 0x00;
+    bc = 0x00;
+    de = 0x00;
+    hl = 0x00;
+    sp = 0x00;
+    pc = 0x0000;
+    pc_at_opcode = 0x0000;
+    cycles_to_advance = 0;
     ime = false;
+    ime_delay = false;
+    halted = false;
 }
 
 u8 SM83::Tick() {
     cycles_to_advance = 0;
     HandleInterrupts();
 
+    if (halted) {
+        return 4; // 1 cycle
+    }
+
     if (ime_delay) {
         ime = true;
         ime_delay = false;
-        LDEBUG("IME has been enabled");
     }
 
     pc_at_opcode = pc;
-    u8 opcode = GetByteFromPC();
+    const u8 opcode = GetByteFromPC();
 
     // LTRACE("executing opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
-    if (!ExecuteOpcode(opcode, pc_at_opcode)) {
+    if (!ExecuteOpcode(opcode)) {
         std::exit(0);
     }
 
@@ -84,27 +90,22 @@ bool SM83::HasFlag(Flags flag) {
 }
 
 void SM83::StackPush(u16* word_reg) {
-    sp--;
-    bus.Write8(sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
-    sp--;
-    bus.Write8(sp, static_cast<u8>(*word_reg & 0xFF));
+    bus.Write8(--sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
+    bus.Write8(--sp, static_cast<u8>(*word_reg & 0xFF));
 }
 
 void SM83::StackPop(u16* word_reg) {
-    u8 low = bus.Read8(sp);
-    sp++;
-    u8 high = bus.Read8(sp);
-    sp++;
+    u8 low = bus.Read8(sp++);
+    u8 high = bus.Read8(sp++);
 
     u16 value = (high << 8) | low;
     *word_reg = value; 
 }
 
-bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
-{
+bool SM83::ExecuteOpcode(const u8 opcode) {
     switch (opcode) {
         case 0xCB:
-            if (!ExecuteCBOpcode(GetByteFromPC(), pc_at_opcode)) {
+            if (!ExecuteCBOpcode(GetByteFromPC())) {
                 return false;
             }
             break;
@@ -167,9 +168,9 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x36, ld_dhl_d8());
         INSTR(0x37, scf());
         INSTR(0x38, jr_c_r8());
-        // 0x39 ADD HL, SP
+        INSTR(0x39, add_hl_sp());
         INSTR(0x3A, ld_a_dhld());
-        // 0x3B DEC SP
+        INSTR(0x3B, dec_sp());
         INSTR(0x3C, inc_a());
         INSTR(0x3D, dec_a());
         INSTR(0x3E, ld_a_d8());
@@ -228,7 +229,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0x73, ld_dhl_e());
         INSTR(0x74, ld_dhl_h());
         INSTR(0x75, ld_dhl_l());
-        // 0x76 HALT
+        INSTR(0x76, halt());
         INSTR(0x77, ld_dhl_a());
         INSTR(0x78, ld_a_b());
         INSTR(0x79, ld_a_c());
@@ -314,47 +315,47 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xC9, ret());
         INSTR(0xCA, jp_z_a16());
         // INSTR(0xCB) is handled above
-        // 0xCC CALL Z, u16
+        INSTR(0xCC, call_z_a16());
         INSTR(0xCD, call_a16());
         INSTR(0xCE, adc_a_d8());
         INSTR(0xCF, rst(0x08));
         INSTR(0xD0, ret_nc());
         INSTR(0xD1, pop_de());
-        // 0xD2 JP NC, u16
-        INSTR(0xD3, ill(0xD3); return false);
+        INSTR(0xD2, jp_nc_a16());
+        INSTR(0xD3, ill(opcode); return false);
         INSTR(0xD4, call_nc_a16());
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
         INSTR(0xD7, rst(0x10));
         INSTR(0xD8, ret_c());
         INSTR(0xD9, reti());
-        // 0xDA JP C, u16
-        INSTR(0xDB, ill(0xDB); return false);
-        // 0xDC CALL C, u16
-        INSTR(0xDD, ill(0xDD); return false);
+        INSTR(0xDA, jp_c_a16());
+        INSTR(0xDB, ill(opcode); return false);
+        INSTR(0xDC, call_c_a16());
+        INSTR(0xDD, ill(opcode); return false);
         INSTR(0xDE, sbc_a_d8());
         INSTR(0xDF, rst(0x18));
         INSTR(0xE0, ldh_da8_a());
         INSTR(0xE1, pop_hl());
         INSTR(0xE2, ld_dc_a());
-        INSTR(0xE3, ill(0xE3); return false);
-        INSTR(0xE4, ill(0xE4); return false);
+        INSTR(0xE3, ill(opcode); return false);
+        INSTR(0xE4, ill(opcode); return false);
         INSTR(0xE5, push_hl());
         INSTR(0xE6, and_d8());
         INSTR(0xE7, rst(0x20));
-        // 0xE8 ADD SP, i8
+        INSTR(0xE8, add_sp_d8());
         INSTR(0xE9, jp_hl());
         INSTR(0xEA, ld_da16_a());
-        INSTR(0xEB, ill(0xEB); return false);
-        INSTR(0xEC, ill(0xEC); return false);
-        INSTR(0xED, ill(0xED); return false);
+        INSTR(0xEB, ill(opcode); return false);
+        INSTR(0xEC, ill(opcode); return false);
+        INSTR(0xED, ill(opcode); return false);
         INSTR(0xEE, xor_d8());
         INSTR(0xEF, rst(0x28));
         INSTR(0xF0, ldh_a_da8());
         INSTR(0xF1, pop_af());
-        // 0xF2 LD A, (FF00+C)
+        INSTR(0xF2, ld_a_dc());
         INSTR(0xF3, di());
-        INSTR(0xF4, ill(0xF4); return false);
+        INSTR(0xF4, ill(opcode); return false);
         INSTR(0xF5, push_af());
         INSTR(0xF6, or_d8());
         INSTR(0xF7, rst(0x30));
@@ -362,8 +363,8 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
         INSTR(0xF9, ld_sp_hl());
         INSTR(0xFA, ld_a_da16());
         INSTR(0xFB, ei());
-        INSTR(0xFC, ill(0xFC); return false);
-        INSTR(0xFD, ill(0xFD); return false);
+        INSTR(0xFC, ill(opcode); return false);
+        INSTR(0xFD, ill(opcode); return false);
         INSTR(0xFE, cp_d8());
         INSTR(0xFF, rst(0x38));
 
@@ -377,7 +378,7 @@ bool SM83::ExecuteOpcode(const u8 opcode, u16 pc_at_opcode)
     return true;
 }
 
-bool SM83::ExecuteCBOpcode(const u8 opcode, u16 pc_at_opcode) {
+bool SM83::ExecuteCBOpcode(const u8 opcode) {
     switch (opcode) {
         INSTR(0x00, LTRACE("RLC B"); rlc_r(&b));
         INSTR(0x01, LTRACE("RLC C"); rlc_r(&c));
@@ -650,7 +651,6 @@ void SM83::HandleInterrupts() {
     u8 interrupt_flags = bus.Read8(0xFF0F);
     u8 interrupt_enable = bus.Read8(0xFFFF);
     u8 potential_interrupts = interrupt_flags & interrupt_enable;
-    // LFATAL("if=%02X ie=%02X pi=%02X", interrupt_flags, interrupt_enable, potential_interrupts);
     if (!potential_interrupts) {
         return;
     }
@@ -663,7 +663,10 @@ void SM83::HandleInterrupts() {
         }
 
         if (!ime) {
-            // TODO: check if halted and if so, unhalt
+            if (halted) {
+                halted = false;
+            }
+
             return;
         }
 
@@ -683,10 +686,7 @@ void SM83::HandleInterrupts() {
         StackPush(&pc);
         pc = address;
 
-        // TODO: unhalt
-
-        // TODO: remove this line
-        LFATAL("jumping to 0x%04X", address);
+        halted = false;
     }
 }
 
@@ -833,6 +833,34 @@ void SM83::add_hl_hl() {
     AdvanceCycles(8);
 }
 
+void SM83::add_hl_sp() {
+    LTRACE("ADD HL, SP");
+    u32 result = hl + sp;
+
+    SetNegateFlag(false);
+    SetHalfCarryFlag(((hl & 0xFFF) + (sp & 0xFFF)) & 0x1000);
+    SetCarryFlag((result & 0x10000) != 0);
+
+    hl = static_cast<u16>(result);
+
+    AdvanceCycles(8);
+}
+
+void SM83::add_sp_d8() {
+    s8 value = static_cast<s8>(GetByteFromPC());
+    LTRACE("ADD SP, 0x%02X", value);
+    u32 result = sp + value;
+
+    SetZeroFlag(false);
+    SetNegateFlag(false);
+    SetHalfCarryFlag(((sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10);
+    SetCarryFlag(((sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100);
+
+    sp = static_cast<u16>(result);
+
+    AdvanceCycles(8);
+}
+
 void SM83::and_d8() {
     u8 value = GetByteFromPC();
     LTRACE("AND 0x%02X", value);
@@ -887,6 +915,19 @@ void SM83::call_a16() {
     AdvanceCycles(24);
 }
 
+void SM83::call_c_a16() {
+    u16 address = GetWordFromPC();
+    LTRACE("CALL C, 0x%04X", address);
+
+    if (HasFlag(Flags::Carry)) {
+        StackPush(&pc);
+        pc = address;
+        AdvanceCycles(24);
+    } else {
+        AdvanceCycles(12);
+    }
+}
+
 void SM83::call_nc_a16() {
     u16 address = GetWordFromPC();
     LTRACE("CALL NC, 0x%04X", address);
@@ -913,6 +954,19 @@ void SM83::call_nz_a16() {
     }
 }
 
+void SM83::call_z_a16() {
+    u16 address = GetWordFromPC();
+    LTRACE("CALL Z, 0x%04X", address);
+
+    if (HasFlag(Flags::Zero)) {
+        StackPush(&pc);
+        pc = address;
+        AdvanceCycles(24);
+    } else {
+        AdvanceCycles(12);
+    }
+}
+
 void SM83::ccf() {
     LTRACE("CCF");
 
@@ -925,7 +979,7 @@ void SM83::ccf() {
 
 void SM83::cp_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("CP A, 0x%02X", value);
+    LTRACE("CP 0x%02X", value);
 
     SetZeroFlag(a == value);
     SetNegateFlag(true);
@@ -974,7 +1028,7 @@ void SM83::daa() {
     // this is one nutty instruction
     // TODO: come up with an original implementation
 
-    uint16_t result = a;
+    u16 result = a;
     a = 0;
 
     if (HasFlag(Flags::Negate)) {
@@ -1127,11 +1181,17 @@ void SM83::dec_l() {
     AdvanceCycles(4);
 }
 
+void SM83::dec_sp() {
+    LTRACE("DEC SP");
+    sp--;
+
+    AdvanceCycles(8);
+}
+
 void SM83::di() {
     LTRACE("DI");
     ime = false;
     ime_delay = false;
-    LDEBUG("IME has been disabled");
 
     AdvanceCycles(4);
 }
@@ -1139,6 +1199,13 @@ void SM83::di() {
 void SM83::ei() {
     LTRACE("EI");
     ime_delay = true;
+
+    AdvanceCycles(4);
+}
+
+void SM83::halt() {
+    LTRACE("HALT");
+    halted = true;
 
     AdvanceCycles(4);
 }
@@ -1265,6 +1332,8 @@ void SM83::inc_l() {
 void SM83::inc_sp() {
     LTRACE("INC SP");
     sp++;
+
+    AdvanceCycles(8);
 }
 
 void SM83::jp_a16() {
@@ -1276,11 +1345,35 @@ void SM83::jp_a16() {
     AdvanceCycles(16);
 }
 
+void SM83::jp_c_a16() {
+    u16 addr = GetWordFromPC();
+    LTRACE("JP C, 0x%04X", addr);
+
+    if (HasFlag(Flags::Carry)) {
+        pc = addr;
+        AdvanceCycles(16);
+    } else {
+        AdvanceCycles(12);
+    }
+}
+
 void SM83::jp_hl() {
     LTRACE("JP HL");
     pc = hl;
 
     AdvanceCycles(4);
+}
+
+void SM83::jp_nc_a16() {
+    u16 addr = GetWordFromPC();
+    LTRACE("JP NC, 0x%04X", addr);
+
+    if (!HasFlag(Flags::Carry)) {
+        pc = addr;
+        AdvanceCycles(16);
+    } else {
+        AdvanceCycles(12);
+    }
 }
 
 void SM83::jp_nz_a16() {
@@ -1309,7 +1402,7 @@ void SM83::jp_z_a16() {
 
 void SM83::jr_r8() {
     s8 offset = static_cast<s8>(GetByteFromPC());
-    u16 new_pc = static_cast<u16>(pc + offset);
+    u16 new_pc = pc + offset;
     LTRACE("JR 0x%04X", new_pc);
 
     pc = new_pc;
@@ -1618,6 +1711,13 @@ void SM83::ld_a_dbc() {
     AdvanceCycles(8);
 }
 
+void SM83::ld_a_dc() {
+    LTRACE("LD A, (0xFF00+C)");
+    a = bus.Read8(0xFF00 + c);
+
+    AdvanceCycles(8);
+}
+
 void SM83::ld_a_dde() {
     LTRACE("LD A, (DE)");
     a = bus.Read8(de);
@@ -1635,6 +1735,8 @@ void SM83::ld_a_dhl() {
 void SM83::ld_a_dhld() {
     LTRACE("LD A, (HL-)");
     a = bus.Read8(hl--);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_a_dhli() {
@@ -1909,6 +2011,8 @@ void SM83::ld_h_d8() {
 void SM83::ld_h_dhl() {
     LTRACE("LD H, (HL)");
     h = bus.Read8(hl);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_h_e() {
@@ -2106,7 +2210,7 @@ void SM83::pop_af() {
     LTRACE("POP AF");
     StackPop(&af);
 
-    // TODO: find an actually readable way to do this
+    // Reset the lower 4 bits if necessary
     f &= 0xF0;
 
     AdvanceCycles(12);
@@ -2474,6 +2578,13 @@ void SM83::swap_r(u8* reg) {
 void SM83::rst(u8 addr) {
     LTRACE("RST 0x%02X", addr);
 
+    if (addr == 0x0038 && bus.Read8(0x0038) == 0xFF) {
+        LFATAL("Stack overflow");
+        DumpRegisters();
+        bus.DumpMemoryToFile();
+        std::exit(0);
+    }
+
     StackPush(&pc);
     pc = static_cast<u16>(addr);
 
@@ -2501,7 +2612,7 @@ void SM83::sbc_a_d8() {
 void SM83::sbc_dhl() {
     LTRACE("SBC A, (HL)");
     AdvanceCycles(4);
-    sbc_r(bus.Read16(hl));
+    sbc_r(bus.Read8(hl));
 }
 
 void SM83::sbc_r(u8 reg) {
@@ -2635,14 +2746,12 @@ void SM83::srl_r(u8* reg) {
 }
 
 void SM83::sub_r(u8 reg) {
-    u8 result = a - reg;
-
     SetZeroFlag(a == reg);
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0xF) < (reg & 0xF));
     SetCarryFlag(a < reg);
 
-    a = result;
+    a -= reg;
 
     AdvanceCycles(4);
 }
@@ -2651,14 +2760,12 @@ void SM83::sub_d8() {
     u8 value = GetByteFromPC(); 
     LTRACE("SUB 0x%02X", value);
 
-    u8 result = a - value;
-
     SetZeroFlag(a == value);
     SetNegateFlag(true);
     SetHalfCarryFlag((a & 0xF) < (value & 0xF));
     SetCarryFlag(a < value);
 
-    a = result;
+    a -= value;
 
     AdvanceCycles(8);
 }

@@ -2,9 +2,17 @@ cmake_minimum_required(VERSION 3.1)
 
 set(PROJECT heliage)
 project(${PROJECT})
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+
+find_package(SDL2 REQUIRED)
 
 set(SOURCES
+    src/frontend/sdl.cpp
+
+    src/bootrom.cpp
     src/bus.cpp
     src/cartridge.cpp
     src/gb.cpp
@@ -14,6 +22,7 @@ set(SOURCES
 )
 
 set(HEADERS
+    src/bootrom.h
     src/bus.h
     src/cartridge.h
     src/gb.h
@@ -26,4 +35,4 @@ set(HEADERS
 add_compile_options(-Wall -Wextra)
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
-# target_link_libraries(${PROJECT})
+target_link_libraries(${PROJECT} SDL2)
