@@ -30,6 +30,9 @@ u8 SM83::Tick() {
     }
 
     pc_at_opcode = pc;
+    // if (pc_at_opcode == 0xC31B) {
+    //     LFATAL("div=%02X tima=%02X", bus.Read8(0xFF04), bus.Read8(0xFF05));
+    // }
     const u8 opcode = GetByteFromPC();
 
     // LTRACE("executing opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
@@ -37,6 +40,9 @@ u8 SM83::Tick() {
         std::exit(0);
     }
 
+    if (cycles_to_advance == 0) {
+        LWARN("The executed opcode %02X advanced zero cycles", opcode);
+    }
     return cycles_to_advance;
 }
 
@@ -105,6 +111,7 @@ void SM83::StackPop(u16* word_reg) {
 bool SM83::ExecuteOpcode(const u8 opcode) {
     switch (opcode) {
         case 0xCB:
+            AdvanceCycles(4);
             if (!ExecuteCBOpcode(GetByteFromPC())) {
                 return false;
             }
@@ -1549,6 +1556,8 @@ void SM83::ld_dbc_a() {
     LTRACE("LD (BC), A");
 
     bus.Write8(bc, a);
+
+    AdvanceCycles(8);
 }
 
 void SM83::ld_dc_a() {
@@ -2411,6 +2420,8 @@ void SM83::rlc_dhl() {
     SetCarryFlag(should_carry);
 
     bus.Write8(hl, result | should_carry);
+
+    AdvanceCycles(16);
 }
 
 void SM83::rlc_r(u8* reg) {

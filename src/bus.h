@@ -4,11 +4,12 @@
 #include "bootrom.h"
 #include "cartridge.h"
 #include "ppu.h"
+#include "timer.h"
 #include "types.h"
 
 class Bus {
 public:
-    Bus(BootROM& bootrom, Cartridge& cartridge, PPU& ppu);
+    Bus(BootROM& bootrom, Cartridge& cartridge, PPU& ppu, Timer& timer);
 
     u8 Read8(u16 addr);
     void Write8(u16 addr, u8 value);
@@ -37,4 +38,5 @@ private:
     BootROM bootrom;
     Cartridge cartridge;
     PPU& ppu;
+    Timer& timer;
 };

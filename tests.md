@@ -23,7 +23,7 @@ Some of these tests will always fail due to currently unimplemented features, li
 | Test | Result |
 | ---- | ------ |
 | 01-special | Passed |
-| 02-interrupts | Failed (Timer doesn't work)
+| 02-interrupts | Passed |
 | 03-op sp,hl | Passed |
 | 04-op r,imm | Passed |
 | 05-op rp | Passed |
@@ -54,7 +54,7 @@ Some of these tests will always fail due to currently unimplemented features, li
 Failed (3DB103C3)
 
 ## instr_timing
-Failed (#255)
+Failed (Timer doesn't work properly)
 
 ## interrupt_time
 Failed
@@ -151,15 +151,15 @@ Failed
 | ret_timing | Failed (Round 1) |
 | rst_timing | Failed |
 | serial/boot_sclk_align-dmgABCmgb | Failed (No serial intr) |
-| timer/div_write | Passed |
-| timer/rapid_toggle | Failed (No intr) |
-| timer/tim00_div_trigger | Failed |
+| timer/div_write | Failed (intr) |
+| timer/rapid_toggle | Failed |
+| timer/tim00_div_trigger | Passed |
 | timer/tim00 | Failed |
 | timer/tim01_div_trigger | Failed |
-| timer/tim01 | Failed |
+| timer/tim01 | Passed |
 | timer/tim10_div_trigger | Failed |
 | timer/tim10 | Failed |
-| timer/tim11_div_trigger | Failed |
+| timer/tim11_div_trigger | Passed |
 | timer/tim11 | Failed |
 | timer/tima_reload | Failed |
 | timer/tima_write_reloading | Failed |

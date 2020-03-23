@@ -15,9 +15,6 @@ PPU::PPU(Bus& bus)
 }
 
 void PPU::Tick(u8 cycles) {
-    if (cycles == 0) {
-        // LWARN("The executed instruction advanced zero cycles");
-    }
     vcycles += cycles;
 
     switch (mode) {

@@ -5,6 +5,7 @@
 #include "bus.h"
 #include "ppu.h"
 #include "sm83.h"
+#include "timer.h"
 
 class GB {
 public:
@@ -17,6 +18,7 @@ private:
     Bus bus;
     PPU ppu;
     SM83 sm83;
+    Timer timer;
 
     u64 cycles;
 };

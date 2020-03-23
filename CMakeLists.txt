@@ -19,6 +19,7 @@ set(SOURCES
     src/main.cpp
     src/ppu.cpp
     src/sm83.cpp
+    src/timer.cpp
 )
 
 set(HEADERS
@@ -29,6 +30,7 @@ set(HEADERS
     src/logging.h
     src/ppu.h
     src/sm83.h
+    src/timer.h
     src/types.h
 )
 

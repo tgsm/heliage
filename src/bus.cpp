@@ -2,8 +2,8 @@
 #include "bus.h"
 #include "logging.h"
 
-Bus::Bus(BootROM& bootrom, Cartridge& cartridge, PPU& ppu)
-    : bootrom(bootrom), cartridge(cartridge), ppu(ppu) {
+Bus::Bus(BootROM& bootrom, Cartridge& cartridge, PPU& ppu, Timer& timer)
+    : bootrom(bootrom), cartridge(cartridge), ppu(ppu), timer(timer) {
     boot_rom_enabled = true;
     memory = std::array<u8, 0x10000>();
     std::fill(memory.begin(), memory.end(), 0xFF);
@@ -46,7 +46,7 @@ u8 Bus::Read8(u16 addr) {
             LDEBUG("reading 0x%02X from 0x%04X (Cartridge RAM)", memory[addr], addr);
             return memory[addr];
         } else {
-            LWARN("attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
+            // LWARN("attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
             return 0xFF;
         }
     }
@@ -260,6 +260,30 @@ u8 Bus::ReadIO(u16 addr) {
             LDEBUG("reading 0x%02X from 0xFF00 (Joypad)", 0xCF);
             // LWARN("(hack) all reads from 0xFF00 are currently stubbed to 0xCF");
             return 0xCF;
+        case 0xFF04:
+        {
+            u8 div = timer.GetDivider();
+            LDEBUG("reading 0x%02X from DIV (0xFF04)", div);
+            return div;
+        }
+        case 0xFF05:
+        {
+            u8 tima = timer.GetTIMA();
+            LDEBUG("reading 0x%02X from TIMA (0xFF05)", tima);
+            return tima;
+        }
+        case 0xFF06:
+        {
+            u8 tma = timer.GetTMA();
+            LDEBUG("reading 0x%02X from TMA (0xFF06)", tma);
+            return tma;
+        }
+        case 0xFF07:
+        {
+            u8 tac = timer.GetTAC();
+            LDEBUG("reading 0x%02X from TAC (0xFF07)", tac);
+            return tac;
+        }
         case 0xFF0F:
             // Interrupt fetch
             return memory[0xFF0F];
@@ -315,6 +339,30 @@ void Bus::WriteIO(u16 addr, u8 value) {
             // used by blargg tests
             // putchar(value);
             LDEBUG("writing 0x%02X to Serial data (0xFF01)", value);
+            return;
+        case 0xFF04:
+            // Timer divider
+            // All writes to this set it to 0.
+            timer.ResetDivider();
+            memory[0xFF04] = 0x00;
+            return;
+        case 0xFF05:
+            // Timer counter
+            LDEBUG("writing 0x%02X to TIMA (0xFF05)", value);
+            timer.SetTIMA(value);
+            memory[0xFF05] = value;
+            return;
+        case 0xFF06:
+            // Timer modulo
+            LDEBUG("writing 0x%02X to TMA (0xFF06)", value);
+            timer.SetTMA(value);
+            memory[0xFF06] = value;
+            return;
+        case 0xFF07:
+            // Timer control
+            LDEBUG("writing 0x%02X to TAC (0xFF07)", value);
+            timer.SetTAC(value);
+            memory[0xFF07] = value;
             return;
         case 0xFF0F:
             // Interrupt fetch
