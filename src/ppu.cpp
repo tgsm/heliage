@@ -137,19 +137,18 @@ void PPU::RenderScanline() {
     if (IsWindowDisplayEnabled()) {
         // TODO: render window
     }
-
-    if (IsSpriteDisplayEnabled()) {
-        // TODO: render sprites
-    }
 }
 
 void PPU::RenderBackgroundScanline() {
     u16 offset = GetBGTileMapDisplayOffset();
+    bool is_signed = (GetBGWindowTileDataOffset() == 0x8800);
     u8 screen_y = ly;
     for (u8 screen_x = 0; screen_x < 160; screen_x++) {
         u16 tile_offset = offset + (screen_x / 8) + (screen_y / 8 * 32);
-        // LFATAL("%04X", tile_offset);
-        u8 tile_id = bus.Read8(tile_offset);
+        u16 tile_id = bus.Read8(tile_offset);
+        if (is_signed && tile_id < 0x80) {
+            tile_id += 0x100;
+        }
 
         u8 tile_y = screen_y % 8;
         u8 tile_x = screen_x % 8;
@@ -158,6 +157,10 @@ void PPU::RenderBackgroundScanline() {
 }
 
 void PPU::RenderSprites() {
+    if (!IsSpriteDisplayEnabled()) {
+        return;
+    }
+
     // Sprites can be 8x16 rather than 8x8
     [[maybe_unused]] bool double_height = AreSpritesDoubleHeight();
 
