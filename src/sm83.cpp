@@ -182,70 +182,70 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x3D, dec_a());
         INSTR(0x3E, ld_a_d8());
         INSTR(0x3F, ccf());
-        INSTR(0x40, ld_b_b());
-        INSTR(0x41, ld_b_c());
-        INSTR(0x42, ld_b_d());
-        INSTR(0x43, ld_b_e());
-        INSTR(0x44, ld_b_h());
-        INSTR(0x45, ld_b_l());
-        INSTR(0x46, ld_b_dhl());
-        INSTR(0x47, ld_b_a());
-        INSTR(0x48, ld_c_b());
-        INSTR(0x49, ld_c_c());
-        INSTR(0x4A, ld_c_d());
-        INSTR(0x4B, ld_c_e());
-        INSTR(0x4C, ld_c_h());
-        INSTR(0x4D, ld_c_l());
-        INSTR(0x4E, ld_c_dhl());
-        INSTR(0x4F, ld_c_a());
-        INSTR(0x50, ld_d_b());
-        INSTR(0x51, ld_d_c());
-        INSTR(0x52, ld_d_d());
-        INSTR(0x53, ld_d_e());
-        INSTR(0x54, ld_d_h());
-        INSTR(0x55, ld_d_l());
-        INSTR(0x56, ld_d_dhl());
-        INSTR(0x57, ld_d_a());
-        INSTR(0x58, ld_e_b());
-        INSTR(0x59, ld_e_c());
-        INSTR(0x5A, ld_e_d());
-        INSTR(0x5B, ld_e_e());
-        INSTR(0x5C, ld_e_h());
-        INSTR(0x5D, ld_e_l());
-        INSTR(0x5E, ld_e_dhl());
-        INSTR(0x5F, ld_e_a());
-        INSTR(0x60, ld_h_b());
-        INSTR(0x61, ld_h_c());
-        INSTR(0x62, ld_h_d());
-        INSTR(0x63, ld_h_e());
-        INSTR(0x64, ld_h_h());
-        INSTR(0x65, ld_h_l());
-        INSTR(0x66, ld_h_dhl());
-        INSTR(0x67, ld_h_a());
-        INSTR(0x68, ld_l_b());
-        INSTR(0x69, ld_l_c());
-        INSTR(0x6A, ld_l_d());
-        INSTR(0x6B, ld_l_e());
-        INSTR(0x6C, ld_l_h());
-        INSTR(0x6D, ld_l_l());
-        INSTR(0x6E, ld_l_dhl());
-        INSTR(0x6F, ld_l_a());
-        INSTR(0x70, ld_dhl_b());
-        INSTR(0x71, ld_dhl_c());
-        INSTR(0x72, ld_dhl_d());
-        INSTR(0x73, ld_dhl_e());
-        INSTR(0x74, ld_dhl_h());
-        INSTR(0x75, ld_dhl_l());
+        INSTR(0x40, LTRACE("LD B, B"); ld_r_r(&b, &b));
+        INSTR(0x41, LTRACE("LD B, C"); ld_r_r(&b, &c));
+        INSTR(0x42, LTRACE("LD B, D"); ld_r_r(&b, &d));
+        INSTR(0x43, LTRACE("LD B, E"); ld_r_r(&b, &e));
+        INSTR(0x44, LTRACE("LD B, H"); ld_r_r(&b, &h));
+        INSTR(0x45, LTRACE("LD B, L"); ld_r_r(&b, &l));
+        INSTR(0x46, LTRACE("LD B, (HL)"); ld_r_dhl(&b));
+        INSTR(0x47, LTRACE("LD B, A"); ld_r_r(&b, &a));
+        INSTR(0x48, LTRACE("LD C, B"); ld_r_r(&c, &b));
+        INSTR(0x49, LTRACE("LD C, C"); ld_r_r(&c, &c));
+        INSTR(0x4A, LTRACE("LD C, D"); ld_r_r(&c, &d));
+        INSTR(0x4B, LTRACE("LD C, E"); ld_r_r(&c, &e));
+        INSTR(0x4C, LTRACE("LD C, H"); ld_r_r(&c, &h));
+        INSTR(0x4D, LTRACE("LD C, L"); ld_r_r(&c, &l));
+        INSTR(0x4E, LTRACE("LD C, (HL)"); ld_r_dhl(&c));
+        INSTR(0x4F, LTRACE("LD C, A"); ld_r_r(&c, &a));
+        INSTR(0x50, LTRACE("LD D, B"); ld_r_r(&d, &b));
+        INSTR(0x51, LTRACE("LD D, C"); ld_r_r(&d, &c));
+        INSTR(0x52, LTRACE("LD D, D"); ld_r_r(&d, &d));
+        INSTR(0x53, LTRACE("LD D, E"); ld_r_r(&d, &e));
+        INSTR(0x54, LTRACE("LD D, H"); ld_r_r(&d, &h));
+        INSTR(0x55, LTRACE("LD D, L"); ld_r_r(&d, &l));
+        INSTR(0x56, LTRACE("LD D, (HL)"); ld_r_dhl(&d));
+        INSTR(0x57, LTRACE("LD D, A"); ld_r_r(&d, &a));
+        INSTR(0x58, LTRACE("LD E, B"); ld_r_r(&e, &b));
+        INSTR(0x59, LTRACE("LD E, C"); ld_r_r(&e, &c));
+        INSTR(0x5A, LTRACE("LD E, D"); ld_r_r(&e, &d));
+        INSTR(0x5B, LTRACE("LD E, E"); ld_r_r(&e, &e));
+        INSTR(0x5C, LTRACE("LD E, H"); ld_r_r(&e, &h));
+        INSTR(0x5D, LTRACE("LD E, L"); ld_r_r(&e, &l));
+        INSTR(0x5E, LTRACE("LD E, (HL)"); ld_r_dhl(&e));
+        INSTR(0x5F, LTRACE("LD E, A"); ld_r_r(&e, &a));
+        INSTR(0x60, LTRACE("LD H, B"); ld_r_r(&h, &b));
+        INSTR(0x61, LTRACE("LD H, C"); ld_r_r(&h, &c));
+        INSTR(0x62, LTRACE("LD H, D"); ld_r_r(&h, &d));
+        INSTR(0x63, LTRACE("LD H, E"); ld_r_r(&h, &e));
+        INSTR(0x64, LTRACE("LD H, H"); ld_r_r(&h, &h));
+        INSTR(0x65, LTRACE("LD H, L"); ld_r_r(&h, &l));
+        INSTR(0x66, LTRACE("LD H, (HL)"); ld_r_dhl(&h));
+        INSTR(0x67, LTRACE("LD H, A"); ld_r_r(&h, &a));
+        INSTR(0x68, LTRACE("LD L, B"); ld_r_r(&l, &b));
+        INSTR(0x69, LTRACE("LD L, C"); ld_r_r(&l, &c));
+        INSTR(0x6A, LTRACE("LD L, D"); ld_r_r(&l, &d));
+        INSTR(0x6B, LTRACE("LD L, E"); ld_r_r(&l, &e));
+        INSTR(0x6C, LTRACE("LD L, H"); ld_r_r(&l, &h));
+        INSTR(0x6D, LTRACE("LD L, L"); ld_r_r(&l, &l));
+        INSTR(0x6E, LTRACE("LD L, (HL)"); ld_r_dhl(&l));
+        INSTR(0x6F, LTRACE("LD L, A"); ld_r_r(&l, &a));
+        INSTR(0x70, LTRACE("LD (HL), B"); ld_dhl_r(b));
+        INSTR(0x71, LTRACE("LD (HL), C"); ld_dhl_r(c));
+        INSTR(0x72, LTRACE("LD (HL), D"); ld_dhl_r(d));
+        INSTR(0x73, LTRACE("LD (HL), E"); ld_dhl_r(e));
+        INSTR(0x74, LTRACE("LD (HL), H"); ld_dhl_r(h));
+        INSTR(0x75, LTRACE("LD (HL), L"); ld_dhl_r(l));
         INSTR(0x76, halt());
-        INSTR(0x77, ld_dhl_a());
-        INSTR(0x78, ld_a_b());
-        INSTR(0x79, ld_a_c());
-        INSTR(0x7A, ld_a_d());
-        INSTR(0x7B, ld_a_e());
-        INSTR(0x7C, ld_a_h());
-        INSTR(0x7D, ld_a_l());
-        INSTR(0x7E, ld_a_dhl());
-        INSTR(0x7F, ld_a_a());
+        INSTR(0x77, LTRACE("LD (HL), A"); ld_dhl_r(a));
+        INSTR(0x78, LTRACE("LD A, B"); ld_r_r(&a, &b));
+        INSTR(0x79, LTRACE("LD A, C"); ld_r_r(&a, &c));
+        INSTR(0x7A, LTRACE("LD A, D"); ld_r_r(&a, &d));
+        INSTR(0x7B, LTRACE("LD A, E"); ld_r_r(&a, &e));
+        INSTR(0x7C, LTRACE("LD A, H"); ld_r_r(&a, &h));
+        INSTR(0x7D, LTRACE("LD A, L"); ld_r_r(&a, &l));
+        INSTR(0x7E, LTRACE("LD A, (HL)"); ld_r_dhl(&a));
+        INSTR(0x7F, LTRACE("LD A, A"); ld_r_r(&a, &a));
         INSTR(0x80, LTRACE("ADD A, B"); add_a_r(b));
         INSTR(0x81, LTRACE("ADD A, C"); add_a_r(c));
         INSTR(0x82, LTRACE("ADD A, D"); add_a_r(d));
@@ -268,7 +268,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x93, LTRACE("SUB E"); sub_r(e));
         INSTR(0x94, LTRACE("SUB H"); sub_r(h));
         INSTR(0x95, LTRACE("SUB L"); sub_r(l));
-        INSTR(0x96, LTRACE("SUB (HL)"); sub_r(bus.Read8(hl)));
+        INSTR(0x96, LTRACE("SUB (HL)"); AdvanceCycles(4); sub_r(bus.Read8(hl)));
         INSTR(0x97, LTRACE("SUB A"); sub_r(a));
         INSTR(0x98, LTRACE("SBC B"); sbc_r(b));
         INSTR(0x99, LTRACE("SBC C"); sbc_r(c));
@@ -284,7 +284,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xA3, LTRACE("AND E"); and_r(e));
         INSTR(0xA4, LTRACE("AND H"); and_r(h));
         INSTR(0xA5, LTRACE("AND L"); and_r(l));
-        INSTR(0xA6, LTRACE("AND (HL)"); and_r(bus.Read8(hl)));
+        INSTR(0xA6, LTRACE("AND (HL)"); AdvanceCycles(4); and_r(bus.Read8(hl)));
         INSTR(0xA7, LTRACE("AND A"); and_r(a));
         INSTR(0xA8, LTRACE("XOR B"); xor_r(b));
         INSTR(0xA9, LTRACE("XOR C"); xor_r(c));
@@ -651,6 +651,10 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
             return false;
     }
 
+    if (cycles_to_advance == 4) {
+        LWARN("The executed opcode CB%02X advanced zero cycles", opcode);
+    }
+
     return true;
 }
 
@@ -865,7 +869,7 @@ void SM83::add_sp_d8() {
 
     sp = static_cast<u16>(result);
 
-    AdvanceCycles(8);
+    AdvanceCycles(16);
 }
 
 void SM83::and_d8() {
@@ -1469,34 +1473,6 @@ void SM83::jr_z_r8() {
     }
 }
 
-void SM83::ld_d_a() {
-    LTRACE("LD D, A");
-    d = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_d_b() {
-    LTRACE("LD D, B");
-    d = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_d_c() {
-    LTRACE("LD D, C");
-    d = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_d_d() {
-    LTRACE("LD D, D");
-    d = d;
-
-    AdvanceCycles(4);
-}
-
 void SM83::ld_d_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD D, 0x%02X", value);
@@ -1504,34 +1480,6 @@ void SM83::ld_d_d8() {
     d = value;
 
     AdvanceCycles(8);
-}
-
-void SM83::ld_d_dhl() {
-    LTRACE("LD D, (HL)");
-    d = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_d_e() {
-    LTRACE("LD D, E");
-    d = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_d_h() {
-    LTRACE("LD D, H");
-    d = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_d_l() {
-    LTRACE("LD D, L");
-    d = l;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_da16_a() {
@@ -1586,38 +1534,6 @@ void SM83::ld_de_d16() {
     AdvanceCycles(12);
 }
 
-void SM83::ld_dhl_a() {
-    LTRACE("LD (HL), A");
-
-    bus.Write8(hl, a);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_dhl_b() {
-    LTRACE("LD (HL), B");
-
-    bus.Write8(hl, b);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_dhl_c() {
-    LTRACE("LD (HL), C");
-
-    bus.Write8(hl, c);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_dhl_d() {
-    LTRACE("LD (HL), D");
-
-    bus.Write8(hl, d);
-
-    AdvanceCycles(8);
-}
-
 void SM83::ld_dhl_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD (HL), 0x%02X", value);
@@ -1627,27 +1543,8 @@ void SM83::ld_dhl_d8() {
     AdvanceCycles(12);
 }
 
-void SM83::ld_dhl_e() {
-    LTRACE("LD (HL), E");
-    
-    bus.Write8(hl, e);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_dhl_h() {
-    LTRACE("LD (HL), H");
-    
-    bus.Write8(hl, h);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_dhl_l() {
-    LTRACE("LD (HL), L");
-    
-    bus.Write8(hl, l);
-
+void SM83::ld_dhl_r(u8 reg) {
+    bus.Write8(hl, reg);
     AdvanceCycles(8);
 }
 
@@ -1674,34 +1571,6 @@ void SM83::ld_a_da16() {
     a = bus.Read8(addr);
 
     AdvanceCycles(16);
-}
-
-void SM83::ld_a_a() {
-    LTRACE("LD A, A");
-    a = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_a_b() {
-    LTRACE("LD A, B");
-    a = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_a_c() {
-    LTRACE("LD A, C");
-    a = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_a_d() {
-    LTRACE("LD A, D");
-    a = d;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_a_d8() {
@@ -1734,13 +1603,6 @@ void SM83::ld_a_dde() {
     AdvanceCycles(8);
 }
 
-void SM83::ld_a_dhl() {
-    LTRACE("LD A, (HL)");
-    a = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
 void SM83::ld_a_dhld() {
     LTRACE("LD A, (HL-)");
     a = bus.Read8(hl--);
@@ -1755,55 +1617,6 @@ void SM83::ld_a_dhli() {
     AdvanceCycles(8);
 }
 
-void SM83::ld_a_e() {
-    LTRACE("LD A, E");
-    a = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_a_h() {
-    LTRACE("LD A, H");
-    a = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_a_l() {
-    LTRACE("LD A, L");
-    a = l;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_a() {
-    LTRACE("LD B, A");
-    b = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_b() {
-    LTRACE("LD B, B");
-    b = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_c() {
-    LTRACE("LD B, C");
-    b = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_d() {
-    LTRACE("LD B, D");
-    b = d;
-
-    AdvanceCycles(4);
-}
-
 void SM83::ld_b_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD B, 0x%02X", value);
@@ -1811,34 +1624,6 @@ void SM83::ld_b_d8() {
     b = value;
 
     AdvanceCycles(8);
-}
-
-void SM83::ld_b_dhl() {
-    LTRACE("LD B, (HL)");
-    b = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_b_e() {
-    LTRACE("LD B, E");
-    b = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_h() {
-    LTRACE("LD B, H");
-    b = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_b_l() {
-    LTRACE("LD B, L");
-    b = l;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_bc_d16() {
@@ -1850,34 +1635,6 @@ void SM83::ld_bc_d16() {
     AdvanceCycles(12);
 }
 
-void SM83::ld_c_a() {
-    LTRACE("LD C, A");
-    c = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_b() {
-    LTRACE("LD C, B");
-    c = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_c() {
-    LTRACE("LD C, C");
-    c = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_d() {
-    LTRACE("LD C, D");
-    c = d;
-
-    AdvanceCycles(4);
-}
-
 void SM83::ld_c_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD C, 0x%02X", value);
@@ -1885,62 +1642,6 @@ void SM83::ld_c_d8() {
     c = value;
 
     AdvanceCycles(8);
-}
-
-void SM83::ld_c_e() {
-    LTRACE("LD C, E");
-    c = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_h() {
-    LTRACE("LD C, H");
-    c = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_l() {
-    LTRACE("LD C, L");
-    c = l;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_c_dhl() {
-    LTRACE("LD C, (HL)");
-    c = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_e_a() {
-    LTRACE("LD E, A");
-    e = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_e_b() {
-    LTRACE("LD E, B");
-    e = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_e_c() {
-    LTRACE("LD E, C");
-    e = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_e_d() {
-    LTRACE("LD E, D");
-    e = d;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_e_d8() {
@@ -1952,62 +1653,6 @@ void SM83::ld_e_d8() {
     AdvanceCycles(8);
 }
 
-void SM83::ld_e_dhl() {
-    LTRACE("LD E, (HL)");
-    e = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_e_e() {
-    LTRACE("LD E, E");
-    e = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_e_h() {
-    LTRACE("LD E, H");
-    e = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_e_l() {
-    LTRACE("LD E, L");
-    e = l;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_a() {
-    LTRACE("LD H, A");
-    h = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_b() {
-    LTRACE("LD H, B");
-    h = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_c() {
-    LTRACE("LD H, C");
-    h = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_d() {
-    LTRACE("LD H, D");
-    h = d;
-
-    AdvanceCycles(4);
-}
-
 void SM83::ld_h_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD H, 0x%02X", value);
@@ -2015,34 +1660,6 @@ void SM83::ld_h_d8() {
     h = value;
 
     AdvanceCycles(8);
-}
-
-void SM83::ld_h_dhl() {
-    LTRACE("LD H, (HL)");
-    h = bus.Read8(hl);
-
-    AdvanceCycles(8);
-}
-
-void SM83::ld_h_e() {
-    LTRACE("LD H, E");
-    h = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_h() {
-    LTRACE("LD H, H");
-    h = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_h_l() {
-    LTRACE("LD H, L");
-    h = l;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_hl_d16() {
@@ -2054,34 +1671,6 @@ void SM83::ld_hl_d16() {
     AdvanceCycles(12);
 }
 
-void SM83::ld_l_a() {
-    LTRACE("LD L, A");
-    l = a;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_l_b() {
-    LTRACE("LD L, B");
-    l = b;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_l_c() {
-    LTRACE("LD L, C");
-    l = c;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_l_d() {
-    LTRACE("LD L, D");
-    l = d;
-
-    AdvanceCycles(4);
-}
-
 void SM83::ld_l_d8() {
     u8 value = GetByteFromPC();
     LTRACE("LD L, 0x%02X", value);
@@ -2091,32 +1680,14 @@ void SM83::ld_l_d8() {
     AdvanceCycles(8);
 }
 
-void SM83::ld_l_dhl() {
-    LTRACE("LD L, (HL)");
-    l = bus.Read8(hl);
+void SM83::ld_r_r(u8* dst, u8* src) {
+    *dst = *src;
+    AdvanceCycles(4);
+}
 
+void SM83::ld_r_dhl(u8* reg) {
+    *reg = bus.Read8(hl);
     AdvanceCycles(8);
-}
-
-void SM83::ld_l_e() {
-    LTRACE("LD L, E");
-    l = e;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_l_h() {
-    LTRACE("LD L, H");
-    l = h;
-
-    AdvanceCycles(4);
-}
-
-void SM83::ld_l_l() {
-    LTRACE("LD L, L");
-    l = l;
-
-    AdvanceCycles(4);
 }
 
 void SM83::ld_sp_d16() {
@@ -2367,6 +1938,8 @@ void SM83::rl_dhl() {
     SetHalfCarryFlag(false);
 
     bus.Write8(hl, result);
+
+    AdvanceCycles(16);
 }
 
 void SM83::rl_r(u8* reg) {
@@ -2469,6 +2042,8 @@ void SM83::rr_dhl() {
     SetHalfCarryFlag(false);
 
     bus.Write8(hl, result);
+
+    AdvanceCycles(16);
 }
 
 void SM83::rr_r(u8* reg) {
@@ -2741,6 +2316,8 @@ void SM83::srl_dhl() {
     SetCarryFlag(value & 0x1);
 
     bus.Write8(hl, result);
+
+    AdvanceCycles(16);
 }
 
 void SM83::srl_r(u8* reg) {
