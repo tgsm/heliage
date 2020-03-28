@@ -27,13 +27,13 @@ void HandleSDLEvents() {
 }
 
 u32 GetARGBColor(PPU::Color pixel) {
-    u8 color = 0x00;
-    switch (pixel) {
-        case PPU::Color::White: color = 0xFF; break;
-        case PPU::Color::LightGray: color = 0xAA; break;
-        case PPU::Color::DarkGray: color = 0x55; break;
-        case PPU::Color::Black: color = 0x00; break;
-    }
+    u8 color = ~(static_cast<u8>(pixel) * 0x55);
+    // switch (pixel) {
+    //     case PPU::Color::White: color = 0xFF; break;
+    //     case PPU::Color::LightGray: color = 0xAA; break;
+    //     case PPU::Color::DarkGray: color = 0x55; break;
+    //     case PPU::Color::Black: color = 0x00; break;
+    // }
 
     return 0xFF << 24 | color << 16 | color << 8 | color;
 }
