@@ -4,7 +4,6 @@
 #include <string>
 #include "../bootrom.h"
 #include "../cartridge.h"
-#include "../gb.h"
 #include "../logging.h"
 #include "sdl.h"
 
@@ -15,10 +14,33 @@ SDL_Event event;
 
 bool running = false;
 
-void HandleSDLEvents() {
+void HandleSDLEvents(GB* gb) {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
-            // TODO: handle input
+            case SDL_KEYDOWN:
+#define KEYDOWN(k, button) if (event.key.keysym.sym == k) gb->GetJoypad()->PressButton(Joypad::Button::button)
+                KEYDOWN(SDLK_UP, Up);
+                KEYDOWN(SDLK_DOWN, Down);
+                KEYDOWN(SDLK_LEFT, Left);
+                KEYDOWN(SDLK_RIGHT, Right);
+                KEYDOWN(SDLK_a, A);
+                KEYDOWN(SDLK_s, B);
+                KEYDOWN(SDLK_BACKSPACE, Select);
+                KEYDOWN(SDLK_RETURN, Start);
+#undef KEYDOWN
+                break;
+            case SDL_KEYUP:
+#define KEYUP(k, button) if (event.key.keysym.sym == k) gb->GetJoypad()->ReleaseButton(Joypad::Button::button)
+                KEYUP(SDLK_UP, Up);
+                KEYUP(SDLK_DOWN, Down);
+                KEYUP(SDLK_LEFT, Left);
+                KEYUP(SDLK_RIGHT, Right);
+                KEYUP(SDLK_a, A);
+                KEYUP(SDLK_s, B);
+                KEYUP(SDLK_BACKSPACE, Select);
+                KEYUP(SDLK_RETURN, Start);
+#undef KEYUP
+                break;
             case SDL_QUIT:
                 running = false;
                 break;
@@ -28,13 +50,6 @@ void HandleSDLEvents() {
 
 u32 GetARGBColor(PPU::Color pixel) {
     u8 color = ~(static_cast<u8>(pixel) * 0x55);
-    // switch (pixel) {
-    //     case PPU::Color::White: color = 0xFF; break;
-    //     case PPU::Color::LightGray: color = 0xAA; break;
-    //     case PPU::Color::DarkGray: color = 0x55; break;
-    //     case PPU::Color::Black: color = 0x00; break;
-    // }
-
     return 0xFF << 24 | color << 16 | color << 8 | color;
 }
 
@@ -111,7 +126,7 @@ int main_SDL(char* argv[]) {
 
     running = true;
     while (running) {
-        HandleSDLEvents();
+        HandleSDLEvents(&gb);
         gb.Run();
     }
 

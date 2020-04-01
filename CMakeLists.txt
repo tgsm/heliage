@@ -16,6 +16,7 @@ set(SOURCES
     src/bus.cpp
     src/cartridge.cpp
     src/gb.cpp
+    src/joypad.cpp
     src/main.cpp
     src/ppu.cpp
     src/sm83.cpp
@@ -27,6 +28,7 @@ set(HEADERS
     src/bus.h
     src/cartridge.h
     src/gb.h
+    src/joypad.h
     src/logging.h
     src/ppu.h
     src/sm83.h

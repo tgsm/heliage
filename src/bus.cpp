@@ -2,8 +2,8 @@
 #include "bus.h"
 #include "logging.h"
 
-Bus::Bus(BootROM& bootrom, Cartridge& cartridge, PPU& ppu, Timer& timer)
-    : bootrom(bootrom), cartridge(cartridge), ppu(ppu), timer(timer) {
+Bus::Bus(BootROM& bootrom, Cartridge& cartridge, Joypad& joypad, PPU& ppu, Timer& timer)
+    : bootrom(bootrom), cartridge(cartridge), joypad(joypad), ppu(ppu), timer(timer) {
     boot_rom_enabled = true;
     memory = std::array<u8, 0x10000>();
     std::fill(memory.begin(), memory.end(), 0xFF);
@@ -141,7 +141,7 @@ void Bus::Write8(u16 addr, u8 value) {
     }
 
     if (addr >= 0xFEA0 && addr < 0xFF00) {
-        LWARN("attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
+        // LWARN("attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
         return;
     }
 
@@ -257,9 +257,11 @@ void Bus::Write16(u16 addr, u16 value) {
 u8 Bus::ReadIO(u16 addr) {
     switch (addr) {
         case 0xFF00:
-            LDEBUG("reading 0x%02X from 0xFF00 (Joypad)", 0xCF);
-            // LWARN("(hack) all reads from 0xFF00 are currently stubbed to 0xCF");
-            return 0xCF;
+        {
+            u8 buttons = joypad.Read();
+            LDEBUG("reading 0x%02X from Joypad (0xFF00)", buttons);
+            return buttons;
+        }
         case 0xFF04:
         {
             u8 div = timer.GetDivider();
@@ -335,6 +337,9 @@ u8 Bus::ReadIO(u16 addr) {
 
 void Bus::WriteIO(u16 addr, u8 value) {
     switch (addr) {
+        case 0xFF00:
+            joypad.Write(value);
+            return;
         case 0xFF01:
             // used by blargg tests
             // putchar(value);

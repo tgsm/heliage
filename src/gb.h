@@ -1,8 +1,9 @@
 #pragma once
 
 #include "bootrom.h"
-#include "cartridge.h"
 #include "bus.h"
+#include "cartridge.h"
+#include "joypad.h"
 #include "ppu.h"
 #include "sm83.h"
 #include "timer.h"
@@ -14,8 +15,10 @@ public:
     void Run();
 
     Bus GetBus();
+    Joypad* GetJoypad();
 private:
     Bus bus;
+    Joypad joypad;
     PPU ppu;
     SM83 sm83;
     Timer timer;
