@@ -22,8 +22,6 @@ public:
 
     void PressButton(Button button);
     void ReleaseButton(Button button);
-
-    u8 buttons_value = 0xFF;
 private:
     Bus& bus;
 
@@ -39,4 +37,5 @@ private:
     bool select = false;
     bool start = false;
 
+    u8 buttons_value = 0xFF;
 };
