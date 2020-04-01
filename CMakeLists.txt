@@ -4,7 +4,7 @@ set(PROJECT heliage)
 project(${PROJECT})
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -pg")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 find_package(SDL2 REQUIRED)
