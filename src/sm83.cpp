@@ -710,10 +710,10 @@ void SM83::DumpRegisters() {
     if (!f) {
         LFATAL("Flags: none");
     } else {
-        LFATAL("Flags: [%s%s%s%s]", (HasFlag(Flags::Zero)) ? "Z" : " ",
-                                    (HasFlag(Flags::Negate)) ? "N" : " ",
-                                    (HasFlag(Flags::HalfCarry)) ? "H" : " ",
-                                    (HasFlag(Flags::Carry)) ? "C" : " ");
+        LFATAL("Flags: [%c%c%c%c]", (HasFlag(Flags::Zero)) ? 'Z' : ' ',
+                                    (HasFlag(Flags::Negate)) ? 'N' : ' ',
+                                    (HasFlag(Flags::HalfCarry)) ? 'H' : ' ',
+                                    (HasFlag(Flags::Carry)) ? 'C' : ' ');
     }
 }
 
