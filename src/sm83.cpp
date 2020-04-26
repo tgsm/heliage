@@ -95,9 +95,9 @@ bool SM83::HasFlag(Flags flag) {
     return f & static_cast<u8>(flag);
 }
 
-void SM83::StackPush(u16* word_reg) {
-    bus.Write8(--sp, static_cast<u8>((*word_reg >> 8) & 0xFF));
-    bus.Write8(--sp, static_cast<u8>(*word_reg & 0xFF));
+void SM83::StackPush(u16 word_reg) {
+    bus.Write8(--sp, static_cast<u8>((word_reg >> 8) & 0xFF));
+    bus.Write8(--sp, static_cast<u8>(word_reg & 0xFF));
 }
 
 void SM83::StackPop(u16* word_reg) {
@@ -694,7 +694,7 @@ void SM83::HandleInterrupts() {
         ADDR(4, Joypad);
 #undef ADDR
 
-        StackPush(&pc);
+        StackPush(pc);
         pc = address;
 
         halted = false;
@@ -920,7 +920,7 @@ void SM83::call_a16() {
     u16 address = GetWordFromPC();
     LTRACE("CALL 0x%04X", address);
 
-    StackPush(&pc);
+    StackPush(pc);
     pc = address;
 
     AdvanceCycles(24);
@@ -931,7 +931,7 @@ void SM83::call_c_a16() {
     LTRACE("CALL C, 0x%04X", address);
 
     if (HasFlag(Flags::Carry)) {
-        StackPush(&pc);
+        StackPush(pc);
         pc = address;
         AdvanceCycles(24);
     } else {
@@ -944,7 +944,7 @@ void SM83::call_nc_a16() {
     LTRACE("CALL NC, 0x%04X", address);
 
     if (!HasFlag(Flags::Carry)) {
-        StackPush(&pc);
+        StackPush(pc);
         pc = address;
         AdvanceCycles(24);
     } else {
@@ -957,7 +957,7 @@ void SM83::call_nz_a16() {
     LTRACE("CALL NZ, 0x%04X", address);
 
     if (!HasFlag(Flags::Zero)) {
-        StackPush(&pc);
+        StackPush(pc);
         pc = address;
         AdvanceCycles(24);
     } else {
@@ -970,7 +970,7 @@ void SM83::call_z_a16() {
     LTRACE("CALL Z, 0x%04X", address);
 
     if (HasFlag(Flags::Zero)) {
-        StackPush(&pc);
+        StackPush(pc);
         pc = address;
         AdvanceCycles(24);
     } else {
@@ -1819,28 +1819,28 @@ void SM83::pop_hl() {
 
 void SM83::push_af() {
     LTRACE("PUSH AF");
-    StackPush(&af);
+    StackPush(af);
 
     AdvanceCycles(16);
 }
 
 void SM83::push_bc() {
     LTRACE("PUSH BC");
-    StackPush(&bc);
+    StackPush(bc);
 
     AdvanceCycles(16);
 }
 
 void SM83::push_de() {
     LTRACE("PUSH DE");
-    StackPush(&de);
+    StackPush(de);
 
     AdvanceCycles(16);
 }
 
 void SM83::push_hl() {
     LTRACE("PUSH HL");
-    StackPush(&hl);
+    StackPush(hl);
 
     AdvanceCycles(16);
 }
@@ -2171,7 +2171,7 @@ void SM83::rst(u8 addr) {
         std::exit(0);
     }
 
-    StackPush(&pc);
+    StackPush(pc);
     pc = static_cast<u16>(addr);
 
     AdvanceCycles(16);

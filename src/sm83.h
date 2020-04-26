@@ -36,7 +36,7 @@ public:
 
     bool HasFlag(Flags flag);
 
-    void StackPush(u16* word_reg);
+    void StackPush(u16 word_reg);
     void StackPop(u16* word_reg);
 
     bool ExecuteOpcode(const u8 opcode);
