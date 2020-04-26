@@ -39,6 +39,10 @@ public:
     void SetLCDC(u8 value);
     u8 GetSTAT();
     void SetSTAT(u8 value);
+    u8 GetSCY();
+    void SetSCY(u8 value);
+    u8 GetSCX();
+    void SetSCX(u8 value);
     u8 GetLY();
     u8 GetLYC();
 
@@ -55,6 +59,8 @@ private:
     u64 vcycles;
     u8 lcdc;
     u8 stat;
+    u8 scx;
+    u8 scy;
     u8 ly;
     u8 lyc;
     Mode mode;

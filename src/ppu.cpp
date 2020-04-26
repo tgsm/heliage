@@ -145,14 +145,18 @@ void PPU::RenderBackgroundScanline() {
     bool is_signed = (GetBGWindowTileDataOffset() == 0x8800);
     u8 screen_y = ly;
     for (u8 screen_x = 0; screen_x < 160; screen_x++) {
-        u16 tile_offset = offset + (screen_x / 8) + (screen_y / 8 * 32);
+        u16 scroll_x = screen_x + scx;
+        u16 scroll_y = screen_y + scy;
+        u16 bg_x = scroll_x % 256;
+        u16 bg_y = scroll_y % 256;
+        u16 tile_offset = offset + (bg_x / 8) + (bg_y / 8 * 32);
         u16 tile_id = bus.Read8(tile_offset);
         if (is_signed && tile_id < 0x80) {
             tile_id += 0x100;
         }
 
-        u8 tile_y = screen_y % 8;
-        u8 tile_x = screen_x % 8;
+        u8 tile_y = bg_y % 8;
+        u8 tile_x = bg_x % 8;
         framebuffer[160 * screen_y + screen_x] = tiles[tile_id][tile_y][tile_x];
     }
 }
@@ -208,6 +212,22 @@ u8 PPU::GetSTAT() {
 
 void PPU::SetSTAT(u8 value) {
     stat = value;
+}
+
+u8 PPU::GetSCY() {
+    return scy;
+}
+
+void PPU::SetSCY(u8 value) {
+    scy = value;
+}
+
+u8 PPU::GetSCX() {
+    return scx;
+}
+
+void PPU::SetSCX(u8 value) {
+    scx = value;
 }
 
 u8 PPU::GetLY() {

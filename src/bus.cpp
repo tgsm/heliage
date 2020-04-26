@@ -385,10 +385,12 @@ void Bus::WriteIO(u16 addr, u8 value) {
             return;
         case 0xFF42:
             LDEBUG("writing 0x%02X to SCY (0xFF42)", value);
+            ppu.SetSCY(value);
             memory[addr] = value;
             return;
         case 0xFF43:
             LDEBUG("writing 0x%02X to SCX (0xFF43)", value);
+            ppu.SetSCX(value);
             memory[addr] = value;
             return;
         case 0xFF46: {
