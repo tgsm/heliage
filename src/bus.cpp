@@ -448,3 +448,7 @@ void Bus::DumpMemoryToFile() {
 
     fclose(file);
 }
+
+Joypad* Bus::GetJoypad() {
+    return &joypad;
+}

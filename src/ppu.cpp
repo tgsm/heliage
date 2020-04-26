@@ -91,6 +91,7 @@ void PPU::Tick(u8 cycles) {
                 // TODO: draw
                 RenderSprites();
                 DrawFramebuffer(framebuffer);
+                HandleSDLEvents(bus.GetJoypad());
                 ly = 0;
                 mode = Mode::AccessOAM;
                 stat &= ~0x3;

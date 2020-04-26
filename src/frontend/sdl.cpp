@@ -14,11 +14,11 @@ SDL_Event event;
 
 bool running = false;
 
-void HandleSDLEvents(GB* gb) {
+void HandleSDLEvents(Joypad* joypad) {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_KEYDOWN:
-#define KEYDOWN(k, button) if (event.key.keysym.sym == k) gb->GetJoypad()->PressButton(Joypad::Button::button)
+#define KEYDOWN(k, button) if (event.key.keysym.sym == k) joypad->PressButton(Joypad::Button::button)
                 KEYDOWN(SDLK_UP, Up);
                 KEYDOWN(SDLK_DOWN, Down);
                 KEYDOWN(SDLK_LEFT, Left);
@@ -30,7 +30,7 @@ void HandleSDLEvents(GB* gb) {
 #undef KEYDOWN
                 break;
             case SDL_KEYUP:
-#define KEYUP(k, button) if (event.key.keysym.sym == k) gb->GetJoypad()->ReleaseButton(Joypad::Button::button)
+#define KEYUP(k, button) if (event.key.keysym.sym == k) joypad->ReleaseButton(Joypad::Button::button)
                 KEYUP(SDLK_UP, Up);
                 KEYUP(SDLK_DOWN, Down);
                 KEYUP(SDLK_LEFT, Left);
@@ -126,7 +126,6 @@ int main_SDL(char* argv[]) {
 
     running = true;
     while (running) {
-        HandleSDLEvents(&gb);
         gb.Run();
     }
 

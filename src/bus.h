@@ -23,6 +23,8 @@ public:
     void WriteIO(u16 addr, u8 value);
 
     void DumpMemoryToFile();
+
+    Joypad* GetJoypad();
 private:
     bool boot_rom_enabled;
 
