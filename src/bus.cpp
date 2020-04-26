@@ -213,6 +213,7 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
             }
             return;
         case 0x10:
+        case 0x11:
         case 0x13:
             switch (addr & 0xF000) {
                 case 0x0000:
