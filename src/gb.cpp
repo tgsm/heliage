@@ -16,8 +16,8 @@ void GB::Run() {
     timer.Tick(c);
 }
 
-Bus GB::GetBus() {
-    return bus;
+Bus* GB::GetBus() {
+    return &bus;
 }
 
 Joypad* GB::GetJoypad() {

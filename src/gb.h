@@ -14,7 +14,7 @@ public:
 
     void Run();
 
-    Bus GetBus();
+    Bus* GetBus();
     Joypad* GetJoypad();
 private:
     Bus bus;

@@ -130,7 +130,7 @@ int main_SDL(char* argv[]) {
         gb.Run();
     }
 
-    gb.GetBus().DumpMemoryToFile();
+    gb.GetBus()->DumpMemoryToFile();
 
     Shutdown();
     return 0;
