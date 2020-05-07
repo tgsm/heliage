@@ -3,3 +3,7 @@
 
 # Build output
 build/
+heliage
+**/*.o
+
+**/memory.log
