@@ -5,8 +5,19 @@
 Bus::Bus(BootROM& bootrom, Cartridge& cartridge, Joypad& joypad, PPU& ppu, Timer& timer)
     : bootrom(bootrom), cartridge(cartridge), joypad(joypad), ppu(ppu), timer(timer) {
     boot_rom_enabled = true;
+    LoadInitialValues();
+}
+
+void Bus::LoadInitialValues() {
     memory = std::array<u8, 0x10000>();
     std::fill(memory.begin(), memory.end(), 0xFF);
+
+    // Some addresses need to start at a different value than 0xFF.
+    // For example, the interrupt registers need to be zero at startup,
+    // otherwise they would be able to execute any interrupt once
+    // interrupts are enabled if these registers weren't zeroed out before.
+    memory[0xFF0F] = 0x00;
+    memory[0xFFFF] = 0x00;
 }
 
 u8 Bus::Read8(u16 addr) {

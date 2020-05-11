@@ -116,11 +116,11 @@ Failed
 | halt_ime0_ei | Passed |
 | halt_ime0_nointr_timing | Failed |
 | halt_ime1_timing2-GS | Failed (Round 1) |
-| halt_ime1_timing | Failed (stack overflow) |
+| halt_ime1_timing | Passed |
 | if_ie_registers | Failed |
 | instr/daa | Passed |
 | interrupts/ie_push | Failed (Round 1: not cancelled) |
-| intr_timing | Failed |
+| intr_timing | Passed |
 | jp_cc_timing | Failed (Round 1) |
 | jp_timing | Failed (Round 1) |
 | ld_hl_sp_e_timing | Failed |
@@ -131,7 +131,7 @@ Failed
 | oam_dma_start | Failed |
 | oam_dma_timing | Failed |
 | pop_timing | Failed |
-| ppu/hblank_ly_scx_timing-GS | Failed (freezes) |
+| ppu/hblank_ly_scx_timing-GS | Failed |
 | ppu/intr_1_2_timing-GS | Failed (freezes) |
 | ppu/intr_2_0_timing | Failed (freezes) |
 | ppu/intr_2_mode0_timing | Failed (freezes) |
@@ -140,14 +140,14 @@ Failed
 | ppu/intr_2_oam_ok_timing | Failed (freezes) |
 | ppu/lcdon_timing-GS | Failed |
 | ppu/lcdon_write_timing-GS | Failed |
-| ppu/stat_irq_blocking | Failed (stack overflow) |
+| ppu/stat_irq_blocking | Failed (Mode=1 intr) |
 | ppu/stat_lyc_onoff | Failed (Round 1 step 1) |
 | ppu/vblank_stat_intr-GS | Failed (freezes) |
 | push_timing | Failed |
 | rapid_di_ei | Passed |
 | ret_cc_timing | Failed (Round 1) |
 | reti_intr_timing | Passed |
-| reti_timing | Failed (stack overflow) |
+| reti_timing | Failed (Round 1) |
 | ret_timing | Failed (Round 1) |
 | rst_timing | Failed |
 | serial/boot_sclk_align-dmgABCmgb | Failed (No serial intr) |

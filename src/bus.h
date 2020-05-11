@@ -26,6 +26,8 @@ public:
 
     Joypad* GetJoypad();
 private:
+    void LoadInitialValues();
+
     bool boot_rom_enabled;
 
     std::array<u8, 0x10000> memory;
