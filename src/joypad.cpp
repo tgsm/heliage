@@ -7,22 +7,22 @@ Joypad::Joypad(Bus& bus)
 }
 
 u8 Joypad::Read() {
-    buttons_value = 0xFF;
+    buttons_state = 0xFF;
 
     if (directions_selected) {
-        if (down) buttons_value &= ~(1 << 3);
-        if (up) buttons_value &= ~(1 << 2);
-        if (left) buttons_value &= ~(1 << 1);
-        if (right) buttons_value &= ~(1 << 0);
+        if (down) buttons_state &= ~(1 << 3);
+        if (up) buttons_state &= ~(1 << 2);
+        if (left) buttons_state &= ~(1 << 1);
+        if (right) buttons_state &= ~(1 << 0);
     }
     if (buttons_selected) {
-        if (start) buttons_value &= ~(1 << 3);
-        if (select) buttons_value &= ~(1 << 2);
-        if (b) buttons_value &= ~(1 << 1);
-        if (a) buttons_value &= ~(1 << 0);
+        if (start) buttons_state &= ~(1 << 3);
+        if (select) buttons_state &= ~(1 << 2);
+        if (b) buttons_state &= ~(1 << 1);
+        if (a) buttons_state &= ~(1 << 0);
     }
 
-    return buttons_value;
+    return buttons_state;
 }
 
 void Joypad::Write(u8 value) {

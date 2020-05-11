@@ -37,5 +37,5 @@ private:
     bool select = false;
     bool start = false;
 
-    u8 buttons_value = 0xFF;
+    u8 buttons_state = 0xFF;
 };
