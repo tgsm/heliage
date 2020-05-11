@@ -121,18 +121,9 @@ private:
 
     void daa();
 
-    void dec_a();
-    void dec_b();
-    void dec_bc();
-    void dec_c();
-    void dec_d();
-    void dec_de();
     void dec_dhl();
-    void dec_e();
-    void dec_h();
-    void dec_hl();
-    void dec_l();
-    void dec_sp();
+    void dec_r(u8* reg);
+    void dec_rr(u16* reg);
 
     void di();
 
@@ -140,18 +131,9 @@ private:
 
     void halt();
 
-    void inc_a();
-    void inc_b();
-    void inc_bc();
-    void inc_c();
-    void inc_d();
-    void inc_de();
     void inc_dhl();
-    void inc_e();
-    void inc_h();
-    void inc_hl();
-    void inc_l();
-    void inc_sp();
+    void inc_r(u8* reg);
+    void inc_rr(u16* reg);
 
     void jp_a16();
     void jp_c_a16();
@@ -192,7 +174,7 @@ private:
     void ld_hl_d16();
     void ld_hl_sp_d8();
     void ld_l_d8();
-    void ld_r_r(u8* left, u8* right);
+    void ld_r_r(u8* dst, u8* src);
     void ld_r_dhl(u8* reg);
     void ld_sp_d16();
     void ld_sp_hl();

@@ -121,55 +121,55 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x00, nop());
         INSTR(0x01, ld_bc_d16());
         INSTR(0x02, ld_dbc_a());
-        INSTR(0x03, inc_bc());
-        INSTR(0x04, inc_b());
-        INSTR(0x05, dec_b());
+        INSTR(0x03, LTRACE("INC BC"); inc_rr(&bc));
+        INSTR(0x04, LTRACE("INC B"); inc_r(&b));
+        INSTR(0x05, LTRACE("DEC B"); dec_r(&b));
         INSTR(0x06, ld_b_d8());
         INSTR(0x07, rlca());
         INSTR(0x08, ld_da16_sp());
         INSTR(0x09, add_hl_bc());
         INSTR(0x0A, ld_a_dbc());
-        INSTR(0x0B, dec_bc());
-        INSTR(0x0C, inc_c());
-        INSTR(0x0D, dec_c());
+        INSTR(0x0B, LTRACE("DEC BC"); dec_rr(&bc));
+        INSTR(0x0C, LTRACE("INC C"); inc_r(&c));
+        INSTR(0x0D, LTRACE("DEC C"); dec_r(&c));
         INSTR(0x0E, ld_c_d8());
         INSTR(0x0F, rrca());
         // 0x10 STOP
         INSTR(0x11, ld_de_d16());
         INSTR(0x12, ld_dde_a());
-        INSTR(0x13, inc_de());
-        INSTR(0x14, inc_d());
-        INSTR(0x15, dec_d());
+        INSTR(0x13, LTRACE("INC DE"); inc_rr(&de));
+        INSTR(0x14, LTRACE("INC D"); inc_r(&d));
+        INSTR(0x15, LTRACE("DEC D"); dec_r(&d));
         INSTR(0x16, ld_d_d8());
         INSTR(0x17, rla());
         INSTR(0x18, jr_r8());
         INSTR(0x19, add_hl_de());
         INSTR(0x1A, ld_a_dde());
-        INSTR(0x1B, dec_de());
-        INSTR(0x1C, inc_e());
-        INSTR(0x1D, dec_e());
+        INSTR(0x1B, LTRACE("DEC DE"); dec_rr(&de));
+        INSTR(0x1C, LTRACE("INC E"); inc_r(&e));
+        INSTR(0x1D, LTRACE("DEC E"); dec_r(&e));
         INSTR(0x1E, ld_e_d8());
         INSTR(0x1F, rra());
         INSTR(0x20, jr_nz_r8());
         INSTR(0x21, ld_hl_d16());
         INSTR(0x22, ld_dhli_a());
-        INSTR(0x23, inc_hl());
-        INSTR(0x24, inc_h());
-        INSTR(0x25, dec_h());
+        INSTR(0x23, LTRACE("INC HL"); inc_rr(&hl));
+        INSTR(0x24, LTRACE("INC H"); inc_r(&h));
+        INSTR(0x25, LTRACE("DEC H"); dec_r(&h));
         INSTR(0x26, ld_h_d8());
         INSTR(0x27, daa());
         INSTR(0x28, jr_z_r8());
         INSTR(0x29, add_hl_hl());
         INSTR(0x2A, ld_a_dhli());
-        INSTR(0x2B, dec_hl());
-        INSTR(0x2C, inc_l());
-        INSTR(0x2D, dec_l());
+        INSTR(0x2B, LTRACE("DEC HL"); dec_rr(&hl));
+        INSTR(0x2C, LTRACE("INC L"); inc_r(&l));
+        INSTR(0x2D, LTRACE("DEC L"); dec_r(&l));
         INSTR(0x2E, ld_l_d8());
         INSTR(0x2F, cpl());
         INSTR(0x30, jr_nc_r8());
         INSTR(0x31, ld_sp_d16());
         INSTR(0x32, ld_dhld_a());
-        INSTR(0x33, inc_sp());
+        INSTR(0x33, LTRACE("INC SP"); inc_rr(&sp));
         INSTR(0x34, inc_dhl());
         INSTR(0x35, dec_dhl());
         INSTR(0x36, ld_dhl_d8());
@@ -177,9 +177,9 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x38, jr_c_r8());
         INSTR(0x39, add_hl_sp());
         INSTR(0x3A, ld_a_dhld());
-        INSTR(0x3B, dec_sp());
-        INSTR(0x3C, inc_a());
-        INSTR(0x3D, dec_a());
+        INSTR(0x3B, LTRACE("DEC SP"); dec_rr(&sp));
+        INSTR(0x3C, LTRACE("INC A"); inc_r(&a));
+        INSTR(0x3D, LTRACE("DEC A"); dec_r(&a));
         INSTR(0x3E, ld_a_d8());
         INSTR(0x3F, ccf());
         INSTR(0x40, LTRACE("LD B, B"); ld_r_r(&b, &b));
@@ -1073,64 +1073,18 @@ void SM83::daa() {
     AdvanceCycles(4);
 }
 
-void SM83::dec_a() {
-    LTRACE("DEC A");
+void SM83::dec_r(u8* reg) {
+    --*reg;
 
-    a--;
-
-    SetZeroFlag(a == 0);
+    SetZeroFlag(*reg == 0);
     SetNegateFlag(true);
-    SetHalfCarryFlag((a & 0x0F) == 0x0F);
+    SetHalfCarryFlag((*reg & 0x0F) == 0x0F);
 
     AdvanceCycles(4);
 }
 
-void SM83::dec_b() {
-    LTRACE("DEC B");
-
-    b--;
-
-    SetZeroFlag(b == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((b & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_bc() {
-    LTRACE("DEC BC");
-    bc--;
-
-    AdvanceCycles(8);
-}
-
-void SM83::dec_c() {
-    LTRACE("DEC C");
-
-    c--;
-
-    SetZeroFlag(c == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((c & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_d() {
-    LTRACE("DEC D");
-
-    d--;
-
-    SetZeroFlag(d == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((d & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_de() {
-    LTRACE("DEC DE");
-    de--;
+void SM83::dec_rr(u16* reg) {
+    --*reg;
 
     AdvanceCycles(8);
 }
@@ -1147,56 +1101,6 @@ void SM83::dec_dhl() {
     SetHalfCarryFlag((value & 0x0F) == 0x0F);
 
     AdvanceCycles(12);
-}
-
-void SM83::dec_e() {
-    LTRACE("DEC E");
-
-    e--;
-
-    SetZeroFlag(e == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((e & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_h() {
-    LTRACE("DEC H");
-
-    h--;
-
-    SetZeroFlag(h == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((h & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_hl() {
-    LTRACE("DEC HL");
-    hl--;
-
-    AdvanceCycles(8);
-}
-
-void SM83::dec_l() {
-    LTRACE("DEC L");
-
-    l--;
-
-    SetZeroFlag(l == 0);
-    SetNegateFlag(true);
-    SetHalfCarryFlag((l & 0x0F) == 0x0F);
-
-    AdvanceCycles(4);
-}
-
-void SM83::dec_sp() {
-    LTRACE("DEC SP");
-    sp--;
-
-    AdvanceCycles(8);
 }
 
 void SM83::di() {
@@ -1221,64 +1125,18 @@ void SM83::halt() {
     AdvanceCycles(4);
 }
 
-void SM83::inc_a() {
-    LTRACE("INC A");
+void SM83::inc_r(u8* reg) {
+    ++*reg;
 
-    a++;
-
-    SetZeroFlag(a == 0);
+    SetZeroFlag(*reg == 0);
     SetNegateFlag(false);
-    SetHalfCarryFlag((a & 0x0F) == 0x00);
+    SetHalfCarryFlag((*reg & 0x0F) == 0x00);
 
     AdvanceCycles(4);
 }
 
-void SM83::inc_b() {
-    LTRACE("INC B");
-
-    b++;
-
-    SetZeroFlag(b == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((b & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_bc() {
-    LTRACE("INC BC");
-    bc++;
-
-    AdvanceCycles(8);
-}
-
-void SM83::inc_c() {
-    LTRACE("INC C");
-
-    c++; // lol get it
-
-    SetZeroFlag(c == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((c & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_d() {
-    LTRACE("INC D");
-
-    d++;
-
-    SetZeroFlag(d == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((d & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_de() {
-    LTRACE("INC DE");
-    de++;
+void SM83::inc_rr(u16* reg) {
+    ++*reg;
 
     AdvanceCycles(8);
 }
@@ -1295,56 +1153,6 @@ void SM83::inc_dhl() {
     SetHalfCarryFlag((value & 0x0F) == 0x00);
 
     AdvanceCycles(12);
-}
-
-void SM83::inc_e() {
-    LTRACE("INC E");
-
-    e++;
-
-    SetZeroFlag(e == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((e & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_h() {
-    LTRACE("INC H");
-
-    h++;
-
-    SetZeroFlag(h == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((h & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_hl() {
-    LTRACE("INC HL");
-    hl++;
-
-    AdvanceCycles(8);
-}
-
-void SM83::inc_l() {
-    LTRACE("INC L");
-
-    l++;
-
-    SetZeroFlag(l == 0);
-    SetNegateFlag(false);
-    SetHalfCarryFlag((l & 0x0F) == 0x00);
-
-    AdvanceCycles(4);
-}
-
-void SM83::inc_sp() {
-    LTRACE("INC SP");
-    sp++;
-
-    AdvanceCycles(8);
 }
 
 void SM83::jp_a16() {
