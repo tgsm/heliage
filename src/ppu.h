@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include "types.h"
 
 class Bus;
@@ -71,6 +72,6 @@ private:
     u8 lyc;
     Mode mode;
 
-    Color* framebuffer = {};
+    std::array<Color, 160 * 144> framebuffer;
     Color tiles[384][8][8];
 };

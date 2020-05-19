@@ -10,8 +10,6 @@ PPU::PPU(Bus& bus)
     ly = 0x00;
     stat = 0x80;
     mode = Mode::AccessOAM;
-
-    framebuffer = static_cast<PPU::Color*>(malloc(160 * 144 * sizeof(PPU::Color)));
 }
 
 void PPU::Tick(u8 cycles) {
