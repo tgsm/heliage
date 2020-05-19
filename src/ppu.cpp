@@ -238,6 +238,10 @@ u8 PPU::GetLYC() {
     return lyc;
 }
 
+void PPU::SetLYC(u8 value) {
+    lyc = value;
+}
+
 bool PPU::IsLCDEnabled() {
     return lcdc & (1 << 7);
 }

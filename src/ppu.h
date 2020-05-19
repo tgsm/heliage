@@ -37,14 +37,20 @@ public:
 
     u8 GetLCDC();
     void SetLCDC(u8 value);
+
     u8 GetSTAT();
     void SetSTAT(u8 value);
+
     u8 GetSCY();
     void SetSCY(u8 value);
+
     u8 GetSCX();
     void SetSCX(u8 value);
+
     u8 GetLY();
+
     u8 GetLYC();
+    void SetLYC(u8 value);
 
     bool IsLCDEnabled();
     u16 GetWindowTileMapDisplayOffset();

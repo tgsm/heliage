@@ -405,6 +405,11 @@ void Bus::WriteIO(u16 addr, u8 value) {
             ppu.SetSCX(value);
             memory[addr] = value;
             return;
+        case 0xFF45:
+            LDEBUG("writing 0x%02X to LYC (0xFF45)", value);
+            ppu.SetLYC(value);
+            memory[addr] = value;
+            return;
         case 0xFF46: {
             LDEBUG("writing 0x%02X to DMA transfer location (0xFF46)", value);
             memory[addr] = value;
