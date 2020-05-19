@@ -198,50 +198,6 @@ void PPU::RenderSprites() {
     }
 }
 
-u8 PPU::GetLCDC() {
-    return lcdc;
-}
-
-void PPU::SetLCDC(u8 value) {
-    lcdc = value;
-}
-
-u8 PPU::GetSTAT() {
-    return stat;
-}
-
-void PPU::SetSTAT(u8 value) {
-    stat = value;
-}
-
-u8 PPU::GetSCY() {
-    return scy;
-}
-
-void PPU::SetSCY(u8 value) {
-    scy = value;
-}
-
-u8 PPU::GetSCX() {
-    return scx;
-}
-
-void PPU::SetSCX(u8 value) {
-    scx = value;
-}
-
-u8 PPU::GetLY() {
-    return ly;
-}
-
-u8 PPU::GetLYC() {
-    return lyc;
-}
-
-void PPU::SetLYC(u8 value) {
-    lyc = value;
-}
-
 bool PPU::IsLCDEnabled() {
     return lcdc & (1 << 7);
 }

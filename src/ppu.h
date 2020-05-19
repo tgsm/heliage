@@ -35,22 +35,22 @@ public:
     void RenderBackgroundScanline();
     void RenderSprites();
 
-    u8 GetLCDC();
-    void SetLCDC(u8 value);
+    u8 GetLCDC() { return lcdc; }
+    void SetLCDC(u8 value) { lcdc = value; }
 
-    u8 GetSTAT();
-    void SetSTAT(u8 value);
+    u8 GetSTAT() { return stat; }
+    void SetSTAT(u8 value) { stat = value; }
 
-    u8 GetSCY();
-    void SetSCY(u8 value);
+    u8 GetSCY() { return scy; }
+    void SetSCY(u8 value) { scy = value; }
 
-    u8 GetSCX();
-    void SetSCX(u8 value);
+    u8 GetSCX() { return scx; }
+    void SetSCX(u8 value) { scx = value; }
 
-    u8 GetLY();
+    u8 GetLY() { return ly; }
 
-    u8 GetLYC();
-    void SetLYC(u8 value);
+    u8 GetLYC() { return lyc; }
+    void SetLYC(u8 value) { lyc = value; }
 
     bool IsLCDEnabled();
     u16 GetWindowTileMapDisplayOffset();
