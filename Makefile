@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra
+CXXFLAGS = -std=c++17 -Wall -Wextra -DHELIAGE_FRONTEND_SDL
 LIBS = -lSDL2 -pthread
 OBJS = \
     src/bootrom.o \
@@ -20,4 +20,4 @@ heliage: $(OBJS)
 	$(CXX) -o $@ $^ $(LIBS)
 
 clean:
-	rm -r src/*.o heliage
+	rm -rf src/*.o src/frontend/*.o heliage

@@ -14,7 +14,7 @@ SDL_Event event;
 
 bool running = false;
 
-void HandleSDLEvents(Joypad* joypad) {
+void HandleEvents(Joypad* joypad) {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_KEYDOWN:

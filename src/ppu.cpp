@@ -2,7 +2,7 @@
 #include "bus.h"
 #include "logging.h"
 #include "ppu.h"
-#include "frontend/sdl.h"
+#include "frontend/frontend.h"
 
 PPU::PPU(Bus& bus)
     : bus(bus) {
@@ -89,7 +89,7 @@ void PPU::Tick(u8 cycles) {
                 // TODO: draw
                 RenderSprites();
                 DrawFramebuffer(framebuffer);
-                HandleSDLEvents(bus.GetJoypad());
+                HandleEvents(bus.GetJoypad());
                 ly = 0;
                 mode = Mode::AccessOAM;
                 stat &= ~0x3;
