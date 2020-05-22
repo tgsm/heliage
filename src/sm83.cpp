@@ -104,7 +104,6 @@ void SM83::StackPop(u16* word_reg) {
 bool SM83::ExecuteOpcode(const u8 opcode) {
     switch (opcode) {
         case 0xCB:
-            AdvanceCycles(4);
             if (!ExecuteCBOpcode(GetByteFromPC())) {
                 return false;
             }
