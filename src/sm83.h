@@ -21,10 +21,10 @@ public:
         Joypad = 0x0060,
     };
 
-    SM83(Bus& bus);
+    SM83(Bus& bus, Timer& timer);
 
     void Reset();
-    u8 Tick();
+    void Tick();
 
     u8 GetByteFromPC();
     u16 GetWordFromPC();
@@ -42,8 +42,6 @@ public:
     bool ExecuteOpcode(const u8 opcode);
     bool ExecuteCBOpcode(const u8 opcode);
     void HandleInterrupts();
-
-    void AdvanceCycles(u8 cycles);
 
     void DumpRegisters();
 private:
@@ -82,12 +80,12 @@ private:
     bool halted;
 
     Bus& bus;
+    Timer& timer;
 
     // illegal instruction
     void ill(const u8 opcode);
 
     void adc_a_d8();
-    void adc_a_dhl();
     void adc_a_r(u8 reg);
 
     void add_a_d8();

@@ -54,7 +54,7 @@ Some of these tests will always fail due to currently unimplemented features, li
 Failed (3DB103C3)
 
 ## instr_timing
-Failed (Timer doesn't work properly)
+Passed
 
 ## interrupt_time
 Failed
@@ -62,16 +62,16 @@ Failed
 ## mem_timing
 | Test | Result |
 | ---- | ------ |
-| 01-read_timing | Failed (freezes before completion) |
-| 02-write_timing | Failed (freezes before completion) |
-| 03-modify_timing | Failed (freezes before completion) |
+| 01-read_timing | Failed |
+| 02-write_timing | Failed |
+| 03-modify_timing | Failed |
 
 ## mem_timing-2
 | Test | Result |
 | ---- | ------ |
-| 01-read_timing | Failed (freezes before completion) |
-| 02-write_timing | Failed (freezes before completion) |
-| 03-modify_timing | Failed (freezes before completion) |
+| 01-read_timing | Failed |
+| 02-write_timing | Failed |
+| 03-modify_timing | Failed |
 
 ## oam_bug
 | Test | Result |
@@ -110,7 +110,7 @@ Failed
 | call_timing2 | Failed |
 | call_timing | Failed (Round 1) |
 | di_timing-GS | Failed (Round 1) |
-| div_timing | Failed |
+| div_timing | Passed |
 | ei_sequence | Passed |
 | ei_timing | Passed |
 | halt_ime0_ei | Passed |
@@ -120,7 +120,7 @@ Failed
 | if_ie_registers | Failed |
 | instr/daa | Passed |
 | interrupts/ie_push | Failed (Round 1: not cancelled) |
-| intr_timing | Passed |
+| intr_timing | Failed |
 | jp_cc_timing | Failed (Round 1) |
 | jp_timing | Failed (Round 1) |
 | ld_hl_sp_e_timing | Failed |
@@ -130,7 +130,7 @@ Failed
 | oam_dma/sources-GS | Failed ($A000) |
 | oam_dma_start | Failed |
 | oam_dma_timing | Failed |
-| pop_timing | Failed |
+| pop_timing | Passed |
 | ppu/hblank_ly_scx_timing-GS | Failed |
 | ppu/intr_1_2_timing-GS | Failed (freezes) |
 | ppu/intr_2_0_timing | Failed (freezes) |
@@ -156,7 +156,7 @@ Failed
 | timer/tim00_div_trigger | Passed |
 | timer/tim00 | Failed |
 | timer/tim01_div_trigger | Failed |
-| timer/tim01 | Passed |
+| timer/tim01 | Failed |
 | timer/tim10_div_trigger | Failed |
 | timer/tim10 | Failed |
 | timer/tim11_div_trigger | Passed |
@@ -171,7 +171,7 @@ Failed
 | mbc1/bits_bank1 | Passed |
 | mbc1/bits_bank2 | Failed (Round 1: initial BANK2) |
 | mbc1/bits_mode | Passed |
-| mbc1/bits_ramg | Failed (freezes) |
+| mbc1/bits_ramg | Failed (Round 2, RAMG=1A) |
 | mbc1/multicart_rom_8Mb | Failed |
 | mbc1/ram_256kb | Failed (stack overflow) |
 | mbc1/ram_64kb | Failed (crashes heliage) |

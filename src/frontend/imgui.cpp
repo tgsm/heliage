@@ -186,7 +186,7 @@ int main_imgui(char* argv[]) {
             for (u32 i = 0x0000; i < 0x10000; i += 0x10) {
                 ImGui::Text("%04X ", i);
                 for (u16 j = 0x0; j < 0x10; j++) {
-                    u8 byte = gb.GetBus()->Read8(static_cast<u16>(i + j));
+                    u8 byte = gb.GetBus()->Read8(static_cast<u16>(i + j), false);
                     ImGui::SameLine();
                     ImGui::Text("%02X", byte);
                 }

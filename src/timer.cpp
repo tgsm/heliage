@@ -2,48 +2,33 @@
 #include "logging.h"
 #include "timer.h"
 
-Timer::Timer(Bus& bus)
-    : bus(bus) {
-    div = 0x00;
-    tima = 0x00;
-    tma = 0x00;
-    tac = 0x00;
-    timer_enable = false;
-    div_cycles = 0;
-    tima_cycles = 0;
+Timer::Timer(Bus& bus, PPU& ppu)
+    : bus(bus), ppu(ppu) {
 }
 
-void Timer::Tick(u64 cycles_to_add) {
+void Timer::Tick() {
     if (timer_enable) {
-        tima_cycles += cycles_to_add;
-
-        if (tima_cycles >= GetTACFrequency()) {
+        while (tima_cycles >= GetTACFrequency()) {
             tima_cycles -= GetTACFrequency();
             tima++;
-            
-            // overflow
-            if (tima == 0) {
-                tima = tma;
-                // request a timer interrupt
-                bus.Write8(0xFF0F, bus.Read8(0xFF0F) | 0x4);
-                // LFATAL("Setting tima to 0x%02X", tma);
-            }
         }
-    }
-
-    div_cycles += cycles_to_add;
-    if (div_cycles >= 256) {
-        div_cycles -= 256;
-        div++;
+            
+        // overflow
+        if (tima == 0) {
+            tima = tma;
+            // request a timer interrupt
+            bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x4, false);
+        }
     }
 }
 
 u8 Timer::GetDivider() {
-    return div;
+    // DIV is really just the upper 8 bits of the cycle counter.
+    return (cycle_count >> 8) & 0xFF;
 }
 
 void Timer::ResetDivider() {
-    div = 0x00;
+    cycle_count = 0x0000;
 }
 
 u8 Timer::GetTIMA() {
@@ -81,4 +66,14 @@ u32 Timer::GetTACFrequency() {
             LERROR("unreachable TAC frequency");
             return 1;
     }
+}
+
+void Timer::AdvanceCycles(u64 cycles) {
+    cycle_count += cycles;
+
+    if (timer_enable) {
+        tima_cycles += cycles;
+    }
+
+    ppu.AdvanceCycles(cycles);
 }

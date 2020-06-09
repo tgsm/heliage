@@ -4,16 +4,15 @@
 #include "ppu.h"
 
 GB::GB(BootROM bootrom, Cartridge cartridge)
-    : bus(bootrom, cartridge, joypad, ppu, timer), joypad(bus), ppu(bus), sm83(bus), timer(bus) {
+    : bus(bootrom, cartridge, joypad, ppu, timer), joypad(bus), ppu(bus), sm83(bus, timer), timer(bus, ppu) {
     LINFO("powering on...");
     cycles = 0;
 }
 
 void GB::Run() {
-    u8 c = sm83.Tick();
-    cycles += c;
-    ppu.Tick(c);
-    timer.Tick(c);
+    sm83.Tick();
+    ppu.Tick();
+    timer.Tick();
 }
 
 Bus* GB::GetBus() {

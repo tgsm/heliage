@@ -20,7 +20,11 @@ void Bus::LoadInitialValues() {
     memory[0xFFFF] = 0x00;
 }
 
-u8 Bus::Read8(u16 addr) {
+u8 Bus::Read8(u16 addr, bool affect_timer) {
+    if (affect_timer) {
+        timer.AdvanceCycles(4);
+    }
+
     if (addr <= 0x7FFF) {
         if (addr < 0x0100 && boot_rom_enabled) {
             memory[addr] = bootrom.Read(addr);
@@ -101,7 +105,11 @@ u8 Bus::Read8(u16 addr) {
     return 0xFF;
 }
 
-void Bus::Write8(u16 addr, u8 value) {
+void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
+    if (affect_timer) {
+        timer.AdvanceCycles(4);
+    }
+
     if (addr <= 0x7FFF) {
         u8 mbc_type = cartridge.GetMBCType();
         if (mbc_type) {
@@ -251,13 +259,12 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
     }
 }
 
-u16 Bus::Read16(u16 addr) {
-    LERROR("unrecognized read16 from 0x%04X", addr);
-    return 0xFFFF;
-}
-
-void Bus::Write16(u16 addr, u16 value) {
+void Bus::Write16(u16 addr, u16 value, bool affect_timer) {
     LDEBUG("writing 0x%04X to 0x%04X", value, addr);
+
+    if (affect_timer) {
+        timer.AdvanceCycles(8);
+    }
 
     u8 high = static_cast<u8>(value >> 8);
     u8 low = static_cast<u8>(value & 0xFF);
@@ -420,7 +427,7 @@ void Bus::WriteIO(u16 addr, u8 value) {
             // from 0xC300 - 0xC39F to OAM.
             u16 source = (value << 8);
             for (u8 i = 0; i < 0xA0; i++) {
-                Write8(0xFE00 + i, Read8(source + i));
+                Write8(0xFE00 + i, Read8(source + i, false));
             }
         }
             return;
@@ -449,7 +456,7 @@ void Bus::DumpMemoryToFile() {
     for (u32 i = 0x0000; i < 0x10000; i += 0x10) {
         fprintf(file, "%04X ", i);
         for (u16 j = 0x0; j < 0x10; j++) {
-            u8 byte = Read8(static_cast<u16>(i + j));
+            u8 byte = Read8(static_cast<u16>(i + j), false);
             fprintf(file, " %02X", byte);
         }
         fprintf(file, "\n");
@@ -458,7 +465,7 @@ void Bus::DumpMemoryToFile() {
     // for (u16 i = 0x9800; i < 0xA000; i += 0x10) {
     //     // fprintf(file, "%04X ", i);
     //     for (u16 j = 0x0; j < 0x10; j++) {
-    //         u8 byte = Read8(static_cast<u16>(i + j));
+    //         u8 byte = Read8(static_cast<u16>(i + j), false);
     //         printf("%c", byte);
     //         // fprintf(file, " %02X", byte);
     //     }

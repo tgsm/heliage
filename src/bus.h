@@ -12,12 +12,11 @@ class Bus {
 public:
     Bus(BootROM& bootrom, Cartridge& cartridge, Joypad& joypad, PPU& ppu, Timer& timer);
 
-    u8 Read8(u16 addr);
-    void Write8(u16 addr, u8 value);
+    u8 Read8(u16 addr, bool affect_timer = true);
+    void Write8(u16 addr, u8 value, bool affect_timer = true);
     void WriteMBC(u8 mbc_type, u16 addr, u8 value);
 
-    u16 Read16(u16 addr);
-    void Write16(u16 addr, u16 value);
+    void Write16(u16 addr, u16 value, bool affect_timer = true);
 
     u8 ReadIO(u16 addr);
     void WriteIO(u16 addr, u8 value);

@@ -4,9 +4,9 @@
 
 class Timer {
 public:
-    Timer(Bus& bus);
+    Timer(Bus& bus, PPU& ppu);
 
-    void Tick(u64 cycles_to_add);
+    void Tick();
 
     u8 GetDivider();
     void ResetDivider();
@@ -17,18 +17,20 @@ public:
     u8 GetTAC();
     void SetTAC(u8 value);
 
+    void AdvanceCycles(u64 cycles);
+
 private:
     u32 GetTACFrequency();
 
-    u8 div; // divider
-    u8 tima; // timer counter
-    u8 tma; // timer modulo
-    u8 tac; // timer control
+    u16 cycle_count = 0x0000; // divider is pulled from the upper 8 bits of this
+    u8 tima = 0x00; // timer counter
+    u8 tma = 0x00; // timer modulo
+    u8 tac = 0x00; // timer control
 
-    bool timer_enable;
+    bool timer_enable = false;
 
-    u64 div_cycles;
-    u64 tima_cycles;
+    u64 tima_cycles = 0;
 
     Bus& bus;
+    PPU& ppu;
 };

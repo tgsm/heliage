@@ -30,7 +30,9 @@ public:
 
     PPU(Bus& bus);
 
-    void Tick(u8 cycles);
+    void AdvanceCycles(u64 cycles);
+
+    void Tick();
     void UpdateTile(u16 addr);
     void RenderScanline();
     void RenderBackgroundScanline();
