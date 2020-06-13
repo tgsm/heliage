@@ -3,21 +3,9 @@
 
 SM83::SM83(Bus& bus, Timer& timer)
     : bus(bus), timer(timer) {
-    af = 0x00;
-    bc = 0x00;
-    de = 0x00;
-    hl = 0x00;
-    sp = 0x00;
-    pc = 0x0000;
-    pc_at_opcode = 0x0000;
-    cycles_to_advance = 0;
-    ime = false;
-    ime_delay = false;
-    halted = false;
 }
 
 void SM83::Tick() {
-    cycles_to_advance = 0;
     HandleInterrupts();
 
     if (halted) {
@@ -648,7 +636,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
 void SM83::HandleInterrupts() {
     u8 interrupt_flags = bus.Read8(0xFF0F, false);
     u8 interrupt_enable = bus.Read8(0xFFFF, false);
-    u8 potential_interrupts = interrupt_flags & interrupt_enable;
+    u8 potential_interrupts = interrupt_flags & interrupt_enable & 0x1F;
     if (!potential_interrupts) {
         return;
     }

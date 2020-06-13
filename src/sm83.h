@@ -46,38 +46,36 @@ public:
     void DumpRegisters();
 private:
     union {
-        u16 af;
+        u16 af = 0x0000;
         struct { u8 f; u8 a; }; // little endian
     };
 
     union {
-        u16 bc;
+        u16 bc = 0x0000;
         struct { u8 c; u8 b; };
     };
 
     union {
-        u16 de;
+        u16 de = 0x0000;
         struct { u8 e; u8 d; };
     };
 
     union {
-        u16 hl;
+        u16 hl = 0x0000;
         struct { u8 l; u8 h; };
     };
 
     // stack pointer
-    u16 sp;
+    u16 sp = 0x0000;
 
     // program counter
-    u16 pc;
-    u16 pc_at_opcode; // used for debugging
+    u16 pc = 0x0000;
+    u16 pc_at_opcode = 0x0000; // used for debugging
 
-    u8 cycles_to_advance;
+    bool ime = false;
+    bool ime_delay = false; // EI enables interrupts one instruction after
 
-    bool ime;
-    bool ime_delay; // EI enables interrupts one instruction after
-
-    bool halted;
+    bool halted = false;
 
     Bus& bus;
     Timer& timer;
