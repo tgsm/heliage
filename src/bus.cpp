@@ -178,6 +178,10 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
 
     if (addr == 0xFFFF) {
         // Interrupt enable
+
+        // The highest 3 bits are always set
+        value |= 0xE0;
+
         memory[0xFFFF] = value;
         return;
     }
@@ -390,6 +394,10 @@ void Bus::WriteIO(u16 addr, u8 value) {
             return;
         case 0xFF0F:
             // Interrupt fetch
+
+            // The highest 3 bits are always set
+            value |= 0xE0;
+
             memory[0xFF0F] = value;
             return;
         case 0xFF40:
@@ -399,6 +407,13 @@ void Bus::WriteIO(u16 addr, u8 value) {
             return;
         case 0xFF41:
             LDEBUG("writing 0x%02X to STAT (0xFF41)", value);
+            // Bit 7 is always set
+            value |= 0x80;
+
+            // The lowest 3 bits are read-only
+            value &= ~0x7;
+            value |= (ppu.GetSTAT() & 0x7);
+
             ppu.SetSTAT(value);
             memory[addr] = value;
             return;
