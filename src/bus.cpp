@@ -195,7 +195,8 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
             switch (addr & 0xF000) {
                 case 0x0000:
                 case 0x1000:
-                    mbc_ram_enabled = (value == 0x0A);
+                    mbc_ram_enabled = ((value & 0xF) == 0xA);
+                    LDEBUG("MBC1: RAM %s", mbc_ram_enabled ? "enabled" : "disabled");
                     break;
                 case 0x2000:
                 case 0x3000:
@@ -235,7 +236,7 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
             switch (addr & 0xF000) {
                 case 0x0000:
                 case 0x1000:
-                    mbc_ram_enabled = (value == 0x0A);
+                    mbc_ram_enabled = ((value & 0xF) == 0xA);
                     break;
                 case 0x2000:
                 case 0x3000:
