@@ -430,6 +430,7 @@ void Bus::WriteIO(u8 addr, u8 value) {
             return;
         case 0x47:
             LDEBUG("bus: writing 0x%02X to Background palette data (0xFF47)", value);
+            ppu.SetBGWindowPalette(value);
             io[0x47] = value;
             return;
         case 0x50:

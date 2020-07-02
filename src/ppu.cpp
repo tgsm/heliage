@@ -125,7 +125,6 @@ void PPU::UpdateTile(u16 addr) {
 
     for (u8 col = 0; col < 8; col++) {
         u8 tile = (((byte2 >> (7 - col)) & 0b1) << 1) | ((byte1 >> (7 - col)) & 0b1);
-        // TODO: palette switching
         tiles[tile_index][row][col] = static_cast<Color>(tile);
     }
 }
@@ -157,7 +156,26 @@ void PPU::RenderBackgroundScanline() {
 
         u8 tile_y = bg_y % 8;
         u8 tile_x = bg_x % 8;
-        framebuffer[160 * screen_y + screen_x] = tiles[tile_id][tile_y][tile_x];
+
+        Color color = tiles[tile_id][tile_y][tile_x];
+        switch (static_cast<u8>(color)) {
+            case 0b00:
+                color = bg_window_palette.zero;
+                break;
+            case 0b01:
+                color = bg_window_palette.one;
+                break;
+            case 0b10:
+                color = bg_window_palette.two;
+                break;
+            case 0b11:
+                color = bg_window_palette.three;
+                break;
+            default:
+                break;
+        }
+
+        framebuffer[160 * screen_y + screen_x] = color;
     }
 }
 
@@ -196,6 +214,18 @@ void PPU::RenderSprites() {
 
         // TODO: actually draw sprites
     }
+}
+
+void PPU::SetBGWindowPalette(u8 value) {
+    bg_window_palette.three = static_cast<Color>((value >> 6) & 0b11);
+    bg_window_palette.two = static_cast<Color>((value >> 4) & 0b11);
+    bg_window_palette.one = static_cast<Color>((value >> 2) & 0b11);
+    bg_window_palette.zero = static_cast<Color>(value & 0b11);
+
+    LDEBUG("PPU: new background palette: %u %u %u %u", static_cast<u8>(bg_window_palette.three),
+                                                       static_cast<u8>(bg_window_palette.two),
+                                                       static_cast<u8>(bg_window_palette.one),
+                                                       static_cast<u8>(bg_window_palette.zero));
 }
 
 bool PPU::IsLCDEnabled() {

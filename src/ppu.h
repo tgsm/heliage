@@ -21,13 +21,6 @@ public:
         Black = 0b11,
     };
 
-    struct MonochromePalette {
-        Color zero;
-        Color one;
-        Color two;
-        Color three;
-    };
-
     PPU(Bus& bus);
 
     void AdvanceCycles(u64 cycles);
@@ -55,6 +48,8 @@ public:
     u8 GetLYC() { return lyc; }
     void SetLYC(u8 value) { lyc = value; }
 
+    void SetBGWindowPalette(u8 value);
+
     bool IsLCDEnabled();
     u16 GetWindowTileMapDisplayOffset();
     bool IsWindowDisplayEnabled();
@@ -73,6 +68,13 @@ private:
     u8 ly;
     u8 lyc;
     Mode mode;
+
+    struct {
+        Color three;
+        Color two;
+        Color one;
+        Color zero;
+    } bg_window_palette;
 
     std::array<Color, 160 * 144> framebuffer;
     Color tiles[384][8][8];
