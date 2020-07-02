@@ -9,15 +9,19 @@ Bus::Bus(BootROM& bootrom, Cartridge& cartridge, Joypad& joypad, PPU& ppu, Timer
 }
 
 void Bus::LoadInitialValues() {
-    memory = std::array<u8, 0x10000>();
-    std::fill(memory.begin(), memory.end(), 0xFF);
+    std::fill(vram.begin(), vram.end(), 0xFF);
+    std::fill(wram.begin(), wram.end(), 0xFF);
+    std::fill(oam.begin(), oam.end(), 0xFF);
+    std::fill(io.begin(), io.end(), 0xFF);
+    std::fill(hram.begin(), hram.end(), 0xFF);
+    std::fill(cartridge_ram.begin(), cartridge_ram.end(), 0xFF);
 
     // Some addresses need to start at a different value than 0xFF.
     // For example, the interrupt registers need to be zero at startup,
     // otherwise they would be able to execute any interrupt once
     // interrupts are enabled if these registers weren't zeroed out before.
-    memory[0xFF0F] = 0x00;
-    memory[0xFFFF] = 0x00;
+    io[0x0F] = 0xE0;
+    ie = 0x00;
 }
 
 u8 Bus::Read8(u16 addr, bool affect_timer) {
@@ -27,8 +31,7 @@ u8 Bus::Read8(u16 addr, bool affect_timer) {
 
     if (addr <= 0x7FFF) {
         if (addr < 0x0100 && boot_rom_enabled) {
-            memory[addr] = bootrom.Read(addr);
-            return memory[addr];
+            return bootrom.Read(addr);
         }
 
 #define CART_IS_MBC1() (mbc_type >= 0x01 && mbc_type <= 0x03)
@@ -38,70 +41,68 @@ u8 Bus::Read8(u16 addr, bool affect_timer) {
             u8 mbc_type = cartridge.GetMBCType();
             u16 rom_bank = 0x001;
             if (CART_IS_MBC1()) {
-                rom_bank = ((mbc1_rom_bank_hi & 3) << 5) | (mbc1_rom_bank_lo & 0x1F);
+                rom_bank = ((mbc1_bank2 & 3) << 5) | (mbc1_bank1 & 0x1F);
             } else if (CART_IS_MBC3()) {
                 rom_bank = mbc3_rom_bank;
             }
-            memory[addr] = cartridge.Read((addr & 0x3FFF) + rom_bank * 0x4000);
-            return memory[addr];
+            return cartridge.Read((addr & 0x3FFF) + rom_bank * 0x4000);
         }
 
-        memory[addr] = cartridge.Read(addr);
-        return memory[addr];
+        return cartridge.Read(addr);
     }
 
     // VRAM
     if (addr >= 0x8000 && addr < 0xA000) {
-        // LDEBUG("reading 0x%02X from 0x%04X (VRAM)", memory[addr], addr);
-        return memory[addr];
+        // LDEBUG("bus: reading 0x%02X from 0x%04X (VRAM)", vram[addr - 0x8000], addr);
+        return vram[addr - 0x8000];
     }
 
     if (addr >= 0xA000 && addr < 0xC000) {
         if (mbc_ram_enabled) {
-            LDEBUG("reading 0x%02X from 0x%04X (Cartridge RAM)", memory[addr], addr);
-            return memory[addr];
+            LDEBUG("bus: reading 0x%02X from 0x%04X (Cartridge RAM)", cartridge_ram[addr - 0xA000], addr);
+            return cartridge_ram[addr - 0xA000];
         } else {
-            // LWARN("attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
+            // LWARN("bus: attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
             return 0xFF;
         }
     }
 
     if (addr >= 0xC000 && addr < 0xE000) {
-        // LDEBUG("reading 0x%02X from 0x%04X (WRAM)", memory[addr], addr);
-        return memory[addr];
+        // LDEBUG("bus: reading 0x%02X from 0x%04X (WRAM)", wram[addr - 0xC000], addr);
+        return wram[addr - 0xC000];
     }    
 
     if (addr >= 0xE000 && addr < 0xFE00) {
-        // LWARN("reading from echo RAM (0x%02X from 0x%04X)", memory[addr - 0x2000], addr);
-        return memory[addr - 0x2000];
+        // LWARN("bus: reading from echo RAM (0x%02X from 0x%04X)", wram[addr - 0xE000], addr);
+        return wram[addr - 0xE000];
     }
 
     if (addr >= 0xFE00 && addr < 0xFEA0) {
-        // LDEBUG("reading 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", memory[addr], addr);
-        return memory[addr];
+        // LDEBUG("bus: reading 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", oam[0xFE00], addr);
+        return oam[addr - 0xFE00];
     }
 
     if (addr >= 0xFEA0 && addr < 0xFF00) {
-        // LWARN("attempted to read from unusable memory (0x%04X)", addr);
+        // LWARN("bus: attempted to read from unusable memory (0x%04X)", addr);
         return 0x00;
     }
 
     if (addr >= 0xFF00 && addr < 0xFF80) {
-        return ReadIO(addr);
+        return ReadIO(addr & 0xFF);
     }
 
     // Zero Page
     if (addr >= 0xFF80 && addr < 0xFFFF) {
-        // LDEBUG("reading 0x%02X from 0x%04X (Zero Page)", memory[addr], addr);
-        return memory[addr];
+        // LDEBUG("bus: reading 0x%02X from 0x%04X (Zero Page)", hram[addr - 0xFF80], addr);
+        return hram[addr - 0xFF80];
     }
 
     if (addr == 0xFFFF) {
         // Interrupt enable
-        return memory[0xFFFF];
+        return ie;
     }
 
-    LERROR("unrecognized read8 from 0x%04X", addr);
+    LERROR("bus: unrecognized read8 from 0x%04X", addr);
     return 0xFF;
 }
 
@@ -120,59 +121,53 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
     }
 
     if (addr >= 0x8000 && addr < 0xA000) {
-        memory[addr] = value;
+        vram[addr - 0x8000] = value;
         ppu.UpdateTile(addr);
         return;
     }
 
     if (addr >= 0xA000 && addr < 0xC000) {
         if (mbc_ram_enabled) {
-            LDEBUG("writing 0x%02X to 0x%04X (Cartridge RAM)", value, addr);
-            memory[addr] = value;
+            LDEBUG("bus: writing 0x%02X to 0x%04X (Cartridge RAM)", value, addr);
+            cartridge_ram[addr - 0xA000] = value;
         } else {
-            // LWARN("attempted to write to cartridge RAM while it is disabled (0x%02X to 0x%04X)", value, addr);
+            // LWARN("bus: attempted to write to cartridge RAM while it is disabled (0x%02X to 0x%04X)", value, addr);
         }
         return;
     }
 
     if (addr >= 0xC000 && addr < 0xE000) {
-        // LDEBUG("writing 0x%02X to 0x%04X (WRAM)", value, addr);
-        memory[addr] = value;
-
-        if (addr < 0xDE00) {
-            memory[addr + 0x2000] = value;
-        }
-
+        // LDEBUG("bus: writing 0x%02X to 0x%04X (WRAM)", value, addr);
+        wram[addr - 0xC000] = value;
         return;
     }
 
     if (addr >= 0xE000 && addr < 0xFE00) {
-        // LWARN("writing to echo RAM (0x%02X to 0x%04X)", value, addr);
-        memory[addr] = value;
-        memory[addr - 0x2000] = value;
+        // LWARN("bus: writing to echo RAM (0x%02X to 0x%04X)", value, addr);
+        wram[addr - 0xE000] = value;
         return;
     }
 
     if (addr >= 0xFE00 && addr < 0xFEA0) {
-        // LDEBUG("writing 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", value, addr);
-        memory[addr] = value;
+        // LDEBUG("bus: writing 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", value, addr);
+        oam[addr - 0xFE00] = value;
         return;
     }
 
     if (addr >= 0xFEA0 && addr < 0xFF00) {
-        // LWARN("attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
+        // LWARN("bus: attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
         return;
     }
 
     if (addr >= 0xFF00 && addr < 0xFF80) {
-        WriteIO(addr, value);
+        WriteIO(addr & 0xFF, value);
         return;
     }
 
     // Zero Page
     if (addr >= 0xFF80 && addr < 0xFFFF) {
-        // LDEBUG("writing 0x%02X to 0x%04X (Zero Page)", value, addr);
-        memory[addr] = value;
+        // LDEBUG("bus: writing 0x%02X to 0x%04X (Zero Page)", value, addr);
+        hram[addr - 0xFF80] = value;
         return;
     }
 
@@ -182,18 +177,18 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
         // The highest 3 bits are always set
         value |= 0xE0;
 
-        memory[0xFFFF] = value;
+        ie = value;
         return;
     }
 
-    LERROR("unrecognized write8 0x%02X to 0x%04X", value, addr);
+    LERROR("bus: unrecognized write8 0x%02X to 0x%04X", value, addr);
     return;
 }
 
 void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
     switch (mbc_type) {
         case 0x00:
-            LWARN("attempted to write to cartridge ROM (0x%02X to 0x%04X)", value, addr);
+            LWARN("bus: attempted to write to cartridge ROM (0x%02X to 0x%04X)", value, addr);
             return;
         case 0x01:
         case 0x02:
@@ -206,20 +201,20 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
                 case 0x2000:
                 case 0x3000:
                     if (value == 0x00 || value == 0x20 || value == 0x40 || value == 0x60) {
-                        mbc1_rom_bank_lo = value + 1;
+                        mbc1_bank1 = value + 1;
                     } else {
-                        mbc1_rom_bank_lo = value & 0x1F;
+                        mbc1_bank1 = value & 0x1F;
                     }
 
                     break;
                 case 0x4000:
                 case 0x5000:
-                    if (mbc1_bank_mode == 0) {
-                        mbc1_rom_bank_hi = value & 3;
-                        LFATAL("hi=%02X", mbc1_rom_bank_hi);
-                    } else if (mbc1_bank_mode == 1) {
+                    if (mbc1_mode == 0) {
+                        mbc1_bank2 = value & 3;
+                        LFATAL("MBC1: bank2=%02X", mbc1_bank2);
+                    } else if (mbc1_mode == 1) {
                         mbc1_ram_bank = value & 3;
-                        LFATAL("ram=%02X", mbc1_ram_bank);
+                        LFATAL("MBC1: ram bank=%02X", mbc1_ram_bank);
                     }
 
                     break;
@@ -227,11 +222,11 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
                 case 0x7000:
                     // TODO: 00h = ROM Banking Mode (up to 8KByte RAM, 2MByte ROM) (default)
                     //       01h = RAM Banking Mode (up to 32KByte RAM, 512KByte ROM)
-                    mbc1_bank_mode = value;
-                    LINFO("set MBC1 bank mode (%u)", value);
+                    mbc1_mode = value;
+                    LINFO("MBC1: set mode=%u", value);
                     break;
                 default:
-                    LERROR("unimplemented MBC1 write (0x%02X to 0x%04X)", value, addr);
+                    LERROR("MBC1: unimplemented write (0x%02X to 0x%04X)", value, addr);
                     break;
             }
             return;
@@ -253,146 +248,147 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
 
                     break;
                 default:
-                    LERROR("unimplemented MBC3 write (0x%02X to 0x%04X)", value, addr);
+                    LERROR("MBC3: unimplemented write (0x%02X to 0x%04X)", value, addr);
                     break;
             }
             return;
         default:
-            LERROR("unimplemented MBC (type 0x%02X) write (0x%02X to 0x%04X)", mbc_type, value, addr);
+            LERROR("bus: unimplemented MBC (type 0x%02X) write (0x%02X to 0x%04X)", mbc_type, value, addr);
             return;
     }
 }
 
-u8 Bus::ReadIO(u16 addr) {
+u8 Bus::ReadIO(u8 addr) {
     switch (addr) {
-        case 0xFF00:
+        case 0x00:
         {
             u8 buttons = joypad.Read();
-            LDEBUG("reading 0x%02X from Joypad (0xFF00)", buttons);
+            LDEBUG("bus: reading 0x%02X from Joypad (0xFF00)", buttons);
             return buttons;
         }
-        case 0xFF04:
+        case 0x04:
         {
             u8 div = timer.GetDivider();
-            LDEBUG("reading 0x%02X from DIV (0xFF04)", div);
+            LDEBUG("bus: reading 0x%02X from DIV (0xFF04)", div);
             return div;
         }
-        case 0xFF05:
+        case 0x05:
         {
             u8 tima = timer.GetTIMA();
-            LDEBUG("reading 0x%02X from TIMA (0xFF05)", tima);
+            LDEBUG("bus: reading 0x%02X from TIMA (0xFF05)", tima);
             return tima;
         }
-        case 0xFF06:
+        case 0x06:
         {
             u8 tma = timer.GetTMA();
-            LDEBUG("reading 0x%02X from TMA (0xFF06)", tma);
+            LDEBUG("bus: reading 0x%02X from TMA (0xFF06)", tma);
             return tma;
         }
-        case 0xFF07:
+        case 0x07:
         {
             u8 tac = timer.GetTAC();
-            LDEBUG("reading 0x%02X from TAC (0xFF07)", tac);
+            LDEBUG("bus: reading 0x%02X from TAC (0xFF07)", tac);
             return tac;
         }
-        case 0xFF0F:
+        case 0x0F:
             // Interrupt fetch
-            return memory[0xFF0F];
-        case 0xFF40:
+            return io[0x0F];
+        case 0x40:
         {
             u8 lcdc = ppu.GetLCDC();
-            LDEBUG("reading 0x%02X from LCDC (0xFF40)", lcdc);
+            LDEBUG("bus: reading 0x%02X from LCDC (0xFF40)", lcdc);
             return lcdc;
         }
-        case 0xFF41:
+        case 0x41:
         {
             u8 status = ppu.GetSTAT();
-            LDEBUG("reading 0x%02X from STAT (0xFF41)", status);
+            LDEBUG("bus: reading 0x%02X from STAT (0xFF41)", status);
             return status;
         }
-        case 0xFF42:
-            LDEBUG("reading 0x%02X from SCY (0xFF42)", memory[0xFF42]);
-            return memory[0xFF42];
-        case 0xFF43:
-            LDEBUG("reading 0x%02X from SCX (0xFF43)", memory[0xFF43]);
-            return memory[0xFF43];
-        case 0xFF44:
+        case 0x42:
+            LDEBUG("bus: reading 0x%02X from SCY (0xFF42)", io[0x42]);
+            return io[0x42];
+        case 0x43:
+            LDEBUG("bus: reading 0x%02X from SCX (0xFF43)", io[0x43]);
+            return io[0x43];
+        case 0x44:
         {
             u8 ly = ppu.GetLY();
-            // LDEBUG("reading 0x%02X from LY (0xFF44)", ly);
+            // LDEBUG("bus: reading 0x%02X from LY (0xFF44)", ly);
             return ly;
         }
-        case 0xFF50:
+        case 0x50:
             // boot ROM switch
-            return memory[0xFF50];
+            return io[0x50];
 
-        case 0xFF4D:
-        case 0xFF56:
-        case 0xFF6C:
-        case 0xFF70:
-        case 0xFF72:
-        case 0xFF73:
-        case 0xFF74:
-        case 0xFF75:
-        case 0xFF76:
-        case 0xFF77:
+        case 0x4D:
+        case 0x56:
+        case 0x6C:
+        case 0x70:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+        case 0x76:
+        case 0x77:
             // These are CGB registers.
             return 0xFF;
         default:
-            LDEBUG("reading 0x%02X from 0x%04X (IO)", memory[addr], addr);
-            return memory[addr];
+            LDEBUG("bus: reading 0x%02X from 0xFF%02X (IO)", io[addr], addr);
+            return io[addr];
     }
 }
 
-void Bus::WriteIO(u16 addr, u8 value) {
+void Bus::WriteIO(u8 addr, u8 value) {
     switch (addr) {
-        case 0xFF00:
+        case 0x00:
             joypad.Write(value);
             return;
-        case 0xFF01:
+        case 0x01:
             // used by blargg tests
             // putchar(value);
-            LDEBUG("writing 0x%02X to Serial data (0xFF01)", value);
+            LDEBUG("bus: writing 0x%02X to Serial data (0xFF01)", value);
+            io[0x01] = value;
             return;
-        case 0xFF04:
+        case 0x04:
             // Timer divider
             // All writes to this set it to 0.
             timer.ResetDivider();
-            memory[0xFF04] = 0x00;
+            io[0x04] = 0x00;
             return;
-        case 0xFF05:
+        case 0x05:
             // Timer counter
-            LDEBUG("writing 0x%02X to TIMA (0xFF05)", value);
+            LDEBUG("bus: writing 0x%02X to TIMA (0xFF05)", value);
             timer.SetTIMA(value);
-            memory[0xFF05] = value;
+            io[0x05] = value;
             return;
-        case 0xFF06:
+        case 0x06:
             // Timer modulo
-            LDEBUG("writing 0x%02X to TMA (0xFF06)", value);
+            LDEBUG("bus: writing 0x%02X to TMA (0xFF06)", value);
             timer.SetTMA(value);
-            memory[0xFF06] = value;
+            io[0x06] = value;
             return;
-        case 0xFF07:
+        case 0x07:
             // Timer control
-            LDEBUG("writing 0x%02X to TAC (0xFF07)", value);
+            LDEBUG("bus: writing 0x%02X to TAC (0xFF07)", value);
             timer.SetTAC(value);
-            memory[0xFF07] = value;
+            io[0x07] = value;
             return;
-        case 0xFF0F:
+        case 0x0F:
             // Interrupt fetch
 
             // The highest 3 bits are always set
             value |= 0xE0;
 
-            memory[0xFF0F] = value;
+            io[0x0F] = value;
             return;
-        case 0xFF40:
-            LDEBUG("writing 0x%02X to LCDC (0xFF40)", value);
+        case 0x40:
+            LDEBUG("bus: writing 0x%02X to LCDC (0xFF40)", value);
             ppu.SetLCDC(value);
-            memory[addr] = value;
+            io[0x40] = value;
             return;
-        case 0xFF41:
-            LDEBUG("writing 0x%02X to STAT (0xFF41)", value);
+        case 0x41:
+            LDEBUG("bus: writing 0x%02X to STAT (0xFF41)", value);
             // Bit 7 is always set
             value |= 0x80;
 
@@ -401,26 +397,26 @@ void Bus::WriteIO(u16 addr, u8 value) {
             value |= (ppu.GetSTAT() & 0x7);
 
             ppu.SetSTAT(value);
-            memory[addr] = value;
+            io[0x41] = value;
             return;
-        case 0xFF42:
-            LDEBUG("writing 0x%02X to SCY (0xFF42)", value);
+        case 0x42:
+            LDEBUG("bus: writing 0x%02X to SCY (0xFF42)", value);
             ppu.SetSCY(value);
-            memory[addr] = value;
+            io[0x42] = value;
             return;
-        case 0xFF43:
-            LDEBUG("writing 0x%02X to SCX (0xFF43)", value);
+        case 0x43:
+            LDEBUG("bus: writing 0x%02X to SCX (0xFF43)", value);
             ppu.SetSCX(value);
-            memory[addr] = value;
+            io[0x43] = value;
             return;
-        case 0xFF45:
-            LDEBUG("writing 0x%02X to LYC (0xFF45)", value);
+        case 0x45:
+            LDEBUG("bus: writing 0x%02X to LYC (0xFF45)", value);
             ppu.SetLYC(value);
-            memory[addr] = value;
+            io[0x45] = value;
             return;
-        case 0xFF46: {
-            LDEBUG("writing 0x%02X to DMA transfer location (0xFF46)", value);
-            memory[addr] = value;
+        case 0x46: {
+            LDEBUG("bus: writing 0x%02X to DMA transfer location (0xFF46)", value);
+            io[0x46] = value;
 
             // copies 160 bytes from somewhere to OAM
             // source is determined by (value << 8)
@@ -432,21 +428,21 @@ void Bus::WriteIO(u16 addr, u8 value) {
             }
         }
             return;
-        case 0xFF47:
-            LDEBUG("writing 0x%02X to Background palette data (0xFF47)", value);
-            memory[addr] = value;
+        case 0x47:
+            LDEBUG("bus: writing 0x%02X to Background palette data (0xFF47)", value);
+            io[0x47] = value;
             return;
-        case 0xFF50:
+        case 0x50:
             if (value & 0b1) {
-                LINFO("disabling bootrom");
+                LINFO("bus: disabling bootrom");
                 boot_rom_enabled = false;
             }
 
-            memory[addr] = value;
+            io[0x50] = value;
             return;
         default:
-            LDEBUG("writing 0x%02X to 0x%04X (unknown IO)", value, addr);
-            memory[addr] = value;
+            LDEBUG("bus: writing 0x%02X to 0xFF%02X (unknown IO)", value, addr);
+            io[addr] = value;
             return;
     }
 }
