@@ -1194,7 +1194,8 @@ void SM83::ld_da16_sp() {
     u16 address = GetWordFromPC();
     LTRACE("LD (0x%04X), SP", address);
 
-    bus.Write16(address, sp);
+    bus.Write8(address, static_cast<u8>(sp & 0xFF));
+    bus.Write8(address + 1, static_cast<u8>(sp >> 8));
 }
 
 void SM83::ld_dbc_a() {

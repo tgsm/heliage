@@ -263,20 +263,6 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
     }
 }
 
-void Bus::Write16(u16 addr, u16 value, bool affect_timer) {
-    LDEBUG("writing 0x%04X to 0x%04X", value, addr);
-
-    if (affect_timer) {
-        timer.AdvanceCycles(8);
-    }
-
-    u8 high = static_cast<u8>(value >> 8);
-    u8 low = static_cast<u8>(value & 0xFF);
-
-    memory[addr] = low;
-    memory[addr + 1] = high;
-}
-
 u8 Bus::ReadIO(u16 addr) {
     switch (addr) {
         case 0xFF00:

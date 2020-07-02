@@ -16,8 +16,6 @@ public:
     void Write8(u16 addr, u8 value, bool affect_timer = true);
     void WriteMBC(u8 mbc_type, u16 addr, u8 value);
 
-    void Write16(u16 addr, u16 value, bool affect_timer = true);
-
     u8 ReadIO(u16 addr);
     void WriteIO(u16 addr, u8 value);
 
