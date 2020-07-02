@@ -124,6 +124,13 @@ int main_SDL(char* argv[]) {
 
     GB gb(bootrom, cartridge);
 
+    std::string title = "heliage";
+    std::string game_title = cartridge.GetGameTitle();
+    if (!game_title.empty()) {
+        title = "heliage - " + game_title;
+    }
+    SDL_SetWindowTitle(window, title.c_str());
+
     running = true;
     while (running) {
         gb.Run();
