@@ -7,7 +7,7 @@ Joypad::Joypad(Bus& bus)
 }
 
 u8 Joypad::Read() {
-    buttons_state = 0xFF;
+    buttons_state = 0xCF;
 
     if (directions_selected) {
         if (down) buttons_state &= ~(1 << 3);
