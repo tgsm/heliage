@@ -1,4 +1,3 @@
-#include <cstdio>
 #include "bus.h"
 #include "logging.h"
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdio>
+
 #define TEAL "\033[36m"
 #define WHITE "\033[1;37m"
 #define YELLOW "\033[1;33m"

@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <cstdio>
 #include <filesystem>
 #include <string>
 #include "../bootrom.h"
