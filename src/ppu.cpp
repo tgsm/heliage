@@ -72,10 +72,18 @@ void PPU::Tick() {
                 stat &= ~0x3;
                 stat |= 0x1;
                 bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x1, false);
+
+                if (stat & (1 << 4)) {
+                    bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
+                }
             } else {
                 stat &= ~0x3;
                 stat |= 0x2;
                 mode = Mode::AccessOAM;
+
+                if (stat & (1 << 5)) {
+                    bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
+                }
             }
 
             break;
@@ -96,6 +104,10 @@ void PPU::Tick() {
                 mode = Mode::AccessOAM;
                 stat &= ~0x3;
                 stat |= 0x2;
+
+                if (stat & (1 << 5)) {
+                    bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
+                }
             }
 
             break;
