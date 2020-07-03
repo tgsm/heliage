@@ -530,7 +530,7 @@ void Bus::WriteIO(u8 addr, u8 value) {
             io[0x47] = value;
             return;
         case 0x50:
-            if (value & 0b1) {
+            if (boot_rom_enabled && value & 0b1) {
                 LINFO("bus: disabling bootrom");
                 boot_rom_enabled = false;
             }
