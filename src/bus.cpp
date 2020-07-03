@@ -262,6 +262,16 @@ u8 Bus::ReadIO(u8 addr) {
             LDEBUG("bus: reading 0x%02X from Joypad (0xFF00)", buttons);
             return buttons;
         }
+        case 0x02:
+        {
+            u8 value = io[0x02];
+
+            // Bits 6-1 are unused
+            value |= 0x7E;
+
+            LDEBUG("bus: reading 0x%02X from Serial control (0xFF02)", value);
+            return value;
+        }
         case 0x04:
         {
             u8 div = timer.GetDivider();
@@ -283,12 +293,90 @@ u8 Bus::ReadIO(u8 addr) {
         case 0x07:
         {
             u8 tac = timer.GetTAC();
+
+            // Highest 5 bits are unused
+            tac |= 0xF8;
+
             LDEBUG("bus: reading 0x%02X from TAC (0xFF07)", tac);
             return tac;
         }
         case 0x0F:
+        {
             // Interrupt fetch
-            return io[0x0F];
+            u8 value = io[0x0F];
+
+            // Highest 3 bits are unused
+            value |= 0xE0;
+
+            return value;
+        }
+        case 0x10:
+        {
+            // Audio channel 1 sweep
+            u8 value = io[0x10];
+
+            // Highest bit is unused
+            value |= 0x80;
+
+            LDEBUG("bus: reading 0x%02X to NR10 (0xFF10)", value);
+            return value;
+        }
+        case 0x1A:
+        {
+            // Audio channel 3 on/off
+            u8 value = io[0x1A];
+
+            // Bits 6-0 are unused
+            value |= 0x7F;
+
+            LDEBUG("bus: reading 0x%02X from NR30 (0xFF1A)", value);
+            return value;
+        }
+        case 0x1C:
+        {
+            // Audio channel 3 select output level
+            u8 value = io[0x1C];
+
+            // Bits 7 and 4-0 are unused
+            value |= 0x9F;
+
+            LDEBUG("bus: reading 0x%02X from NR32 (0xFF1C)", value);
+            return value;
+        }
+        case 0x20:
+        {
+            // Audio channel 4 sound length
+            u8 value = io[0x20];
+
+            // Bits 7-6 are unused
+            value |= 0xC0;
+
+            LDEBUG("bus: reading 0x%02X from NR41 (0xFF20)", value);
+            return value;
+        }
+        case 0x23:
+        {
+            // Audio channel 4 counter
+            u8 value = io[0x23];
+
+            // Bits 5-0 are unused
+            value |= 0x3F;
+
+            LDEBUG("bus: reading 0x%02X from NR44 (0xFF23)", value);
+            return value;
+        }
+        case 0x26:
+        {
+            // Sound on/off
+            u8 value = io[0x26];
+
+            // TODO: lowest 4 bits are read-only
+            // Bits 6-4 are unused
+            value |= 0x70;
+
+            LDEBUG("bus: reading 0x%02X from NR52 (0xFF26)", value);
+            return value;
+        }
         case 0x40:
         {
             u8 lcdc = ppu.GetLCDC();
@@ -298,6 +386,10 @@ u8 Bus::ReadIO(u8 addr) {
         case 0x41:
         {
             u8 status = ppu.GetSTAT();
+
+            // Bit 7 is unused
+            status |= 0x80;
+
             LDEBUG("bus: reading 0x%02X from STAT (0xFF41)", status);
             return status;
         }
@@ -313,10 +405,8 @@ u8 Bus::ReadIO(u8 addr) {
             // LDEBUG("bus: reading 0x%02X from LY (0xFF44)", ly);
             return ly;
         }
-        case 0x50:
-            // boot ROM switch
-            return io[0x50];
 
+        // These are CGB registers.
         case 0x4D:
         case 0x56:
         case 0x6C:
@@ -327,8 +417,25 @@ u8 Bus::ReadIO(u8 addr) {
         case 0x75:
         case 0x76:
         case 0x77:
-            // These are CGB registers.
             return 0xFF;
+
+        // These are unused registers.
+        case 0x03:
+        case 0x08 ... 0x0E:
+        case 0x15:
+        case 0x1F:
+        case 0x27 ... 0x29:
+        case 0x4C:
+        case 0x4E ... 0x4F:
+        // 0xFF50 is write-only
+        case 0x50:
+        case 0x51 ... 0x55:
+        case 0x57 ... 0x6B:
+        case 0x6D ... 0x6F:
+        case 0x71:
+        case 0x78 ... 0x7F:
+            return 0xFF;
+
         default:
             LDEBUG("bus: reading 0x%02X from 0xFF%02X (IO)", io[addr], addr);
             return io[addr];
@@ -372,10 +479,6 @@ void Bus::WriteIO(u8 addr, u8 value) {
             return;
         case 0x0F:
             // Interrupt fetch
-
-            // The highest 3 bits are always set
-            value |= 0xE0;
-
             io[0x0F] = value;
             return;
         case 0x40:
@@ -385,9 +488,6 @@ void Bus::WriteIO(u8 addr, u8 value) {
             return;
         case 0x41:
             LDEBUG("bus: writing 0x%02X to STAT (0xFF41)", value);
-            // Bit 7 is always set
-            value |= 0x80;
-
             // The lowest 3 bits are read-only
             value &= ~0x7;
             value |= (ppu.GetSTAT() & 0x7);
@@ -435,7 +535,6 @@ void Bus::WriteIO(u8 addr, u8 value) {
                 boot_rom_enabled = false;
             }
 
-            io[0x50] = value;
             return;
         default:
             LDEBUG("bus: writing 0x%02X to 0xFF%02X (unknown IO)", value, addr);
