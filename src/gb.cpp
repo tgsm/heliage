@@ -11,8 +11,6 @@ GB::GB(BootROM bootrom, Cartridge cartridge)
 
 void GB::Run() {
     sm83.Tick();
-    ppu.Tick();
-    timer.Tick();
 }
 
 Bus* GB::GetBus() {

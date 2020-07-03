@@ -74,6 +74,8 @@ void Timer::AdvanceCycles(u64 cycles) {
     if (timer_enable) {
         tima_cycles += cycles;
     }
+    Tick();
 
     ppu.AdvanceCycles(cycles);
+    ppu.Tick();
 }
