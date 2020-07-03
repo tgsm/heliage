@@ -172,10 +172,6 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
 
     if (addr == 0xFFFF) {
         // Interrupt enable
-
-        // The highest 3 bits are always set
-        value |= 0xE0;
-
         ie = value;
         return;
     }
