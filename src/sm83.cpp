@@ -355,9 +355,9 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xFF, rst(0x38));
 
         default:
-            DumpRegisters();
-            // bus.DumpMemoryToFile();
+            bus.DumpMemoryToFile();
             LFATAL("unimplemented opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
+            DumpRegisters();
             return false;
     }
 
@@ -624,10 +624,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xFF, LTRACE("SET 7, A"); set(7, &a));
 #undef INSTR
         default:
-            DumpRegisters();
-            bus.DumpMemoryToFile();
-            LFATAL("unimplemented CB opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
-            return false;
+            UNREACHABLE();
     }
 
     return true;
@@ -689,9 +686,9 @@ void SM83::DumpRegisters() {
 }
 
 void SM83::ill(const u8 opcode) {
-    DumpRegisters();
     bus.DumpMemoryToFile();
     LFATAL("illegal opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
+    DumpRegisters();
 }
 
 void SM83::adc_a_d8() {

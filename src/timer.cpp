@@ -63,8 +63,7 @@ u32 Timer::GetTACFrequency() {
         case 0b10: return 64;
         case 0b11: return 256;
         default:
-            LERROR("unreachable TAC frequency");
-            return 1;
+            UNREACHABLE_MSG("invalid TAC frequency %u", tac);
     }
 }
 
