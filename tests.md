@@ -51,7 +51,7 @@ Some of these tests will always fail due to currently unimplemented features, li
 | 12-wave write while on | Failed (Timer period or phase resetting is wrong) |
 
 ## halt_bug
-Failed (3DB103C3)
+Failed (2A6CE34B)
 
 ## instr_timing
 Passed
@@ -62,16 +62,16 @@ Failed
 ## mem_timing
 | Test | Result |
 | ---- | ------ |
-| 01-read_timing | Failed |
-| 02-write_timing | Failed |
-| 03-modify_timing | Failed |
+| 01-read_timing | Passed |
+| 02-write_timing | Passed |
+| 03-modify_timing | Passed |
 
 ## mem_timing-2
 | Test | Result |
 | ---- | ------ |
-| 01-read_timing | Failed |
-| 02-write_timing | Failed |
-| 03-modify_timing | Failed |
+| 01-read_timing | Passed |
+| 02-write_timing | Passed |
+| 03-modify_timing | Passed |
 
 ## oam_bug
 | Test | Result |
@@ -92,7 +92,7 @@ Failed
 | add_sp_e_timing | Failed |
 | bits/mem_oam | Passed |
 | bits/reg_f | Passed |
-| bits/unused_hwio-GS | Failed |
+| bits/unused_hwio-GS | Passed |
 | boot_div2-S | Failed |
 | boot_div-dmg0 | Failed |
 | boot_div-dmgABCmgb | Failed |
@@ -117,7 +117,7 @@ Failed
 | halt_ime0_nointr_timing | Failed |
 | halt_ime1_timing2-GS | Failed (Round 1) |
 | halt_ime1_timing | Passed |
-| if_ie_registers | Failed |
+| if_ie_registers | Passed |
 | instr/daa | Passed |
 | interrupts/ie_push | Failed (Round 1: not cancelled) |
 | intr_timing | Failed |
@@ -132,17 +132,17 @@ Failed
 | oam_dma_timing | Failed |
 | pop_timing | Passed |
 | ppu/hblank_ly_scx_timing-GS | Failed |
-| ppu/intr_1_2_timing-GS | Failed (freezes) |
-| ppu/intr_2_0_timing | Failed (freezes) |
-| ppu/intr_2_mode0_timing | Failed (freezes) |
-| ppu/intr_2_mode0_timing_sprites | Failed (freezes) |
-| ppu/intr_2_mode3_timing | Failed (freezes) |
-| ppu/intr_2_oam_ok_timing | Failed (freezes) |
+| ppu/intr_1_2_timing-GS | Failed |
+| ppu/intr_2_0_timing | Failed |
+| ppu/intr_2_mode0_timing | Failed |
+| ppu/intr_2_mode0_timing_sprites | Failed |
+| ppu/intr_2_mode3_timing | Failed |
+| ppu/intr_2_oam_ok_timing | Failed |
 | ppu/lcdon_timing-GS | Failed |
 | ppu/lcdon_write_timing-GS | Failed |
 | ppu/stat_irq_blocking | Failed (Mode=1 intr) |
 | ppu/stat_lyc_onoff | Failed (Round 1 step 1) |
-| ppu/vblank_stat_intr-GS | Failed (freezes) |
+| ppu/vblank_stat_intr-GS | Failed |
 | push_timing | Failed |
 | rapid_di_ei | Passed |
 | ret_cc_timing | Failed (Round 1) |
@@ -156,7 +156,7 @@ Failed
 | timer/tim00_div_trigger | Passed |
 | timer/tim00 | Failed |
 | timer/tim01_div_trigger | Failed |
-| timer/tim01 | Failed |
+| timer/tim01 | Passed |
 | timer/tim10_div_trigger | Failed |
 | timer/tim10 | Failed |
 | timer/tim11_div_trigger | Passed |
@@ -171,10 +171,10 @@ Failed
 | mbc1/bits_bank1 | Passed |
 | mbc1/bits_bank2 | Failed (Round 1: initial BANK2) |
 | mbc1/bits_mode | Passed |
-| mbc1/bits_ramg | Failed (Round 2, RAMG=1A) |
+| mbc1/bits_ramg | Passed |
 | mbc1/multicart_rom_8Mb | Failed |
-| mbc1/ram_256kb | Failed (stack overflow) |
-| mbc1/ram_64kb | Failed (crashes heliage) |
+| mbc1/ram_256kb | Failed (just messed up) |
+| mbc1/ram_64kb | Failed (just messed up) |
 | mbc1/rom_16Mb | Failed |
 | mbc1/rom_1Mb | Failed |
 | mbc1/rom_2Mb | Failed |
@@ -196,3 +196,13 @@ Failed
 | mbc5/rom_512kb | Failed |
 | mbc5/rom_64Mb | Failed |
 | mbc5/rom_8Mb | Failed |
+
+## manual_only
+| Test | Result |
+| ---- | ------ |
+| sprite_priority | Failed |
+
+## madness
+| Test | Result |
+| ---- | ------ |
+| mgb_oam_dma_halt_sprites | Failed |
