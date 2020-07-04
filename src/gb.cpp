@@ -6,7 +6,6 @@
 GB::GB(BootROM bootrom, Cartridge cartridge)
     : bus(bootrom, cartridge, joypad, ppu, timer), ppu(bus), sm83(bus, timer), timer(bus, ppu) {
     LINFO("powering on...");
-    cycles = 0;
 }
 
 void GB::Run() {

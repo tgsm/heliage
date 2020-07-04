@@ -22,6 +22,4 @@ private:
     PPU ppu;
     SM83 sm83;
     Timer timer;
-
-    u64 cycles;
 };
