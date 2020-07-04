@@ -17,7 +17,7 @@ public:
         Start,
     };
 
-    Joypad(Bus& bus);
+    Joypad() = default;
 
     u8 Read();
     void Write(u8 value);
@@ -25,8 +25,6 @@ public:
     void PressButton(Button button);
     void ReleaseButton(Button button);
 private:
-    Bus& bus;
-
     bool buttons_selected = false;
     bool directions_selected = false;
 

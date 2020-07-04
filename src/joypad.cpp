@@ -2,10 +2,6 @@
 #include "joypad.h"
 #include "logging.h"
 
-Joypad::Joypad(Bus& bus)
-    : bus(bus) {
-}
-
 u8 Joypad::Read() {
     buttons_state = 0xCF;
 
