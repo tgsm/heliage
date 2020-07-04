@@ -207,10 +207,10 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
                 case 0x5000:
                     if (mbc1_mode == 0) {
                         mbc1_bank2 = value & 3;
-                        LFATAL("MBC1: bank2=%02X", mbc1_bank2);
+                        LDEBUG("MBC1: bank2=%02X", mbc1_bank2);
                     } else if (mbc1_mode == 1) {
                         mbc1_ram_bank = value & 3;
-                        LFATAL("MBC1: ram bank=%02X", mbc1_ram_bank);
+                        LDEBUG("MBC1: ram bank=%02X", mbc1_ram_bank);
                     }
 
                     break;
@@ -219,7 +219,7 @@ void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
                     // TODO: 00h = ROM Banking Mode (up to 8KByte RAM, 2MByte ROM) (default)
                     //       01h = RAM Banking Mode (up to 32KByte RAM, 512KByte ROM)
                     mbc1_mode = value;
-                    LINFO("MBC1: set mode=%u", value);
+                    LDEBUG("MBC1: set mode=%u", value);
                     break;
                 default:
                     LERROR("MBC1: unimplemented write (0x%02X to 0x%04X)", value, addr);
