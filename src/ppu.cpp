@@ -169,24 +169,7 @@ void PPU::RenderBackgroundScanline() {
         u8 tile_y = bg_y % 8;
         u8 tile_x = bg_x % 8;
 
-        Color color = tiles[tile_id][tile_y][tile_x];
-        switch (static_cast<u8>(color)) {
-            case 0b00:
-                color = bg_window_palette.zero;
-                break;
-            case 0b01:
-                color = bg_window_palette.one;
-                break;
-            case 0b10:
-                color = bg_window_palette.two;
-                break;
-            case 0b11:
-                color = bg_window_palette.three;
-                break;
-            default:
-                break;
-        }
-
+        Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
         framebuffer[160 * screen_y + screen_x] = color;
     }
 }
@@ -238,6 +221,21 @@ void PPU::SetBGWindowPalette(u8 value) {
                                                        static_cast<u8>(bg_window_palette.two),
                                                        static_cast<u8>(bg_window_palette.one),
                                                        static_cast<u8>(bg_window_palette.zero));
+}
+
+PPU::Color PPU::GetColorFromPalette(Color color) {
+    switch (static_cast<u8>(color)) {
+        case 0b00:
+            return bg_window_palette.zero;
+        case 0b01:
+            return bg_window_palette.one;
+        case 0b10:
+            return bg_window_palette.two;
+        case 0b11:
+            return bg_window_palette.three;
+        default:
+            UNREACHABLE_MSG("invalid PPU color %u", static_cast<u8>(color));
+    }
 }
 
 bool PPU::IsLCDEnabled() {

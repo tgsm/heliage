@@ -78,4 +78,6 @@ private:
 
     std::array<Color, 160 * 144> framebuffer;
     Color tiles[384][8][8];
+
+    Color GetColorFromPalette(Color color);
 };
