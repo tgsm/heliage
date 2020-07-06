@@ -449,7 +449,12 @@ void Bus::WriteIO(u8 addr, u8 value) {
             return;
         case 0x01:
             // used by blargg tests
+#ifdef HELIAGE_PRINT_SERIAL_BYTES
+            printf("%02X\n", value);
+            fflush(stdout);
+#else
             // putchar(value);
+#endif
             LDEBUG("bus: writing 0x%02X to Serial data (0xFF01)", value);
             io[0x01] = value;
             return;

@@ -8,12 +8,18 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 find_package(SDL2 REQUIRED)
 
+option(HELIAGE_PRINT_SERIAL_BYTES "If enabled, any bytes sent to serial (0xFF01) will be printed to stdout" OFF)
+
 set(HELIAGE_FRONTEND "SDL2" CACHE STRING "The frontend heliage will run on")
 set_property(CACHE HELIAGE_FRONTEND PROPERTY STRINGS SDL2 ImGui Null)
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     add_compile_definitions("HELIAGE_FRONTEND_SDL")
 elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     add_compile_definitions("HELIAGE_FRONTEND_IMGUI")
+endif()
+
+if (${HELIAGE_PRINT_SERIAL_BYTES})
+    add_compile_definitions("HELIAGE_PRINT_SERIAL_BYTES")
 endif()
 
 set(SOURCES
