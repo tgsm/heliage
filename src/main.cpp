@@ -12,7 +12,6 @@ int main(int argc, char* argv[]) {
 #elif defined(HELIAGE_FRONTEND_IMGUI)
     return main_imgui(argv);
 #else
-    printf("you didn't #define a frontend! :(\n");
-    return 0;
+    return main_null(argv);
 #endif
 }

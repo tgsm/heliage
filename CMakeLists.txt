@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 find_package(SDL2 REQUIRED)
 
 set(HELIAGE_FRONTEND "SDL2" CACHE STRING "The frontend heliage will run on")
-set_property(CACHE HELIAGE_FRONTEND PROPERTY STRINGS SDL2 ImGui)
+set_property(CACHE HELIAGE_FRONTEND PROPERTY STRINGS SDL2 ImGui Null)
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     add_compile_definitions("HELIAGE_FRONTEND_SDL")
 elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
@@ -43,6 +43,7 @@ set(HEADERS
 
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     set(SOURCES ${SOURCES} src/frontend/sdl.cpp)
+    set(HEADERS ${HEADERS} src/frontend/sdl.h)
 elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     set(SOURCES ${SOURCES}
         src/frontend/imgui.cpp
@@ -54,6 +55,9 @@ elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
         imgui/imgui_draw.cpp
         imgui/imgui_widgets.cpp
     )
+elseif (${HELIAGE_FRONTEND} MATCHES "Null")
+    set(SOURCES ${SOURCES} src/frontend/null.cpp)
+    set(HEADERS ${HEADERS} src/frontend/null.h)
 endif()
 
 add_compile_options(-Wall -Wextra)
