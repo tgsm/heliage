@@ -26,23 +26,6 @@ public:
     void Reset();
     void Tick();
 
-    u8 GetByteFromPC();
-    u16 GetWordFromPC();
-
-    void SetZeroFlag(bool b);
-    void SetNegateFlag(bool b);
-    void SetHalfCarryFlag(bool b);
-    void SetCarryFlag(bool b);
-
-    bool HasFlag(Flags flag);
-
-    void StackPush(u16 word_reg);
-    void StackPop(u16* word_reg);
-
-    bool ExecuteOpcode(const u8 opcode);
-    bool ExecuteCBOpcode(const u8 opcode);
-    void HandleInterrupts();
-
     void DumpRegisters();
 private:
     union {
@@ -79,6 +62,23 @@ private:
 
     Bus& bus;
     Timer& timer;
+
+    u8 GetByteFromPC();
+    u16 GetWordFromPC();
+
+    void SetZeroFlag(bool b);
+    void SetNegateFlag(bool b);
+    void SetHalfCarryFlag(bool b);
+    void SetCarryFlag(bool b);
+
+    bool HasFlag(Flags flag);
+
+    void StackPush(u16 word_reg);
+    void StackPop(u16* word_reg);
+
+    bool ExecuteOpcode(const u8 opcode);
+    bool ExecuteCBOpcode(const u8 opcode);
+    void HandleInterrupts();
 
     // illegal instruction
     void ill(const u8 opcode);
