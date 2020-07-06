@@ -181,6 +181,16 @@ int main_imgui(char* argv[]) {
         }
 
         {
+            ImGui::Begin("Debugger");
+
+            if (ImGui::Button("Step")) {
+                gb.Run();
+            }
+
+            ImGui::End();
+        }
+
+        {
             ImGui::Begin("Memory viewer");
 
             for (u32 i = 0x0000; i < 0x10000; i += 0x10) {
