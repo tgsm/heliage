@@ -69,6 +69,9 @@ private:
     u8 lyc;
     Mode mode;
 
+    bool lyc_interrupt_fired = false;
+    void CheckForLYCoincidence();
+
     struct {
         Color three;
         Color two;

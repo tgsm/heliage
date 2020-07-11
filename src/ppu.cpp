@@ -16,6 +16,21 @@ void PPU::AdvanceCycles(u64 cycles) {
     vcycles += cycles;
 }
 
+void PPU::CheckForLYCoincidence() {
+    stat &= ~0x4;
+
+    if (ly != lyc) {
+        lyc_interrupt_fired = false;
+        return;
+    }
+
+    stat |= 0x4;
+    if (stat & (1 << 6) && !lyc_interrupt_fired) {
+        lyc_interrupt_fired = true;
+        bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
+    }
+}
+
 void PPU::Tick() {
     switch (mode) {
         case Mode::AccessOAM:
@@ -27,6 +42,8 @@ void PPU::Tick() {
             vcycles %= 80;
             stat |= 0x3;
             mode = Mode::AccessVRAM;
+
+            CheckForLYCoincidence();
             break;
         case Mode::AccessVRAM: {
             // TODO: block memory access to VRAM during this mode
@@ -40,21 +57,9 @@ void PPU::Tick() {
             }
 
             vcycles %= 172;
-
-            stat &= ~0x7;
-
-            bool lyc_interrupt = stat & (1 << 6);
-            bool lyc_equals_ly = (lyc == ly);
-            if (lyc_interrupt && lyc_equals_ly) {
-                // LY conincidence interrupt
-                bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
-            }
-
-            if (lyc_equals_ly) {
-                stat |= 0x7;
-            }
-
+            stat &= ~0x3;
             mode = Mode::HBlank;
+            CheckForLYCoincidence();
         }
             break;
         case Mode::HBlank:
@@ -66,6 +71,8 @@ void PPU::Tick() {
 
             ly++;
             vcycles %= 204;
+
+            CheckForLYCoincidence();
 
             if (ly == 144) {
                 mode = Mode::VBlank;
@@ -96,7 +103,7 @@ void PPU::Tick() {
             vcycles %= 456;
 
             if (ly == 154) {
-                // TODO: draw
+                // TODO: draw sprites
                 RenderSprites();
                 DrawFramebuffer(framebuffer);
                 HandleEvents(bus.GetJoypad());
@@ -110,8 +117,10 @@ void PPU::Tick() {
                 }
             }
 
+            CheckForLYCoincidence();
             break;
         default:
+            UNREACHABLE_MSG("invalid PPU mode %u", static_cast<u8>(mode));
             break;
     }
 }
