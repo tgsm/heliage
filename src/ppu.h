@@ -47,6 +47,12 @@ public:
 
     void SetBGWindowPalette(u8 value);
 
+    u8 GetWY() { return wy; }
+    void SetWY(u8 value) { wy = value; }
+
+    u8 GetWX() { return wx; }
+    void SetWX(u8 value) { wx = value; }
+
     bool IsLCDEnabled();
     u16 GetWindowTileMapDisplayOffset();
     bool IsWindowDisplayEnabled();
@@ -64,6 +70,8 @@ private:
     u8 scy;
     u8 ly;
     u8 lyc;
+    u8 wy;
+    u8 wx;
     Mode mode;
 
     bool lyc_interrupt_fired = false;
@@ -83,5 +91,6 @@ private:
 
     void RenderScanline();
     void RenderBackgroundScanline();
+    void RenderWindowScanline();
     void RenderSprites();
 };

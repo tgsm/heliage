@@ -405,6 +405,18 @@ u8 Bus::ReadIO(u8 addr) {
             // LDEBUG("bus: reading 0x%02X from LY (0xFF44)", ly);
             return ly;
         }
+        case 0x4A:
+        {
+            u8 wy = ppu.GetWY();
+            // LDEBUG("bus: reading 0x%02X from Window Y (0xFF4A)", wy);
+            return wy;
+        }
+        case 0x4B:
+        {
+            u8 wx = ppu.GetWX();
+            // LDEBUG("bus: reading 0x%02X from Window X (0xFF4B)", wx);
+            return wx;
+        }
 
         // These are CGB registers.
         case 0x4D:
@@ -533,6 +545,16 @@ void Bus::WriteIO(u8 addr, u8 value) {
             LDEBUG("bus: writing 0x%02X to Background palette data (0xFF47)", value);
             ppu.SetBGWindowPalette(value);
             io[0x47] = value;
+            return;
+        case 0x4A:
+            LDEBUG("bus: writing 0x%02X to Window Y (0xFF4A)", value);
+            ppu.SetWY(value);
+            io[0x4A] = value;
+            return;
+        case 0x4B:
+            LDEBUG("bus: writing 0x%02X to Window X (0xFF4B)", value);
+            ppu.SetWX(value);
+            io[0x4B] = value;
             return;
         case 0x50:
             if (boot_rom_enabled && value & 0b1) {

@@ -156,7 +156,7 @@ void PPU::RenderScanline() {
     }
 
     if (IsWindowDisplayEnabled()) {
-        // TODO: render window
+        RenderWindowScanline();
     }
 }
 
@@ -180,6 +180,44 @@ void PPU::RenderBackgroundScanline() {
 
         Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
         framebuffer[160 * screen_y + screen_x] = color;
+    }
+}
+
+void PPU::RenderWindowScanline() {
+    if (ly < wy) {
+        return;
+    }
+
+    if (wx < 7) {
+        // FIXME: Hack. Fixes Link's Awakening's HUD.
+        wx = 7;
+    }
+
+    if (wx >= 160) {
+        return;
+    }
+
+    if (wy >= 144) {
+        return;
+    }
+
+    u16 offset = GetWindowTileMapDisplayOffset();
+    bool is_signed = (GetBGWindowTileDataOffset() == 0x8800);
+
+    for (u8 screen_x = wx - 7; screen_x < 160; screen_x++) {
+        u8 scroll_x = screen_x - (wx - 7);
+        u8 scroll_y = ly - wy;
+        u16 tile_offset = offset + (scroll_x / 8) + (scroll_y / 8 * 32);
+        u16 tile_id = bus.Read8(tile_offset, false);
+        if (is_signed && tile_id < 0x80) {
+            tile_id += 0x100;
+        }
+
+        u8 tile_y = scroll_y % 8;
+        u8 tile_x = scroll_x % 8;
+
+        Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
+        framebuffer[160 * ly + screen_x] = color;
     }
 }
 
