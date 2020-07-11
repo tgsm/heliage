@@ -27,9 +27,6 @@ public:
 
     void Tick();
     void UpdateTile(u16 addr);
-    void RenderScanline();
-    void RenderBackgroundScanline();
-    void RenderSprites();
 
     u8 GetLCDC() { return lcdc; }
     void SetLCDC(u8 value) { lcdc = value; }
@@ -83,4 +80,8 @@ private:
     Color tiles[384][8][8];
 
     Color GetColorFromPalette(Color color);
+
+    void RenderScanline();
+    void RenderBackgroundScanline();
+    void RenderSprites();
 };
