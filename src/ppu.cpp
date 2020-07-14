@@ -113,6 +113,7 @@ void PPU::Tick() {
 
                 HandleEvents(bus.GetJoypad());
                 ly = 0;
+                window_line_counter = 0;
                 mode = Mode::AccessOAM;
                 stat &= ~0x3;
                 stat |= 0x2;
@@ -198,7 +199,7 @@ void PPU::RenderWindowScanline() {
         wx = 7;
     }
 
-    if (wx >= 160) {
+    if (wx >= 167) {
         return;
     }
 
@@ -211,7 +212,7 @@ void PPU::RenderWindowScanline() {
 
     for (u8 screen_x = wx - 7; screen_x < 160; screen_x++) {
         u8 scroll_x = screen_x - (wx - 7);
-        u8 scroll_y = ly - wy;
+        u8 scroll_y = window_line_counter;
         u16 tile_offset = offset + (scroll_x / 8) + (scroll_y / 8 * 32);
         u16 tile_id = bus.Read8(tile_offset, false);
         if (is_signed && tile_id < 0x80) {
@@ -224,6 +225,8 @@ void PPU::RenderWindowScanline() {
         Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
         framebuffer[160 * ly + screen_x] = color;
     }
+
+    window_line_counter++;
 }
 
 void PPU::RenderSprites() {

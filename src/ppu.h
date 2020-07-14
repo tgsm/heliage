@@ -97,6 +97,8 @@ private:
     void RenderWindowScanline();
     void RenderSprites();
 
+    u8 window_line_counter = 0;
+
     bool window_drawing_enabled = true;
     bool background_drawing_enabled = true;
 };
