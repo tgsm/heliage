@@ -28,81 +28,71 @@ u8 Bus::Read8(u16 addr, bool affect_timer) {
         timer.AdvanceCycles(4);
     }
 
-    if (addr <= 0x7FFF) {
-        if (addr < 0x0100 && boot_rom_enabled) {
-            return bootrom.Read(addr);
-        }
+    switch (addr) {
+        case 0x0000 ... 0x7FFF:
+            if (addr < 0x0100 && boot_rom_enabled) {
+                return bootrom.Read(addr);
+            }
 
 #define CART_IS_MBC1() (mbc_type >= 0x01 && mbc_type <= 0x03)
 #define CART_IS_MBC3() (mbc_type >= 0x0F && mbc_type <= 0x13)
 
-        if (addr >= 0x4000) {
-            u8 mbc_type = cartridge.GetMBCType();
-            u16 rom_bank = 0x001;
-            if (CART_IS_MBC1()) {
-                rom_bank = ((mbc1_bank2 & 3) << 5) | (mbc1_bank1 & 0x1F);
-            } else if (CART_IS_MBC3()) {
-                rom_bank = mbc3_rom_bank;
+            if (addr >= 0x4000) {
+                u8 mbc_type = cartridge.GetMBCType();
+                u16 rom_bank = 0x001;
+                if (CART_IS_MBC1()) {
+                    rom_bank = ((mbc1_bank2 & 3) << 5) | (mbc1_bank1 & 0x1F);
+                } else if (CART_IS_MBC3()) {
+                    rom_bank = mbc3_rom_bank;
+                }
+                return cartridge.Read((addr & 0x3FFF) + rom_bank * 0x4000);
             }
-            return cartridge.Read((addr & 0x3FFF) + rom_bank * 0x4000);
-        }
 
-        return cartridge.Read(addr);
-    }
+            return cartridge.Read(addr);
 
-    // VRAM
-    if (addr >= 0x8000 && addr < 0xA000) {
-        // LDEBUG("bus: reading 0x%02X from 0x%04X (VRAM)", vram[addr - 0x8000], addr);
-        return vram[addr - 0x8000];
-    }
+        case 0x8000 ... 0x9FFF:
+            // LDEBUG("bus: reading 0x%02X from 0x%04X (VRAM)", vram[addr - 0x8000], addr);
+            return vram[addr - 0x8000];
 
-    if (addr >= 0xA000 && addr < 0xC000) {
-        if (mbc_ram_enabled) {
+        case 0xA000 ... 0xBFFF:
+            if (!mbc_ram_enabled) {
+                // LWARN("bus: attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
+                return 0xFF;
+            }
+
             LDEBUG("bus: reading 0x%02X from 0x%04X (Cartridge RAM)", cartridge_ram[addr - 0xA000], addr);
             return cartridge_ram[addr - 0xA000];
-        } else {
-            // LWARN("bus: attempted to read from cartridge RAM while it is disabled (from 0x%04X)", addr);
-            return 0xFF;
-        }
+
+        case 0xC000 ... 0xDFFF:
+            // LDEBUG("bus: reading 0x%02X from 0x%04X (WRAM)", wram[addr - 0xC000], addr);
+            return wram[addr - 0xC000];
+
+        case 0xE000 ... 0xFDFF:
+            // LWARN("bus: reading from echo RAM (0x%02X from 0x%04X)", wram[addr - 0xE000], addr);
+            return wram[addr - 0xE000];
+
+        case 0xFE00 ... 0xFE9F:
+            // LDEBUG("bus: reading 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", oam[0xFE00], addr);
+            return oam[addr - 0xFE00];
+
+        case 0xFEA0 ... 0xFEFF:
+            // LWARN("bus: attempted to read from unusable memory (0x%04X)", addr);
+            return 0x00;
+
+        case 0xFF00 ... 0xFF7F:
+            return ReadIO(addr & 0xFF);
+
+        case 0xFF80 ... 0xFFFE:
+            // LDEBUG("bus: reading 0x%02X from 0x%04X (Zero Page)", hram[addr - 0xFF80], addr);
+            return hram[addr - 0xFF80];
+
+        case 0xFFFF:
+            // Interrupt enable
+            return ie;
+
+        default:
+            UNREACHABLE();
     }
-
-    if (addr >= 0xC000 && addr < 0xE000) {
-        // LDEBUG("bus: reading 0x%02X from 0x%04X (WRAM)", wram[addr - 0xC000], addr);
-        return wram[addr - 0xC000];
-    }    
-
-    if (addr >= 0xE000 && addr < 0xFE00) {
-        // LWARN("bus: reading from echo RAM (0x%02X from 0x%04X)", wram[addr - 0xE000], addr);
-        return wram[addr - 0xE000];
-    }
-
-    if (addr >= 0xFE00 && addr < 0xFEA0) {
-        // LDEBUG("bus: reading 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", oam[0xFE00], addr);
-        return oam[addr - 0xFE00];
-    }
-
-    if (addr >= 0xFEA0 && addr < 0xFF00) {
-        // LWARN("bus: attempted to read from unusable memory (0x%04X)", addr);
-        return 0x00;
-    }
-
-    if (addr >= 0xFF00 && addr < 0xFF80) {
-        return ReadIO(addr & 0xFF);
-    }
-
-    // Zero Page
-    if (addr >= 0xFF80 && addr < 0xFFFF) {
-        // LDEBUG("bus: reading 0x%02X from 0x%04X (Zero Page)", hram[addr - 0xFF80], addr);
-        return hram[addr - 0xFF80];
-    }
-
-    if (addr == 0xFFFF) {
-        // Interrupt enable
-        return ie;
-    }
-
-    LERROR("bus: unrecognized read8 from 0x%04X", addr);
-    return 0xFF;
 }
 
 void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
@@ -110,74 +100,69 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
         timer.AdvanceCycles(4);
     }
 
-    if (addr <= 0x7FFF) {
-        u8 mbc_type = cartridge.GetMBCType();
-        if (mbc_type) {
+    switch (addr) {
+        case 0x0000 ... 0x7FFF:
+        {
+            u8 mbc_type = cartridge.GetMBCType();
+            if (!mbc_type) {
+                break;
+            }
+
             WriteMBC(mbc_type, addr, value);
+            break;
         }
 
-        return;
-    }
+        case 0x8000 ... 0x9FFF:
+            vram[addr - 0x8000] = value;
+            ppu.UpdateTile(addr);
+            break;
 
-    if (addr >= 0x8000 && addr < 0xA000) {
-        vram[addr - 0x8000] = value;
-        ppu.UpdateTile(addr);
-        return;
-    }
+        case 0xA000 ... 0xBFFF:
+            if (!mbc_ram_enabled) {
+                // LWARN("bus: attempted to write to cartridge RAM while it is disabled (0x%02X to 0x%04X)", value, addr);
+                break;
+            }
 
-    if (addr >= 0xA000 && addr < 0xC000) {
-        if (mbc_ram_enabled) {
             LDEBUG("bus: writing 0x%02X to 0x%04X (Cartridge RAM)", value, addr);
             cartridge_ram[addr - 0xA000] = value;
-        } else {
-            // LWARN("bus: attempted to write to cartridge RAM while it is disabled (0x%02X to 0x%04X)", value, addr);
-        }
-        return;
-    }
+            break;
 
-    if (addr >= 0xC000 && addr < 0xE000) {
-        // LDEBUG("bus: writing 0x%02X to 0x%04X (WRAM)", value, addr);
-        wram[addr - 0xC000] = value;
-        return;
-    }
+        case 0xC000 ... 0xDFFF:
+            // LDEBUG("bus: writing 0x%02X to 0x%04X (WRAM)", value, addr);
+            wram[addr - 0xC000] = value;
+            break;
 
-    if (addr >= 0xE000 && addr < 0xFE00) {
-        // LWARN("bus: writing to echo RAM (0x%02X to 0x%04X)", value, addr);
-        wram[addr - 0xE000] = value;
-        return;
-    }
+        case 0xE000 ... 0xFDFF:
+            // LWARN("bus: writing to echo RAM (0x%02X to 0x%04X)", value, addr);
+            wram[addr - 0xE000] = value;
+            break;
 
-    if (addr >= 0xFE00 && addr < 0xFEA0) {
-        // LDEBUG("bus: writing 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", value, addr);
-        oam[addr - 0xFE00] = value;
-        return;
-    }
+        case 0xFE00 ... 0xFE9F:
+            // LDEBUG("bus: writing 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", value, addr);
+            oam[addr - 0xFE00] = value;
+            break;
 
-    if (addr >= 0xFEA0 && addr < 0xFF00) {
-        // LWARN("bus: attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
-        return;
-    }
+        case 0xFEA0 ... 0xFEFF:
+            // LWARN("bus: attempted to write to unusable memory (0x%02X to 0x%04X)", value, addr);
+            break;
 
-    if (addr >= 0xFF00 && addr < 0xFF80) {
-        WriteIO(addr & 0xFF, value);
-        return;
-    }
+        case 0xFF00 ... 0xFF7F:
+            WriteIO(addr & 0xFF, value);
+            break;
 
-    // Zero Page
-    if (addr >= 0xFF80 && addr < 0xFFFF) {
-        // LDEBUG("bus: writing 0x%02X to 0x%04X (Zero Page)", value, addr);
-        hram[addr - 0xFF80] = value;
-        return;
-    }
+        case 0xFF80 ... 0xFFFE:
+            // LDEBUG("bus: writing 0x%02X to 0x%04X (Zero Page)", value, addr);
+            hram[addr - 0xFF80] = value;
+            break;
 
-    if (addr == 0xFFFF) {
-        // Interrupt enable
-        ie = value;
-        return;
-    }
+        case 0xFFFF:
+            // Interrupt enable
+            ie = value;
+            break;
 
-    LERROR("bus: unrecognized write8 0x%02X to 0x%04X", value, addr);
-    return;
+        default:
+            UNREACHABLE();
+    }
 }
 
 void Bus::WriteMBC(u8 mbc_type, u16 addr, u8 value) {
@@ -449,7 +434,7 @@ u8 Bus::ReadIO(u8 addr) {
             return 0xFF;
 
         default:
-            LDEBUG("bus: reading 0x%02X from 0xFF%02X (IO)", io[addr], addr);
+            LDEBUG("bus: reading 0x%02X from 0xFF%02X (unknown IO)", io[addr], addr);
             return io[addr];
     }
 }
