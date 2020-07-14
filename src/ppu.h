@@ -61,6 +61,9 @@ public:
     bool AreSpritesDoubleHeight();
     bool IsSpriteDisplayEnabled();
     bool IsBGDisplayEnabled();
+
+    void SetBGDrawingEnabled(bool enabled) { background_drawing_enabled = enabled; }
+    void SetWindowDrawingEnabled(bool enabled) { window_drawing_enabled = enabled; }
 private:
     Bus& bus;
     u64 vcycles;
@@ -93,4 +96,7 @@ private:
     void RenderBackgroundScanline();
     void RenderWindowScanline();
     void RenderSprites();
+
+    bool window_drawing_enabled = true;
+    bool background_drawing_enabled = true;
 };

@@ -156,11 +156,11 @@ void PPU::UpdateTile(u16 addr) {
 }
 
 void PPU::RenderScanline() {
-    if (IsBGDisplayEnabled()) {
+    if (IsBGDisplayEnabled() && background_drawing_enabled) {
         RenderBackgroundScanline();
     }
 
-    if (IsWindowDisplayEnabled()) {
+    if (IsWindowDisplayEnabled() && window_drawing_enabled) {
         RenderWindowScanline();
     }
 }

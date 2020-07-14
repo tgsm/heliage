@@ -19,3 +19,7 @@ Bus* GB::GetBus() {
 Joypad* GB::GetJoypad() {
     return &joypad;
 }
+
+PPU* GB::GetPPU() {
+    return &ppu;
+}

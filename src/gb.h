@@ -16,6 +16,7 @@ public:
 
     Bus* GetBus();
     Joypad* GetJoypad();
+    PPU* GetPPU();
 private:
     Bus bus;
     Joypad joypad;
