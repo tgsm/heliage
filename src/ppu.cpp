@@ -105,7 +105,12 @@ void PPU::Tick() {
             if (ly == 154) {
                 // TODO: draw sprites
                 RenderSprites();
+
                 DrawFramebuffer(framebuffer);
+
+                // Clear the framebuffer
+                std::fill(framebuffer.begin(), framebuffer.end(), Color::White);
+
                 HandleEvents(bus.GetJoypad());
                 ly = 0;
                 mode = Mode::AccessOAM;
