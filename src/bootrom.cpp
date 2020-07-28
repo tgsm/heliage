@@ -3,13 +3,13 @@
 #include "logging.h"
 #include "types.h"
 
-BootROM::BootROM(std::filesystem::path bootrom_path) {
-    std::fill(bootrom.begin(), bootrom.end(), 0xFF);
+BootROM::BootROM(std::filesystem::path& bootrom_path) {
+    bootrom.fill(0xFF);
     LoadBootROM(bootrom_path);
 }
 
-bool BootROM::CheckBootROM(std::filesystem::path bootrom_path) {
-    if (!std::filesystem::exists(bootrom_path) || std::filesystem::is_directory(bootrom_path)) {
+bool BootROM::CheckBootROM(std::filesystem::path& bootrom_path) {
+    if (!std::filesystem::is_regular_file(bootrom_path)) {
         return false;
     }
 
@@ -20,19 +20,14 @@ bool BootROM::CheckBootROM(std::filesystem::path bootrom_path) {
     return true;
 }
 
-void BootROM::LoadBootROM(std::filesystem::path bootrom_path) {
-    std::ifstream stream(bootrom_path.c_str(), std::ios::binary);
-    if (!stream.is_open()) {
-        LFATAL("failed to load bootrom: %s", bootrom_path.c_str());
-        std::exit(1);
-    }
+void BootROM::LoadBootROM(std::filesystem::path& bootrom_path) {
+    std::ifstream stream(bootrom_path.string().c_str(), std::ios::binary);
+    ASSERT_MSG(stream.is_open(), "could not open bootROM: %s", bootrom_path.string().c_str());
 
-    stream.read(bootrom.data(), bootrom.size());
-
-    LINFO("bootrom: loaded %ju bytes", std::filesystem::file_size(bootrom_path));
-    stream.close();
+    stream.read(reinterpret_cast<char*>(bootrom.data()), bootrom.size());
+    LINFO("bootrom: loaded %lu bytes", std::filesystem::file_size(bootrom_path));
 }
 
 u8 BootROM::Read(u16 addr) {
-    return bootrom[addr];
+    return bootrom.at(addr);
 }

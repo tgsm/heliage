@@ -5,16 +5,15 @@
 #include "types.h"
 
 // TODO: CGB?
-const u32 BOOTROM_SIZE = 256; // 256 bytes
+constexpr u32 BOOTROM_SIZE = 256; // 256 bytes
 
 class BootROM {
 public:
-    BootROM(std::filesystem::path bootrom_path);
-    bool CheckBootROM(std::filesystem::path bootrom_path);
-    void LoadBootROM(std::filesystem::path bootrom_path);
+    BootROM(std::filesystem::path& bootrom_path);
+    bool CheckBootROM(std::filesystem::path& bootrom_path);
+    void LoadBootROM(std::filesystem::path& bootrom_path);
 
     u8 Read(u16 addr);
-
 private:
-    std::array<char, BOOTROM_SIZE> bootrom;
+    std::array<u8, BOOTROM_SIZE> bootrom;
 };

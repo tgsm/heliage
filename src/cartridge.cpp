@@ -2,7 +2,7 @@
 #include "cartridge.h"
 #include "logging.h"
 
-Cartridge::Cartridge(std::filesystem::path cartridge_path) {
+Cartridge::Cartridge(std::filesystem::path& cartridge_path) {
     LoadCartridge(cartridge_path);
     // PrintMetadata();
 
@@ -12,64 +12,60 @@ Cartridge::Cartridge(std::filesystem::path cartridge_path) {
     }
 
     u8 header_checksum = CalculateHeaderChecksum();
-    if (header_checksum != rom[0x14D] ) {
-        LERROR("header checksum is wrong, this game will not make it past the bootrom (expected 0x%02X, got 0x%02X)", header_checksum, rom[0x14D]);
+    if (header_checksum != rom.at(0x14D) ) {
+        LERROR("header checksum is wrong, this game will not make it past the bootrom (expected 0x%02X, got 0x%02X)", header_checksum, rom.at(0x14D));
     }
 
     u16 rom_checksum = CalculateROMChecksum();
-    if (((rom_checksum >> 8) & 0xFF) != rom[0x14E] && (rom_checksum & 0xFF) != rom[0x14F]) {
-        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x%04X, got 0x%02X%02X)", rom_checksum, rom[0x14E], rom[0x14F]);
+    if (((rom_checksum >> 8) & 0xFF) != rom.at(0x14E) && (rom_checksum & 0xFF) != rom.at(0x14F)) {
+        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x%04X, got 0x%02X%02X)", rom_checksum, rom.at(0x14E), rom.at(0x14F));
     }
 }
 
-void Cartridge::LoadCartridge(std::filesystem::path cartridge_path) {
-    // TODO: use std::ifstream
-
-    FILE *rom_file = fopen(cartridge_path.c_str(), "rb");
-    if (!rom_file) {
-        LFATAL("could not open ROM: %s", cartridge_path.c_str());
-        std::exit(1);
-        return;
-    }
+void Cartridge::LoadCartridge(std::filesystem::path& cartridge_path) {
+    ASSERT_MSG(std::filesystem::is_regular_file(cartridge_path), "ROM is not a regular file");
 
     rom_size = std::filesystem::file_size(cartridge_path);
-    fseek(rom_file, 0, SEEK_SET);
-    rom = static_cast<u8*>(malloc(rom_size * sizeof(u8)));
-    fread(rom, 1, rom_size, rom_file);
+    ASSERT_MSG(rom_size <= 8 * 1024 * 1024, "ROM is too big");
+
+    std::ifstream stream(cartridge_path.string().c_str(), std::ios::binary);
+    ASSERT_MSG(stream.is_open(), "could not open ROM: %s", cartridge_path.string().c_str());
+
+    rom.resize(rom_size);
+    stream.read(reinterpret_cast<char*>(rom.data()), rom.size());
 
     LINFO("cartridge: loaded %u bytes (%u KB)", rom_size, rom_size / 1024);
-    fclose(rom_file);
 }
 
 void Cartridge::PrintMetadata() {
     LINFO("some metadata:");
     LINFO("  title: %s", GetGameTitle().c_str());
-    LINFO("  manufacturer code: 0x%02X%02X%02X%02X", rom[0x13F], rom[0x140], rom[0x141], rom[0x142]);
-    LINFO("  GBC compatibility: 0x%02X", rom[0x143] & 0xFF);
-    LINFO("  new licensee code: %c%c", rom[0x144], rom[0x145]);
-    LINFO("  SGB compatibility: 0x%02X", rom[0x146]);
-    LINFO("  MBC type: 0x%02X (%s)", rom[0x147], GetMBCTypeString());
-    LINFO("  ROM size: 0x%02X (%s)", rom[0x148], GetROMSizeString(rom[0x148]));
-    LINFO("  RAM size: 0x%02X (%s)", rom[0x149], GetRAMSizeString(rom[0x149]));
-    LINFO("  destination code: 0x%02X", rom[0x14A]);
-    LINFO("  old licensee code: 0x%02X", rom[0x14B]);
-    LINFO("  mask ROM version: 0x%02X", rom[0x14C]);
-    LINFO("  header checksum: 0x%02X", rom[0x14D] & 0xFF);
-    LINFO("  ROM checksum: 0x%02X%02X", rom[0x14E] & 0xFF, rom[0x14F] & 0xFF);
+    LINFO("  manufacturer code: 0x%02X%02X%02X%02X", rom.at(0x13F), rom.at(0x140), rom.at(0x141), rom.at(0x142));
+    LINFO("  GBC compatibility: 0x%02X", rom.at(0x143));
+    LINFO("  new licensee code: %c%c", rom.at(0x144), rom.at(0x145));
+    LINFO("  SGB compatibility: 0x%02X", rom.at(0x146));
+    LINFO("  MBC type: 0x%02X (%s)", rom.at(0x147), GetMBCTypeString());
+    LINFO("  ROM size: 0x%02X (%s)", rom.at(0x148), GetROMSizeString());
+    LINFO("  RAM size: 0x%02X (%s)", rom.at(0x149), GetRAMSizeString());
+    LINFO("  destination code: 0x%02X", rom.at(0x14A));
+    LINFO("  old licensee code: 0x%02X", rom.at(0x14B));
+    LINFO("  mask ROM version: 0x%02X", rom.at(0x14C));
+    LINFO("  header checksum: 0x%02X", rom.at(0x14D));
+    LINFO("  ROM checksum: 0x%02X%02X", rom.at(0x14E), rom.at(0x14F));
 }
 
 std::string Cartridge::GetGameTitle() {
-    char title[0x10] = {};
+    std::array<char, 0x10> title;
 
     for (int i = 0; i < 0x10; i++) {
-        title[i] = rom[0x134 + i];
+        title[i] = rom.at(0x134 + i);
     }
 
-    return std::string(title);
+    return std::string(title.data());
 }
 
 u8 Cartridge::GetMBCType() {
-    return rom[0x147];
+    return rom.at(0x147);
 }
 
 const char* Cartridge::GetMBCTypeString() {
@@ -111,7 +107,9 @@ const char* Cartridge::GetMBCTypeString() {
     }
 }
 
-const char* Cartridge::GetROMSizeString(u8 value) {
+const char* Cartridge::GetROMSizeString() {
+    u8 value = rom.at(0x148);
+
     switch (value) {
 #define ROM(value, size) case value: return size
         ROM(0x00, "32KB, 2 banks");
@@ -132,7 +130,9 @@ const char* Cartridge::GetROMSizeString(u8 value) {
     }
 }
 
-const char* Cartridge::GetRAMSizeString(u8 value) {
+const char* Cartridge::GetRAMSizeString() {
+    u8 value = rom.at(0x149);
+
     switch (value) {
 #define RAM(value, size) case value: return size
         RAM(0x00, "None");
@@ -148,7 +148,7 @@ const char* Cartridge::GetRAMSizeString(u8 value) {
 }
 
 bool Cartridge::CheckNintendoLogo() {
-    u8 nintendo_logo[0x30] = {
+    const std::array<u8, 0x30> nintendo_logo = {
         0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
         0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
         0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E,
@@ -158,7 +158,7 @@ bool Cartridge::CheckNintendoLogo() {
     };
 
     for (u8 i = 0x00; i < 0x30; i++) {
-        if (rom[0x0104 + i] != nintendo_logo[i]) {
+        if (rom[0x0104 + i] != nintendo_logo.at(i)) {
             return false;
         }
     }
@@ -169,7 +169,7 @@ bool Cartridge::CheckNintendoLogo() {
 u8 Cartridge::CalculateHeaderChecksum() {
     u8 result = 0x00;
     for (u16 i = 0x0134; i <= 0x014C; i++) {
-        result -= rom[i];
+        result -= rom.at(i);
         result--;
     }
 
@@ -184,12 +184,12 @@ u16 Cartridge::CalculateROMChecksum() {
             continue;
         }
 
-        result += rom[i];
+        result += rom.at(i);
     }
 
     return result;
 }
 
 u8 Cartridge::Read(u32 addr) {
-    return rom[addr];
+    return rom.at(addr);
 }
