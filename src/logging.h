@@ -26,3 +26,19 @@
     LFATAL(format, ##__VA_ARGS__); \
     assert(false); \
     std::exit(1); // exit just in case assert doesn't
+
+#define ASSERT(cond) \
+    if (!(cond)) { \
+        LFATAL("assertion failed at %s:%u", __FILE__, __LINE__); \
+        LFATAL("%s", #cond); \
+        assert(cond); \
+        std::exit(1); \
+    }
+
+#define ASSERT_MSG(cond, format, ...) \
+    if (!(cond)) { \
+        LFATAL("assertion failed at %s:%u", __FILE__, __LINE__); \
+        LFATAL(format, ##__VA_ARGS__); \
+        assert(cond); \
+        std::exit(1); \
+    }
