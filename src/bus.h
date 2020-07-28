@@ -25,7 +25,7 @@ public:
 private:
     void LoadInitialValues();
 
-    bool boot_rom_enabled;
+    bool boot_rom_enabled = true;
 
     std::array<u8, 0x2000> vram;
     // TODO: make this a std::vector
@@ -34,7 +34,7 @@ private:
     std::array<u8, 0xA0> oam;
     std::array<u8, 0x80> io;
     std::array<u8, 0x7F> hram;
-    u8 ie;
+    u8 ie = 0x00;
 
     bool mbc_ram_enabled = false;
     u8 mbc1_bank1 = 0x01;

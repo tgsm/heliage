@@ -3,24 +3,22 @@
 
 Bus::Bus(BootROM& bootrom, Cartridge& cartridge, Joypad& joypad, PPU& ppu, Timer& timer)
     : bootrom(bootrom), cartridge(cartridge), joypad(joypad), ppu(ppu), timer(timer) {
-    boot_rom_enabled = true;
     LoadInitialValues();
 }
 
 void Bus::LoadInitialValues() {
-    std::fill(vram.begin(), vram.end(), 0xFF);
-    std::fill(wram.begin(), wram.end(), 0xFF);
-    std::fill(oam.begin(), oam.end(), 0xFF);
-    std::fill(io.begin(), io.end(), 0xFF);
-    std::fill(hram.begin(), hram.end(), 0xFF);
-    std::fill(cartridge_ram.begin(), cartridge_ram.end(), 0xFF);
+    vram.fill(0xFF);
+    wram.fill(0xFF);
+    oam.fill(0xFF);
+    io.fill(0xFF);
+    hram.fill(0xFF);
+    cartridge_ram.fill(0xFF);
 
     // Some addresses need to start at a different value than 0xFF.
     // For example, the interrupt registers need to be zero at startup,
     // otherwise they would be able to execute any interrupt once
     // interrupts are enabled if these registers weren't zeroed out before.
     io[0x0F] = 0xE0;
-    ie = 0x00;
 }
 
 u8 Bus::Read8(u16 addr, bool affect_timer) {
