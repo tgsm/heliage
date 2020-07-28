@@ -6,10 +6,6 @@
 
 PPU::PPU(Bus& bus)
     : bus(bus) {
-    vcycles = 0;
-    ly = 0x00;
-    stat = 0x80;
-    mode = Mode::AccessOAM;
 }
 
 void PPU::AdvanceCycles(u64 cycles) {
@@ -103,9 +99,6 @@ void PPU::Tick() {
             vcycles %= 456;
 
             if (ly == 154) {
-                // TODO: draw sprites
-                RenderSprites();
-
                 DrawFramebuffer(framebuffer);
 
                 // Clear the framebuffer
@@ -156,6 +149,21 @@ void PPU::UpdateTile(u16 addr) {
     }
 }
 
+void PPU::UpdateSprite(u16 addr) {
+    u8 sprite_index = (addr - 0xFE00) / 4;
+    u16 sprite_base = 0xFE00 + (4 * sprite_index);
+    Sprite* sprite = &sprites[sprite_index];
+    u8 attributes = bus.Read8(sprite_base + 3, false);
+
+    sprite->y = bus.Read8(sprite_base, false);
+    sprite->x = bus.Read8(sprite_base + 1, false);
+    sprite->tile_index = bus.Read8(sprite_base + 2, false);
+    sprite->priority = attributes & 0x80;
+    sprite->flip_y = attributes & 0x40;
+    sprite->flip_x = attributes & 0x20;
+    sprite->use_obp1 = attributes & 0x10;
+}
+
 void PPU::RenderScanline() {
     if (IsBGDisplayEnabled() && background_drawing_enabled) {
         RenderBackgroundScanline();
@@ -163,6 +171,10 @@ void PPU::RenderScanline() {
 
     if (IsWindowDisplayEnabled() && window_drawing_enabled) {
         RenderWindowScanline();
+    }
+
+    if (IsSpriteDisplayEnabled() && sprite_drawing_enabled) {
+        RenderSpriteScanline();
     }
 }
 
@@ -184,7 +196,7 @@ void PPU::RenderBackgroundScanline() {
         u8 tile_y = bg_y % 8;
         u8 tile_x = bg_x % 8;
 
-        Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
+        Color color = GetColorFromBGWindowPalette(tiles[tile_id][tile_y][tile_x]);
         framebuffer[160 * screen_y + screen_x] = color;
     }
 }
@@ -222,47 +234,63 @@ void PPU::RenderWindowScanline() {
         u8 tile_y = scroll_y % 8;
         u8 tile_x = scroll_x % 8;
 
-        Color color = GetColorFromPalette(tiles[tile_id][tile_y][tile_x]);
+        Color color = GetColorFromBGWindowPalette(tiles[tile_id][tile_y][tile_x]);
         framebuffer[160 * ly + screen_x] = color;
     }
 
     window_line_counter++;
 }
 
-void PPU::RenderSprites() {
-    if (!IsSpriteDisplayEnabled()) {
-        return;
-    }
+void PPU::RenderSpriteScanline() {
+    // One of the Gameboy's limitations is that it can only display
+    // 10 sprites per scanline.
+    u8 sprites_this_scanline = 0;
 
     // Sprites can be 8x16 rather than 8x8
-    [[maybe_unused]] bool double_height = AreSpritesDoubleHeight();
+    bool double_height = AreSpritesDoubleHeight();
 
     // There are 160 bytes of sprite memory available to us;
     // 4 bytes per sprite means we can have up to 40 sprites.
-    // TODO: we are limited to 10 sprites per scanline.
     for (u8 sprite_index = 0; sprite_index < 160 / 4; sprite_index++) {
-        u16 oam_address = 0xFE00 + (sprite_index * 4);
-        u8 y = bus.Read8(oam_address, false);
-        u8 x = bus.Read8(oam_address + 1, false);
-        [[maybe_unused]] u8 tile_index = bus.Read8(oam_address + 2, false);
-        u8 attributes = bus.Read8(oam_address + 3, false);
+        Sprite* sprite = &sprites[sprite_index];
 
-        if (y == 0 || y >= 144 + 16) {
+        if (ly < sprite->y - 16 || ly > sprite->y) {
             continue;
         }
 
-        if (x == 0 || x >= 160 + 8) {
-            continue;
+        // Don't draw any more sprites on this scanline if we have at least 10 sprites on it.
+        if (sprites_this_scanline >= 10) {
+            return;
         }
 
-        [[maybe_unused]] bool use_obp1 = attributes & (1 << 4);
-        [[maybe_unused]] bool flip_x = attributes & (1 << 5);
-        [[maybe_unused]] bool flip_y = attributes & (1 << 6);
-        [[maybe_unused]] bool priority = attributes & (1 << 7);
+        if (double_height) {
+            sprite->tile_index &= ~0x1;
+        }
 
-        // printf("sprite %02u bytes: %02X %02X %02X %02X\n", sprite_index, y, x, tile_index, attributes);
+        for (u8 row = 0; row < 8; row++) {
+            if (sprite->y + row - 16 >= 144 || sprite->y + row - 16 < 0) {
+                continue;
+            }
 
-        // TODO: actually draw sprites
+            for (u8 col = 0; col < 8; col++) {
+                if (sprite->x + col - 8 >= 160 || sprite->x + col - 8 < 0) {
+                    continue;
+                }
+
+                u8 x = (sprite->flip_x) ? 7 - col : col;
+                u8 y = (sprite->flip_y) ? 7 - row : row;
+
+                // Color 0 is used for transparency.
+                if (tiles[sprite->tile_index][y][x] == static_cast<Color>(0b00)) {
+                    continue;
+                }
+
+                Color color = GetColorFromSpritePalette(tiles[sprite->tile_index][y][x], sprite->use_obp1);
+                framebuffer[160 * (sprite->y + row - 16) + (sprite->x + col - 8)] = color;
+            }
+        }
+
+        sprites_this_scanline++;
     }
 }
 
@@ -278,7 +306,27 @@ void PPU::SetBGWindowPalette(u8 value) {
                                                        static_cast<u8>(bg_window_palette.zero));
 }
 
-PPU::Color PPU::GetColorFromPalette(Color color) {
+void PPU::SetOBP0(u8 value) {
+    obp0.three = static_cast<Color>((value >> 6) & 0b11);
+    obp0.two = static_cast<Color>((value >> 4) & 0b11);
+    obp0.one = static_cast<Color>((value >> 2) & 0b11);
+
+    LDEBUG("PPU: new OBP0 palette: %u %u %u", static_cast<u8>(obp0.three),
+                                              static_cast<u8>(obp0.two),
+                                              static_cast<u8>(obp0.one));
+}
+
+void PPU::SetOBP1(u8 value) {
+    obp1.three = static_cast<Color>((value >> 6) & 0b11);
+    obp1.two = static_cast<Color>((value >> 4) & 0b11);
+    obp1.one = static_cast<Color>((value >> 2) & 0b11);
+
+    LDEBUG("PPU: new OBP1 palette: %u %u %u", static_cast<u8>(obp1.three),
+                                              static_cast<u8>(obp1.two),
+                                              static_cast<u8>(obp1.one));
+}
+
+PPU::Color PPU::GetColorFromBGWindowPalette(Color color) {
     switch (static_cast<u8>(color)) {
         case 0b00:
             return bg_window_palette.zero;
@@ -288,6 +336,22 @@ PPU::Color PPU::GetColorFromPalette(Color color) {
             return bg_window_palette.two;
         case 0b11:
             return bg_window_palette.three;
+        default:
+            // UNREACHABLE_MSG("invalid PPU color %u", static_cast<u8>(color));
+            return bg_window_palette.zero;
+    }
+}
+
+PPU::Color PPU::GetColorFromSpritePalette(Color color, bool use_obp1) {
+    SpritePalette palette = (use_obp1) ? obp1 : obp0;
+
+    switch (static_cast<u8>(color)) {
+        case 0b01:
+            return palette.one;
+        case 0b10:
+            return palette.two;
+        case 0b11:
+            return palette.three;
         default:
             UNREACHABLE_MSG("invalid PPU color %u", static_cast<u8>(color));
     }

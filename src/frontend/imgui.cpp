@@ -19,6 +19,7 @@ bool power = true;
 
 bool debugger_draw_background = true;
 bool debugger_draw_window = true;
+bool debugger_draw_sprites = true;
 
 void FramebufferToTexture(int* texture_width, int* texture_height, GLuint* framebuffer_texture) {
     GLuint texture;
@@ -198,6 +199,10 @@ int main_imgui(char* argv[]) {
 
             if (ImGui::Checkbox("Draw window", &debugger_draw_window)) {
                 gb.GetPPU()->SetWindowDrawingEnabled(debugger_draw_window);
+            }
+
+            if (ImGui::Checkbox("Draw sprites", &debugger_draw_sprites)) {
+                gb.GetPPU()->SetSpriteDrawingEnabled(debugger_draw_sprites);
             }
 
             ImGui::End();

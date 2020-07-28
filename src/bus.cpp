@@ -138,6 +138,7 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
         case 0xFE00 ... 0xFE9F:
             // LDEBUG("bus: writing 0x%02X to 0x%04X (OAM / Sprite Attribute Table)", value, addr);
             oam[addr - 0xFE00] = value;
+            ppu.UpdateSprite(addr);
             break;
 
         case 0xFEA0 ... 0xFEFF:
@@ -528,6 +529,16 @@ void Bus::WriteIO(u8 addr, u8 value) {
             LDEBUG("bus: writing 0x%02X to Background palette data (0xFF47)", value);
             ppu.SetBGWindowPalette(value);
             io[0x47] = value;
+            return;
+        case 0x48:
+            LDEBUG("bus: writing 0x%02X to OBP0 (0xFF48)", value);
+            ppu.SetOBP0(value);
+            io[0x48] = value;
+            return;
+        case 0x49:
+            LDEBUG("bus: writing 0x%02X to OBP1 (0xFF49)", value);
+            ppu.SetOBP1(value);
+            io[0x49] = value;
             return;
         case 0x4A:
             LDEBUG("bus: writing 0x%02X to Window Y (0xFF4A)", value);

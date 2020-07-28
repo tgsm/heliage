@@ -28,6 +28,8 @@ public:
     void Tick();
     void UpdateTile(u16 addr);
 
+    void UpdateSprite(u16 addr);
+
     u8 GetLCDC() { return lcdc; }
     void SetLCDC(u8 value) { lcdc = value; }
 
@@ -46,6 +48,8 @@ public:
     void SetLYC(u8 value) { lyc = value; }
 
     void SetBGWindowPalette(u8 value);
+    void SetOBP0(u8 value);
+    void SetOBP1(u8 value);
 
     u8 GetWY() { return wy; }
     void SetWY(u8 value) { wy = value; }
@@ -64,18 +68,19 @@ public:
 
     void SetBGDrawingEnabled(bool enabled) { background_drawing_enabled = enabled; }
     void SetWindowDrawingEnabled(bool enabled) { window_drawing_enabled = enabled; }
+    void SetSpriteDrawingEnabled(bool enabled) { sprite_drawing_enabled = enabled; }
 private:
     Bus& bus;
-    u64 vcycles;
-    u8 lcdc;
-    u8 stat;
-    u8 scx;
-    u8 scy;
-    u8 ly;
-    u8 lyc;
-    u8 wy;
-    u8 wx;
-    Mode mode;
+    u64 vcycles = 0;
+    u8 lcdc = 0x00;
+    u8 stat = 0x80;
+    u8 scx = 0x00;
+    u8 scy = 0x00;
+    u8 ly = 0x00;
+    u8 lyc = 0x00;
+    u8 wy = 0x00;
+    u8 wx = 0x00;
+    Mode mode = Mode::AccessOAM;
 
     bool lyc_interrupt_fired = false;
     void CheckForLYCoincidence();
@@ -87,18 +92,41 @@ private:
         Color zero;
     } bg_window_palette;
 
+    // Sprite palettes have 3 colors instead of 4. The lost color is used for transparency.
+    struct SpritePalette {
+        Color three;
+        Color two;
+        Color one;
+    };
+
+    SpritePalette obp0, obp1;
+
+    struct Sprite {
+        u8 y = 0;
+        u8 x = 0;
+        u8 tile_index = 0;
+        bool use_obp1 = false;
+        bool flip_x = false;
+        bool flip_y = false;
+        bool priority = false;
+    };
+
+    std::array<Sprite, 40> sprites = {};
+
     std::array<Color, 160 * 144> framebuffer;
     Color tiles[384][8][8];
 
-    Color GetColorFromPalette(Color color);
+    Color GetColorFromBGWindowPalette(Color color);
+    Color GetColorFromSpritePalette(Color color, bool use_obp1);
 
     void RenderScanline();
     void RenderBackgroundScanline();
     void RenderWindowScanline();
-    void RenderSprites();
+    void RenderSpriteScanline();
 
     u8 window_line_counter = 0;
 
-    bool window_drawing_enabled = true;
     bool background_drawing_enabled = true;
+    bool window_drawing_enabled = true;
+    bool sprite_drawing_enabled = true;
 };
