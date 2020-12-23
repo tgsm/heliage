@@ -6,16 +6,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -pg")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-find_package(SDL2 REQUIRED)
-
 option(HELIAGE_PRINT_SERIAL_BYTES "If enabled, any bytes sent to serial (0xFF01) will be printed to stdout" OFF)
 
 set(HELIAGE_FRONTEND "SDL2" CACHE STRING "The frontend heliage will run on")
 set_property(CACHE HELIAGE_FRONTEND PROPERTY STRINGS SDL2 ImGui Null)
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     add_compile_definitions("HELIAGE_FRONTEND_SDL")
+    find_package(SDL2 REQUIRED)
 elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     add_compile_definitions("HELIAGE_FRONTEND_IMGUI")
+    find_package(SDL2 REQUIRED)
 endif()
 
 if (${HELIAGE_PRINT_SERIAL_BYTES})
@@ -70,10 +70,11 @@ add_compile_options(-Wall -Wextra)
 
 add_executable(heliage)
 target_sources(heliage PRIVATE ${SOURCES} ${HEADERS})
-target_link_libraries(heliage SDL2 pthread)
 
-if (${HELIAGE_FRONTEND} MATCHES "ImGui")
+if (${HELIAGE_FRONTEND} MATCHES "SDL2")
+    target_link_libraries(heliage SDL2)
+elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     find_path(SDL2_INCLUDE_DIR NAMES SDL_opengl.h PATH_SUFFIXES SDL2)
     target_include_directories(heliage PRIVATE imgui . ${SDL2_INCLUDE_DIR})
-    target_link_libraries(heliage GL)
+    target_link_libraries(heliage SDL2 GL pthread)
 endif()
