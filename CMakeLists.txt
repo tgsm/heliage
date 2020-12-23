@@ -54,12 +54,12 @@ elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     set(SOURCES ${SOURCES}
         src/frontend/imgui.cpp
 
-        imgui/examples/imgui_impl_opengl2.cpp
-        imgui/examples/imgui_impl_sdl.cpp
-        imgui/imgui.cpp
-        imgui/imgui_demo.cpp
-        imgui/imgui_draw.cpp
-        imgui/imgui_widgets.cpp
+        dependencies/imgui/examples/imgui_impl_opengl2.cpp
+        dependencies/imgui/examples/imgui_impl_sdl.cpp
+        dependencies/imgui/imgui.cpp
+        dependencies/imgui/imgui_demo.cpp
+        dependencies/imgui/imgui_draw.cpp
+        dependencies/imgui/imgui_widgets.cpp
     )
 elseif (${HELIAGE_FRONTEND} MATCHES "Null")
     set(SOURCES ${SOURCES} src/frontend/null.cpp)
@@ -70,11 +70,12 @@ add_compile_options(-Wall -Wextra)
 
 add_executable(heliage)
 target_sources(heliage PRIVATE ${SOURCES} ${HEADERS})
+target_include_directories(heliage PRIVATE dependencies)
 
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     target_link_libraries(heliage SDL2)
 elseif (${HELIAGE_FRONTEND} MATCHES "ImGui")
     find_path(SDL2_INCLUDE_DIR NAMES SDL_opengl.h PATH_SUFFIXES SDL2)
-    target_include_directories(heliage PRIVATE imgui . ${SDL2_INCLUDE_DIR})
+    target_include_directories(heliage PRIVATE dependencies/imgui ${SDL2_INCLUDE_DIR})
     target_link_libraries(heliage SDL2 GL pthread)
 endif()
