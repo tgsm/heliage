@@ -16,15 +16,15 @@ std::thread emu_thread;
 std::array<u32, 160 * 144> fb;
 bool done = false;
 bool power = true;
+GLuint gl_fb_texture;
 
 bool debugger_draw_background = true;
 bool debugger_draw_window = true;
 bool debugger_draw_sprites = true;
 
 void FramebufferToTexture(int* texture_width, int* texture_height, GLuint* framebuffer_texture) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glGenTextures(1, &gl_fb_texture);
+    glBindTexture(GL_TEXTURE_2D, gl_fb_texture);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -32,7 +32,7 @@ void FramebufferToTexture(int* texture_width, int* texture_height, GLuint* frame
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb.data());
 
-    *framebuffer_texture = texture;
+    *framebuffer_texture = gl_fb_texture;
     *texture_width = 160 * 2;
     *texture_height = 144 * 2;
 }
@@ -237,6 +237,8 @@ int main_imgui(char* argv[]) {
         //glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
+
+        glDeleteTextures(1, &gl_fb_texture);
     }
 
     if (emu_thread.joinable()) {
