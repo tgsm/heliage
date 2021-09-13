@@ -87,8 +87,8 @@ int main_SDL(char* argv[]) {
     std::filesystem::path bootrom_path = argv[1];
     std::filesystem::path cart_path = argv[2];
 
-    LINFO("loading bootrom: %s", bootrom_path.c_str());
-    LINFO("loading cartridge: %s", cart_path.c_str());
+    LINFO("loading bootrom: {}", bootrom_path.c_str());
+    LINFO("loading cartridge: {}", cart_path.c_str());
 
     BootROM bootrom(bootrom_path);
     if (!bootrom.CheckBootROM(bootrom_path)) {
@@ -99,25 +99,25 @@ int main_SDL(char* argv[]) {
     Cartridge cartridge(cart_path);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        LFATAL("failed to initialize SDL: %s", SDL_GetError());
+        LFATAL("failed to initialize SDL: {}", SDL_GetError());
         return 1;
     }
 
     window = SDL_CreateWindow("heliage", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160 * 2, 144 * 2, 0);
     if (!window) {
-        LFATAL("failed to create SDL window: %s", SDL_GetError());
+        LFATAL("failed to create SDL window: {}", SDL_GetError());
         return 1;
     }
 
     renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
-        LFATAL("failed to create SDL renderer: %s", SDL_GetError());
+        LFATAL("failed to create SDL renderer: {}", SDL_GetError());
         return 1;
     }
 
     framebuffer_output = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
     if (!framebuffer_output) {
-        LFATAL("failed to create framebuffer output texture: %s", SDL_GetError());
+        LFATAL("failed to create framebuffer output texture: {}", SDL_GetError());
         return 1;
     }
 

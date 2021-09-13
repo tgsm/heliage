@@ -119,7 +119,7 @@ void PPU::Tick() {
             CheckForLYCoincidence();
             break;
         default:
-            UNREACHABLE_MSG("invalid PPU mode %u", static_cast<u8>(mode));
+            UNREACHABLE_MSG("invalid PPU mode {}", mode);
             break;
     }
 }
@@ -300,10 +300,10 @@ void PPU::SetBGWindowPalette(u8 value) {
     bg_window_palette.one = static_cast<Color>((value >> 2) & 0b11);
     bg_window_palette.zero = static_cast<Color>(value & 0b11);
 
-    LDEBUG("PPU: new background palette: %u %u %u %u", static_cast<u8>(bg_window_palette.three),
-                                                       static_cast<u8>(bg_window_palette.two),
-                                                       static_cast<u8>(bg_window_palette.one),
-                                                       static_cast<u8>(bg_window_palette.zero));
+    LDEBUG("PPU: new background palette: {} {} {} {}", bg_window_palette.three,
+                                                       bg_window_palette.two,
+                                                       bg_window_palette.one,
+                                                       bg_window_palette.zero);
 }
 
 void PPU::SetOBP0(u8 value) {
@@ -311,9 +311,9 @@ void PPU::SetOBP0(u8 value) {
     obp0.two = static_cast<Color>((value >> 4) & 0b11);
     obp0.one = static_cast<Color>((value >> 2) & 0b11);
 
-    LDEBUG("PPU: new OBP0 palette: %u %u %u", static_cast<u8>(obp0.three),
-                                              static_cast<u8>(obp0.two),
-                                              static_cast<u8>(obp0.one));
+    LDEBUG("PPU: new OBP0 palette: {} {} {}", obp0.three,
+                                              obp0.two,
+                                              obp0.one);
 }
 
 void PPU::SetOBP1(u8 value) {
@@ -321,9 +321,9 @@ void PPU::SetOBP1(u8 value) {
     obp1.two = static_cast<Color>((value >> 4) & 0b11);
     obp1.one = static_cast<Color>((value >> 2) & 0b11);
 
-    LDEBUG("PPU: new OBP1 palette: %u %u %u", static_cast<u8>(obp1.three),
-                                              static_cast<u8>(obp1.two),
-                                              static_cast<u8>(obp1.one));
+    LDEBUG("PPU: new OBP1 palette: {} {} {}", obp1.three,
+                                              obp1.two,
+                                              obp1.one);
 }
 
 PPU::Color PPU::GetColorFromBGWindowPalette(Color color) {
@@ -337,7 +337,7 @@ PPU::Color PPU::GetColorFromBGWindowPalette(Color color) {
         case 0b11:
             return bg_window_palette.three;
         default:
-            // UNREACHABLE_MSG("invalid PPU color %u", static_cast<u8>(color));
+            // UNREACHABLE_MSG("invalid PPU color {}", static_cast<u8>(color));
             return bg_window_palette.zero;
     }
 }
@@ -353,7 +353,7 @@ PPU::Color PPU::GetColorFromSpritePalette(Color color, bool use_obp1) {
         case 0b11:
             return palette.three;
         default:
-            UNREACHABLE_MSG("invalid PPU color %u", static_cast<u8>(color));
+            UNREACHABLE_MSG("invalid PPU color {}", color);
     }
 }
 

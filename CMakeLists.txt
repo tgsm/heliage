@@ -68,9 +68,12 @@ endif()
 
 add_compile_options(-Wall -Wextra)
 
+add_subdirectory(dependencies/fmt)
+
 add_executable(heliage)
 target_sources(heliage PRIVATE ${SOURCES} ${HEADERS})
 target_include_directories(heliage PRIVATE dependencies)
+target_link_libraries(heliage fmt)
 
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")
     target_link_libraries(heliage SDL2)

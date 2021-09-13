@@ -392,7 +392,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
 
         default:
             bus.DumpMemoryToFile();
-            LFATAL("unimplemented opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
+            LFATAL("unimplemented opcode 0x{:02X} at 0x{:04X}", opcode, pc_at_opcode);
             DumpRegisters();
             return false;
     }
@@ -710,11 +710,11 @@ void SM83::HandleInterrupts() {
 }
 
 void SM83::DumpRegisters() {
-    LFATAL("AF=%04X BC=%04X DE=%04X HL=%04X SP=%04X PC=%04X", af, bc, de, hl, sp, pc_at_opcode);
+    LFATAL("AF={:04X} BC={:04X} DE={:04X} HL={:04X} SP={:04X} PC={:04X}", af, bc, de, hl, sp, pc_at_opcode);
     if (!f) {
         LFATAL("Flags: none");
     } else {
-        LFATAL("Flags: [%c%c%c%c]", (HasFlag(Flags::Zero)) ? 'Z' : ' ',
+        LFATAL("Flags: [{}{}{}{}]", (HasFlag(Flags::Zero)) ? 'Z' : ' ',
                                     (HasFlag(Flags::Negate)) ? 'N' : ' ',
                                     (HasFlag(Flags::HalfCarry)) ? 'H' : ' ',
                                     (HasFlag(Flags::Carry)) ? 'C' : ' ');
@@ -723,13 +723,13 @@ void SM83::DumpRegisters() {
 
 void SM83::ill(const u8 opcode) {
     bus.DumpMemoryToFile();
-    LFATAL("illegal opcode 0x%02X at 0x%04X", opcode, pc_at_opcode);
+    LFATAL("illegal opcode 0x{:02X} at 0x{:04X}", opcode, pc_at_opcode);
     DumpRegisters();
 }
 
 void SM83::adc_a_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("ADC A, 0x%02X", value);
+    LTRACE("ADC A, 0x{:02X}", value);
 
     bool carry = HasFlag(Flags::Carry);
     u16 full = a + value + carry;
@@ -758,7 +758,7 @@ void SM83::adc_a_r(u8 reg) {
 
 void SM83::add_a_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("ADD A, 0x%02X", value);
+    LTRACE("ADD A, 0x{:02X}", value);
     u16 result = a + value;
 
     SetZeroFlag(static_cast<u8>(result) == 0);
@@ -847,7 +847,7 @@ void SM83::add_hl_sp() {
 
 void SM83::add_sp_d8() {
     s8 value = static_cast<s8>(GetByteFromPC());
-    LTRACE("ADD SP, 0x%02X", value);
+    LTRACE("ADD SP, 0x{:02X}", value);
     u32 result = sp + value;
 
     SetZeroFlag(false);
@@ -862,7 +862,7 @@ void SM83::add_sp_d8() {
 
 void SM83::and_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("AND 0x%02X", value);
+    LTRACE("AND 0x{:02X}", value);
 
     a &= value;
 
@@ -888,7 +888,7 @@ void SM83::bit(u8 bit, u8* reg) {
 }
 
 void SM83::bit_dhl(u8 bit) {
-    LTRACE("BIT %u, (HL)", bit);
+    LTRACE("BIT {}, (HL)", bit);
     u8 value = bus.Read8(hl);
 
     SetZeroFlag(!(value & (1 << bit)));
@@ -898,7 +898,7 @@ void SM83::bit_dhl(u8 bit) {
 
 void SM83::call_a16() {
     u16 address = GetWordFromPC();
-    LTRACE("CALL 0x%04X", address);
+    LTRACE("CALL 0x{:04X}", address);
 
     timer.AdvanceCycles(4);
 
@@ -908,7 +908,7 @@ void SM83::call_a16() {
 
 void SM83::call_c_a16() {
     u16 address = GetWordFromPC();
-    LTRACE("CALL C, 0x%04X", address);
+    LTRACE("CALL C, 0x{:04X}", address);
 
     if (HasFlag(Flags::Carry)) {
         StackPush(pc);
@@ -919,7 +919,7 @@ void SM83::call_c_a16() {
 
 void SM83::call_nc_a16() {
     u16 address = GetWordFromPC();
-    LTRACE("CALL NC, 0x%04X", address);
+    LTRACE("CALL NC, 0x{:04X}", address);
 
     if (!HasFlag(Flags::Carry)) {
         StackPush(pc);
@@ -930,7 +930,7 @@ void SM83::call_nc_a16() {
 
 void SM83::call_nz_a16() {
     u16 address = GetWordFromPC();
-    LTRACE("CALL NZ, 0x%04X", address);
+    LTRACE("CALL NZ, 0x{:04X}", address);
 
     if (!HasFlag(Flags::Zero)) {
         StackPush(pc);
@@ -941,7 +941,7 @@ void SM83::call_nz_a16() {
 
 void SM83::call_z_a16() {
     u16 address = GetWordFromPC();
-    LTRACE("CALL Z, 0x%04X", address);
+    LTRACE("CALL Z, 0x{:04X}", address);
 
     if (HasFlag(Flags::Zero)) {
         StackPush(pc);
@@ -960,7 +960,7 @@ void SM83::ccf() {
 
 void SM83::cp_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("CP 0x%02X", value);
+    LTRACE("CP 0x{:02X}", value);
 
     SetZeroFlag(a == value);
     SetNegateFlag(true);
@@ -1103,7 +1103,7 @@ void SM83::inc_dhl() {
 
 void SM83::jp_a16() {
     u16 addr = GetWordFromPC();
-    LTRACE("JP 0x%04X", addr);
+    LTRACE("JP 0x{:04X}", addr);
 
     pc = addr;
 
@@ -1112,7 +1112,7 @@ void SM83::jp_a16() {
 
 void SM83::jp_c_a16() {
     u16 addr = GetWordFromPC();
-    LTRACE("JP C, 0x%04X", addr);
+    LTRACE("JP C, 0x{:04X}", addr);
 
     if (HasFlag(Flags::Carry)) {
         pc = addr;
@@ -1127,7 +1127,7 @@ void SM83::jp_hl() {
 
 void SM83::jp_nc_a16() {
     u16 addr = GetWordFromPC();
-    LTRACE("JP NC, 0x%04X", addr);
+    LTRACE("JP NC, 0x{:04X}", addr);
 
     if (!HasFlag(Flags::Carry)) {
         pc = addr;
@@ -1137,7 +1137,7 @@ void SM83::jp_nc_a16() {
 
 void SM83::jp_nz_a16() {
     u16 addr = GetWordFromPC();
-    LTRACE("JP NZ, 0x%04X", addr);
+    LTRACE("JP NZ, 0x{:04X}", addr);
 
     if (!HasFlag(Flags::Zero)) {
         pc = addr;
@@ -1147,7 +1147,7 @@ void SM83::jp_nz_a16() {
 
 void SM83::jp_z_a16() {
     u16 addr = GetWordFromPC();
-    LTRACE("JP Z, 0x%04X", addr);
+    LTRACE("JP Z, 0x{:04X}", addr);
 
     if (HasFlag(Flags::Zero)) {
         pc = addr;
@@ -1158,7 +1158,7 @@ void SM83::jp_z_a16() {
 void SM83::jr_r8() {
     s8 offset = static_cast<s8>(GetByteFromPC());
     u16 new_pc = pc + offset;
-    LTRACE("JR 0x%04X", new_pc);
+    LTRACE("JR 0x{:04X}", new_pc);
 
     pc = new_pc;
 
@@ -1168,7 +1168,7 @@ void SM83::jr_r8() {
 void SM83::jr_c_r8() {
     s8 offset = static_cast<s8>(GetByteFromPC());
     u16 potential_pc = pc + offset;
-    LTRACE("JR C, 0x%04X", potential_pc);
+    LTRACE("JR C, 0x{:04X}", potential_pc);
 
     if (HasFlag(Flags::Carry)) {
         pc = potential_pc;
@@ -1179,7 +1179,7 @@ void SM83::jr_c_r8() {
 void SM83::jr_nc_r8() {
     s8 offset = static_cast<s8>(GetByteFromPC());
     u16 potential_pc = pc + offset;
-    LTRACE("JR NC, 0x%04X", potential_pc);
+    LTRACE("JR NC, 0x{:04X}", potential_pc);
 
     if (!HasFlag(Flags::Carry)) {
         pc = potential_pc;
@@ -1190,7 +1190,7 @@ void SM83::jr_nc_r8() {
 void SM83::jr_nz_r8() {
     s8 offset = static_cast<s8>(GetByteFromPC());
     u16 potential_pc = pc + offset;
-    LTRACE("JR NZ, 0x%04X", potential_pc);
+    LTRACE("JR NZ, 0x{:04X}", potential_pc);
 
     if (!HasFlag(Flags::Zero)) {
         pc = potential_pc;
@@ -1201,7 +1201,7 @@ void SM83::jr_nz_r8() {
 void SM83::jr_z_r8() {
     s8 offset = static_cast<u8>(GetByteFromPC());
     u16 potential_pc = pc + offset;
-    LTRACE("JR Z, 0x%04X", potential_pc);
+    LTRACE("JR Z, 0x{:04X}", potential_pc);
 
     if (HasFlag(Flags::Zero)) {
         pc = potential_pc;
@@ -1211,21 +1211,21 @@ void SM83::jr_z_r8() {
 
 void SM83::ld_d_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD D, 0x%02X", value);
+    LTRACE("LD D, 0x{:02X}", value);
 
     d = value;
 }
 
 void SM83::ld_da16_a() {
     u16 address = GetWordFromPC();
-    LTRACE("LD (0x%04X), A", address);
+    LTRACE("LD (0x{:04X}), A", address);
 
     bus.Write8(address, a);
 }
 
 void SM83::ld_da16_sp() {
     u16 address = GetWordFromPC();
-    LTRACE("LD (0x%04X), SP", address);
+    LTRACE("LD (0x{:04X}), SP", address);
 
     bus.Write8(address, static_cast<u8>(sp & 0xFF));
     bus.Write8(address + 1, static_cast<u8>(sp >> 8));
@@ -1252,14 +1252,14 @@ void SM83::ld_dde_a() {
 
 void SM83::ld_de_d16() {
     u16 value = GetWordFromPC();
-    LTRACE("LD DE, 0x%04X", value);
+    LTRACE("LD DE, 0x{:04X}", value);
 
     de = value;
 }
 
 void SM83::ld_dhl_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD (HL), 0x%02X", value);
+    LTRACE("LD (HL), 0x{:02X}", value);
 
     bus.Write8(hl, value);
 }
@@ -1282,14 +1282,14 @@ void SM83::ld_dhli_a() {
 
 void SM83::ld_a_da16() {
     u16 addr = GetWordFromPC();
-    LTRACE("LD A, (0x%04X)", addr);
+    LTRACE("LD A, (0x{:04X})", addr);
 
     a = bus.Read8(addr);
 }
 
 void SM83::ld_a_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD A, 0x%02X", value);
+    LTRACE("LD A, 0x{:02X}", value);
 
     a = value;
 }
@@ -1321,49 +1321,49 @@ void SM83::ld_a_dhli() {
 
 void SM83::ld_b_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD B, 0x%02X", value);
+    LTRACE("LD B, 0x{:02X}", value);
 
     b = value;
 }
 
 void SM83::ld_bc_d16() {
     u16 value = GetWordFromPC();
-    LTRACE("LD BC, 0x%04X", value);
+    LTRACE("LD BC, 0x{:04X}", value);
 
     bc = value;
 }
 
 void SM83::ld_c_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD C, 0x%02X", value);
+    LTRACE("LD C, 0x{:02X}", value);
 
     c = value;
 }
 
 void SM83::ld_e_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD E, 0x%02X", value);
+    LTRACE("LD E, 0x{:02X}", value);
 
     e = value;
 }
 
 void SM83::ld_h_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD H, 0x%02X", value);
+    LTRACE("LD H, 0x{:02X}", value);
 
     h = value;
 }
 
 void SM83::ld_hl_d16() {
     u16 value = GetWordFromPC();
-    LTRACE("LD HL, 0x%04X", value);
+    LTRACE("LD HL, 0x{:04X}", value);
 
     hl = value;
 }
 
 void SM83::ld_l_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("LD L, 0x%02X", value);
+    LTRACE("LD L, 0x{:02X}", value);
 
     l = value;
 }
@@ -1378,14 +1378,14 @@ void SM83::ld_r_dhl(u8* reg) {
 
 void SM83::ld_sp_d16() {
     u16 value = GetWordFromPC();
-    LTRACE("LD SP, 0x%04X", value);
+    LTRACE("LD SP, 0x{:04X}", value);
 
     sp = value;
 }
 
 void SM83::ld_hl_sp_d8() {
     s8 value = static_cast<s8>(GetByteFromPC());
-    LTRACE("LD HL, SP+0x%02X", value);
+    LTRACE("LD HL, SP+0x{:02X}", value);
 
     u32 result = sp + value;
 
@@ -1409,7 +1409,7 @@ void SM83::ld_sp_hl() {
 void SM83::ldh_a_da8() {
     u8 offset = GetByteFromPC();
     u16 address = 0xFF00 + offset;
-    LTRACE("LDH A, (0xFF00+0x%02X)", offset);
+    LTRACE("LDH A, (0xFF00+0x{:02X})", offset);
 
     a = bus.Read8(address);
 }
@@ -1417,7 +1417,7 @@ void SM83::ldh_a_da8() {
 void SM83::ldh_da8_a() {
     u8 offset = GetByteFromPC();
     u16 address = 0xFF00 + offset;
-    LTRACE("LDH (0xFF00+0x%02X), A", offset);
+    LTRACE("LDH (0xFF00+0x{:02X}), A", offset);
 
     bus.Write8(address, a);
 }
@@ -1428,7 +1428,7 @@ void SM83::nop() {
 
 void SM83::or_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("OR 0x%02X", value);
+    LTRACE("OR 0x{:02X}", value);
 
     a |= value;
 
@@ -1514,7 +1514,7 @@ void SM83::res(u8 bit, u8* reg) {
 }
 
 void SM83::res_dhl(u8 bit) {
-    LTRACE("RES %u, (HL)", bit);
+    LTRACE("RES {}, (HL)", bit);
     u8 value = bus.Read8(hl);
 
     value &= ~(1 << bit);
@@ -1794,7 +1794,7 @@ void SM83::swap_r(u8* reg) {
 }
 
 void SM83::rst(u8 addr) {
-    LTRACE("RST 0x%02X", addr);
+    LTRACE("RST 0x{:02X}", addr);
 
     if (addr == 0x0038 && bus.Read8(0x0038, false) == 0xFF) {
         LFATAL("Stack overflow");
@@ -1811,7 +1811,7 @@ void SM83::rst(u8 addr) {
 
 void SM83::sbc_a_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("SBC A, 0x%02X", value);
+    LTRACE("SBC A, 0x{:02X}", value);
 
     bool carry = HasFlag(Flags::Carry);
     u16 full = a - value - carry;
@@ -1852,7 +1852,7 @@ void SM83::scf() {
 }
 
 void SM83::set_dhl(u8 bit) {
-    LTRACE("SET %u, (HL)", bit);
+    LTRACE("SET {}, (HL)", bit);
     u8 value = bus.Read8(hl);
 
     value |= (1 << bit);
@@ -1953,7 +1953,7 @@ void SM83::sub_r(u8 reg) {
 
 void SM83::sub_d8() {
     u8 value = GetByteFromPC(); 
-    LTRACE("SUB 0x%02X", value);
+    LTRACE("SUB 0x{:02X}", value);
 
     SetZeroFlag(a == value);
     SetNegateFlag(true);
@@ -1965,7 +1965,7 @@ void SM83::sub_d8() {
 
 void SM83::xor_d8() {
     u8 value = GetByteFromPC();
-    LTRACE("XOR 0x%02X", value);
+    LTRACE("XOR 0x{:02X}", value);
 
     u8 result = a ^ value;
 

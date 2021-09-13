@@ -13,12 +13,12 @@ Cartridge::Cartridge(std::filesystem::path& cartridge_path) {
 
     u8 header_checksum = CalculateHeaderChecksum();
     if (header_checksum != rom.at(0x14D) ) {
-        LERROR("header checksum is wrong, this game will not make it past the bootrom (expected 0x%02X, got 0x%02X)", header_checksum, rom.at(0x14D));
+        LERROR("header checksum is wrong, this game will not make it past the bootrom (expected 0x{:02X}, got 0x{:02X})", header_checksum, rom.at(0x14D));
     }
 
     u16 rom_checksum = CalculateROMChecksum();
     if (((rom_checksum >> 8) & 0xFF) != rom.at(0x14E) && (rom_checksum & 0xFF) != rom.at(0x14F)) {
-        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x%04X, got 0x%02X%02X)", rom_checksum, rom.at(0x14E), rom.at(0x14F));
+        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x{:04X}, got 0x{:02X})", rom_checksum, rom.at(0x14E), rom.at(0x14F));
     }
 }
 
@@ -29,29 +29,29 @@ void Cartridge::LoadCartridge(std::filesystem::path& cartridge_path) {
     ASSERT_MSG(rom_size <= 8 * 1024 * 1024, "ROM is too big");
 
     std::ifstream stream(cartridge_path.string().c_str(), std::ios::binary);
-    ASSERT_MSG(stream.is_open(), "could not open ROM: %s", cartridge_path.string().c_str());
+    ASSERT_MSG(stream.is_open(), "could not open ROM: {}", cartridge_path.string().c_str());
 
     rom.resize(rom_size);
     stream.read(reinterpret_cast<char*>(rom.data()), rom.size());
 
-    LINFO("cartridge: loaded %u bytes (%u KB)", rom_size, rom_size / 1024);
+    LINFO("cartridge: loaded {} bytes ({} KB)", rom_size, rom_size / 1024);
 }
 
 void Cartridge::PrintMetadata() {
     LINFO("some metadata:");
-    LINFO("  title: %s", GetGameTitle().c_str());
-    LINFO("  manufacturer code: 0x%02X%02X%02X%02X", rom.at(0x13F), rom.at(0x140), rom.at(0x141), rom.at(0x142));
-    LINFO("  GBC compatibility: 0x%02X", rom.at(0x143));
-    LINFO("  new licensee code: %c%c", rom.at(0x144), rom.at(0x145));
-    LINFO("  SGB compatibility: 0x%02X", rom.at(0x146));
-    LINFO("  MBC type: 0x%02X (%s)", rom.at(0x147), GetMBCTypeString());
-    LINFO("  ROM size: 0x%02X (%s)", rom.at(0x148), GetROMSizeString());
-    LINFO("  RAM size: 0x%02X (%s)", rom.at(0x149), GetRAMSizeString());
-    LINFO("  destination code: 0x%02X", rom.at(0x14A));
-    LINFO("  old licensee code: 0x%02X", rom.at(0x14B));
-    LINFO("  mask ROM version: 0x%02X", rom.at(0x14C));
-    LINFO("  header checksum: 0x%02X", rom.at(0x14D));
-    LINFO("  ROM checksum: 0x%02X%02X", rom.at(0x14E), rom.at(0x14F));
+    LINFO("  title: {}", GetGameTitle());
+    LINFO("  manufacturer code: 0x{:02X}", rom.at(0x13F), rom.at(0x140), rom.at(0x141), rom.at(0x142));
+    LINFO("  GBC compatibility: 0x{:02X}", rom.at(0x143));
+    LINFO("  new licensee code: {:c}{:c}", rom.at(0x144), rom.at(0x145));
+    LINFO("  SGB compatibility: 0x{:02X}", rom.at(0x146));
+    LINFO("  MBC type: 0x{:02X} ({})", rom.at(0x147), GetMBCTypeString());
+    LINFO("  ROM size: 0x{:02X} ({})", rom.at(0x148), GetROMSizeString());
+    LINFO("  RAM size: 0x{:02X} ({})", rom.at(0x149), GetRAMSizeString());
+    LINFO("  destination code: 0x{:02X}", rom.at(0x14A));
+    LINFO("  old licensee code: 0x{:02X}", rom.at(0x14B));
+    LINFO("  mask ROM version: 0x{:02X}", rom.at(0x14C));
+    LINFO("  header checksum: 0x{:02X}", rom.at(0x14D));
+    LINFO("  ROM checksum: 0x{:04X}", rom.at(0x14E), rom.at(0x14F));
 }
 
 std::string Cartridge::GetGameTitle() {
