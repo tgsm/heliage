@@ -23,7 +23,6 @@ public:
 
     SM83(Bus& bus, Timer& timer);
 
-    void Reset();
     void Tick();
 
     void DumpRegisters();
