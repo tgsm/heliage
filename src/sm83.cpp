@@ -71,8 +71,44 @@ void SM83::SetCarryFlag(bool b) {
     }
 }
 
-bool SM83::HasFlag(Flags flag) {
+bool SM83::HasFlag(Flags flag) const {
     return f & static_cast<u8>(flag);
+}
+
+template <SM83::Conditions cond>
+bool SM83::MeetsCondition() const {
+    switch (cond) {
+        case Conditions::None:
+            return true;
+        case Conditions::C:
+            return HasFlag(Flags::Carry);
+        case Conditions::NC:
+            return !HasFlag(Flags::Carry);
+        case Conditions::Z:
+            return HasFlag(Flags::Zero);
+        case Conditions::NZ:
+            return !HasFlag(Flags::Zero);
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Conditions cond>
+constexpr std::string SM83::GetConditionString() const {
+    static_assert(cond != Conditions::None);
+
+    switch (cond) {
+        case Conditions::C:
+            return "C";
+        case Conditions::NC:
+            return "NC";
+        case Conditions::Z:
+            return "Z";
+        case Conditions::NZ:
+            return "NZ";
+        default:
+            UNREACHABLE();
+    }
 }
 
 void SM83::StackPush(u16 word_reg) {

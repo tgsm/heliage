@@ -70,7 +70,21 @@ private:
     void SetHalfCarryFlag(bool b);
     void SetCarryFlag(bool b);
 
-    bool HasFlag(Flags flag);
+    bool HasFlag(Flags flag) const;
+
+    enum class Conditions {
+        None,
+        C,
+        NC,
+        Z,
+        NZ,
+    };
+
+    template <Conditions cond>
+    bool MeetsCondition() const;
+
+    template <Conditions cond>
+    constexpr std::string GetConditionString() const;
 
     void StackPush(u16 word_reg);
     void StackPop(u16* word_reg);
