@@ -18,7 +18,7 @@ Cartridge::Cartridge(std::filesystem::path& cartridge_path) {
 
     u16 rom_checksum = CalculateROMChecksum();
     if (((rom_checksum >> 8) & 0xFF) != rom.at(0x14E) && (rom_checksum & 0xFF) != rom.at(0x14F)) {
-        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x{:04X}, got 0x{:02X})", rom_checksum, rom.at(0x14E), rom.at(0x14F));
+        LWARN("ROM checksum is wrong, however a real gameboy does not check this (expected 0x{:04X}, got 0x{:02X}{:02X})", rom_checksum, rom.at(0x14E), rom.at(0x14F));
     }
 }
 
