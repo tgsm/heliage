@@ -329,7 +329,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xC1, pop_bc());
         INSTR(0xC2, jp_a16<Conditions::NZ>());
         INSTR(0xC3, jp_a16<Conditions::None>());
-        INSTR(0xC4, call_nz_a16());
+        INSTR(0xC4, call_a16<Conditions::NZ>());
         INSTR(0xC5, push_bc());
         INSTR(0xC6, add_a_d8());
         INSTR(0xC7, rst(0x00));
@@ -337,15 +337,15 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xC9, ret<Conditions::None>());
         INSTR(0xCA, jp_a16<Conditions::Z>());
         // INSTR(0xCB) is handled above
-        INSTR(0xCC, call_z_a16());
-        INSTR(0xCD, call_a16());
+        INSTR(0xCC, call_a16<Conditions::Z>());
+        INSTR(0xCD, call_a16<Conditions::None>());
         INSTR(0xCE, adc_a_d8());
         INSTR(0xCF, rst(0x08));
         INSTR(0xD0, ret<Conditions::NC>());
         INSTR(0xD1, pop_de());
         INSTR(0xD2, jp_a16<Conditions::NC>());
         INSTR(0xD3, ill(opcode); return false);
-        INSTR(0xD4, call_nc_a16());
+        INSTR(0xD4, call_a16<Conditions::NC>());
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
         INSTR(0xD7, rst(0x10));
@@ -353,7 +353,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xD9, reti());
         INSTR(0xDA, jp_a16<Conditions::C>());
         INSTR(0xDB, ill(opcode); return false);
-        INSTR(0xDC, call_c_a16());
+        INSTR(0xDC, call_a16<Conditions::C>());
         INSTR(0xDD, ill(opcode); return false);
         INSTR(0xDE, sbc_a_d8());
         INSTR(0xDF, rst(0x18));
@@ -896,54 +896,17 @@ void SM83::bit_dhl(u8 bit) {
     SetHalfCarryFlag(true);
 }
 
+template <SM83::Conditions cond>
 void SM83::call_a16() {
-    u16 address = GetWordFromPC();
-    LTRACE("CALL 0x{:04X}", address);
+    const u16 address = GetWordFromPC();
 
-    timer.AdvanceCycles(4);
-
-    StackPush(pc);
-    pc = address;
-}
-
-void SM83::call_c_a16() {
-    u16 address = GetWordFromPC();
-    LTRACE("CALL C, 0x{:04X}", address);
-
-    if (HasFlag(Flags::Carry)) {
-        StackPush(pc);
-        pc = address;
-        timer.AdvanceCycles(4);
+    if constexpr (cond == Conditions::None) {
+        LTRACE("CALL 0x{:04X}", address);
+    } else {
+        LTRACE("CALL {}, 0x{:04X}", GetConditionString<cond>(), address);
     }
-}
 
-void SM83::call_nc_a16() {
-    u16 address = GetWordFromPC();
-    LTRACE("CALL NC, 0x{:04X}", address);
-
-    if (!HasFlag(Flags::Carry)) {
-        StackPush(pc);
-        pc = address;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::call_nz_a16() {
-    u16 address = GetWordFromPC();
-    LTRACE("CALL NZ, 0x{:04X}", address);
-
-    if (!HasFlag(Flags::Zero)) {
-        StackPush(pc);
-        pc = address;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::call_z_a16() {
-    u16 address = GetWordFromPC();
-    LTRACE("CALL Z, 0x{:04X}", address);
-
-    if (HasFlag(Flags::Zero)) {
+    if (MeetsCondition<cond>()) {
         StackPush(pc);
         pc = address;
         timer.AdvanceCycles(4);

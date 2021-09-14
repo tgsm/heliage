@@ -114,11 +114,8 @@ private:
     void bit(u8 bit, u8* reg);
     void bit_dhl(u8 bit);
 
+    template <Conditions cond>
     void call_a16();
-    void call_c_a16();
-    void call_nc_a16();
-    void call_nz_a16();
-    void call_z_a16();
 
     void ccf();
 
