@@ -209,11 +209,8 @@ private:
     void res(u8 bit, u8* reg);
     void res_dhl(u8 bit);
 
+    template <Conditions cond>
     void ret();
-    void ret_c();
-    void ret_nc();
-    void ret_z();
-    void ret_nz();
 
     void reti();
 

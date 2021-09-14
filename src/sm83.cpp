@@ -325,7 +325,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xBD, LTRACE("CP L"); cp_r(l));
         INSTR(0xBE, cp_dhl());
         INSTR(0xBF, LTRACE("CP A"); cp_r(a));
-        INSTR(0xC0, ret_nz());
+        INSTR(0xC0, ret<Conditions::NZ>());
         INSTR(0xC1, pop_bc());
         INSTR(0xC2, jp_nz_a16());
         INSTR(0xC3, jp_a16());
@@ -333,15 +333,15 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xC5, push_bc());
         INSTR(0xC6, add_a_d8());
         INSTR(0xC7, rst(0x00));
-        INSTR(0xC8, ret_z());
-        INSTR(0xC9, ret());
+        INSTR(0xC8, ret<Conditions::Z>());
+        INSTR(0xC9, ret<Conditions::None>());
         INSTR(0xCA, jp_z_a16());
         // INSTR(0xCB) is handled above
         INSTR(0xCC, call_z_a16());
         INSTR(0xCD, call_a16());
         INSTR(0xCE, adc_a_d8());
         INSTR(0xCF, rst(0x08));
-        INSTR(0xD0, ret_nc());
+        INSTR(0xD0, ret<Conditions::NC>());
         INSTR(0xD1, pop_de());
         INSTR(0xD2, jp_nc_a16());
         INSTR(0xD3, ill(opcode); return false);
@@ -349,7 +349,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xD5, push_de());
         INSTR(0xD6, sub_d8());
         INSTR(0xD7, rst(0x10));
-        INSTR(0xD8, ret_c());
+        INSTR(0xD8, ret<Conditions::C>());
         INSTR(0xD9, reti());
         INSTR(0xDA, jp_c_a16());
         INSTR(0xDB, ill(opcode); return false);
@@ -1521,54 +1521,22 @@ void SM83::res_dhl(u8 bit) {
     bus.Write8(hl, value);
 }
 
+template <SM83::Conditions cond>
 void SM83::ret() {
-    LTRACE("RET");
-    StackPop(&pc);
-
-    timer.AdvanceCycles(4);
-}
-
-void SM83::ret_c() {
-    LTRACE("RET C");
-
-    if (HasFlag(Flags::Carry)) {
+    if constexpr (cond == Conditions::None) {
+        LTRACE("RET");
+        
         StackPop(&pc);
-        timer.AdvanceCycles(8);
-    } else {
         timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::ret_nc() {
-    LTRACE("RET NC");
-    
-    if (!HasFlag(Flags::Carry)) {
-        StackPop(&pc);
-        timer.AdvanceCycles(8);
     } else {
-        timer.AdvanceCycles(4);
-    }
-}
+        LTRACE("RET {}", GetConditionString<cond>());
 
-void SM83::ret_z() {
-    LTRACE("RET Z");
-
-    if (HasFlag(Flags::Zero)) {
-        StackPop(&pc);
-        timer.AdvanceCycles(8);
-    } else {
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::ret_nz() {
-    LTRACE("RET NZ");
-
-    if (!HasFlag(Flags::Zero)) {
-        StackPop(&pc);
-        timer.AdvanceCycles(8);
-    } else {
-        timer.AdvanceCycles(4);
+        if (MeetsCondition<cond>()) {
+            StackPop(&pc);
+            timer.AdvanceCycles(8);
+        } else {
+            timer.AdvanceCycles(4);
+        }
     }
 }
 
