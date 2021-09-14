@@ -144,12 +144,10 @@ private:
     void inc_r(u8* reg);
     void inc_rr(u16* reg);
 
+    template <Conditions cond>
     void jp_a16();
-    void jp_c_a16();
+
     void jp_hl();
-    void jp_nc_a16();
-    void jp_nz_a16();
-    void jp_z_a16();
 
     void jr_r8();
     void jr_c_r8();

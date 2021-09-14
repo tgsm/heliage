@@ -327,15 +327,15 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xBF, LTRACE("CP A"); cp_r(a));
         INSTR(0xC0, ret<Conditions::NZ>());
         INSTR(0xC1, pop_bc());
-        INSTR(0xC2, jp_nz_a16());
-        INSTR(0xC3, jp_a16());
+        INSTR(0xC2, jp_a16<Conditions::NZ>());
+        INSTR(0xC3, jp_a16<Conditions::None>());
         INSTR(0xC4, call_nz_a16());
         INSTR(0xC5, push_bc());
         INSTR(0xC6, add_a_d8());
         INSTR(0xC7, rst(0x00));
         INSTR(0xC8, ret<Conditions::Z>());
         INSTR(0xC9, ret<Conditions::None>());
-        INSTR(0xCA, jp_z_a16());
+        INSTR(0xCA, jp_a16<Conditions::Z>());
         // INSTR(0xCB) is handled above
         INSTR(0xCC, call_z_a16());
         INSTR(0xCD, call_a16());
@@ -343,7 +343,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xCF, rst(0x08));
         INSTR(0xD0, ret<Conditions::NC>());
         INSTR(0xD1, pop_de());
-        INSTR(0xD2, jp_nc_a16());
+        INSTR(0xD2, jp_a16<Conditions::NC>());
         INSTR(0xD3, ill(opcode); return false);
         INSTR(0xD4, call_nc_a16());
         INSTR(0xD5, push_de());
@@ -351,7 +351,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xD7, rst(0x10));
         INSTR(0xD8, ret<Conditions::C>());
         INSTR(0xD9, reti());
-        INSTR(0xDA, jp_c_a16());
+        INSTR(0xDA, jp_a16<Conditions::C>());
         INSTR(0xDB, ill(opcode); return false);
         INSTR(0xDC, call_c_a16());
         INSTR(0xDD, ill(opcode); return false);
@@ -1101,20 +1101,17 @@ void SM83::inc_dhl() {
     SetHalfCarryFlag((value & 0x0F) == 0x00);
 }
 
+template <SM83::Conditions cond>
 void SM83::jp_a16() {
-    u16 addr = GetWordFromPC();
-    LTRACE("JP 0x{:04X}", addr);
+    const u16 addr = GetWordFromPC();
 
-    pc = addr;
+    if constexpr (cond == Conditions::None) {
+        LTRACE("JP 0x{:04X}", addr);
+    } else {
+        LTRACE("JP {}, 0x{:04X}", GetConditionString<cond>(), addr);
+    }
 
-    timer.AdvanceCycles(4);
-}
-
-void SM83::jp_c_a16() {
-    u16 addr = GetWordFromPC();
-    LTRACE("JP C, 0x{:04X}", addr);
-
-    if (HasFlag(Flags::Carry)) {
+    if (MeetsCondition<cond>()) {
         pc = addr;
         timer.AdvanceCycles(4);
     }
@@ -1123,36 +1120,6 @@ void SM83::jp_c_a16() {
 void SM83::jp_hl() {
     LTRACE("JP HL");
     pc = hl;
-}
-
-void SM83::jp_nc_a16() {
-    u16 addr = GetWordFromPC();
-    LTRACE("JP NC, 0x{:04X}", addr);
-
-    if (!HasFlag(Flags::Carry)) {
-        pc = addr;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::jp_nz_a16() {
-    u16 addr = GetWordFromPC();
-    LTRACE("JP NZ, 0x{:04X}", addr);
-
-    if (!HasFlag(Flags::Zero)) {
-        pc = addr;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::jp_z_a16() {
-    u16 addr = GetWordFromPC();
-    LTRACE("JP Z, 0x{:04X}", addr);
-
-    if (HasFlag(Flags::Zero)) {
-        pc = addr;
-        timer.AdvanceCycles(4);
-    }
 }
 
 void SM83::jr_r8() {
