@@ -149,11 +149,8 @@ private:
 
     void jp_hl();
 
+    template <Conditions cond>
     void jr_r8();
-    void jr_c_r8();
-    void jr_nc_r8();
-    void jr_nz_r8();
-    void jr_z_r8();
 
     void ld_a_d8();
     void ld_a_da16();

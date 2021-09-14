@@ -157,7 +157,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x15, LTRACE("DEC D"); dec_r(&d));
         INSTR(0x16, ld_d_d8());
         INSTR(0x17, rla());
-        INSTR(0x18, jr_r8());
+        INSTR(0x18, jr_r8<Conditions::None>());
         INSTR(0x19, add_hl_de());
         INSTR(0x1A, ld_a_dde());
         INSTR(0x1B, LTRACE("DEC DE"); dec_rr(&de));
@@ -165,7 +165,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x1D, LTRACE("DEC E"); dec_r(&e));
         INSTR(0x1E, ld_e_d8());
         INSTR(0x1F, rra());
-        INSTR(0x20, jr_nz_r8());
+        INSTR(0x20, jr_r8<Conditions::NZ>());
         INSTR(0x21, ld_hl_d16());
         INSTR(0x22, ld_dhli_a());
         INSTR(0x23, LTRACE("INC HL"); inc_rr(&hl));
@@ -173,7 +173,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x25, LTRACE("DEC H"); dec_r(&h));
         INSTR(0x26, ld_h_d8());
         INSTR(0x27, daa());
-        INSTR(0x28, jr_z_r8());
+        INSTR(0x28, jr_r8<Conditions::Z>());
         INSTR(0x29, add_hl_hl());
         INSTR(0x2A, ld_a_dhli());
         INSTR(0x2B, LTRACE("DEC HL"); dec_rr(&hl));
@@ -181,7 +181,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x2D, LTRACE("DEC L"); dec_r(&l));
         INSTR(0x2E, ld_l_d8());
         INSTR(0x2F, cpl());
-        INSTR(0x30, jr_nc_r8());
+        INSTR(0x30, jr_r8<Conditions::NC>());
         INSTR(0x31, ld_sp_d16());
         INSTR(0x32, ld_dhld_a());
         INSTR(0x33, LTRACE("INC SP"); inc_rr(&sp));
@@ -189,7 +189,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x35, dec_dhl());
         INSTR(0x36, ld_dhl_d8());
         INSTR(0x37, scf());
-        INSTR(0x38, jr_c_r8());
+        INSTR(0x38, jr_r8<Conditions::C>());
         INSTR(0x39, add_hl_sp());
         INSTR(0x3A, ld_a_dhld());
         INSTR(0x3B, LTRACE("DEC SP"); dec_rr(&sp));
@@ -1122,56 +1122,19 @@ void SM83::jp_hl() {
     pc = hl;
 }
 
+template <SM83::Conditions cond>
 void SM83::jr_r8() {
-    s8 offset = static_cast<s8>(GetByteFromPC());
-    u16 new_pc = pc + offset;
-    LTRACE("JR 0x{:04X}", new_pc);
+    const s8 offset = static_cast<s8>(GetByteFromPC());
+    const u16 new_pc = pc + offset;
 
-    pc = new_pc;
-
-    timer.AdvanceCycles(4);
-}
-
-void SM83::jr_c_r8() {
-    s8 offset = static_cast<s8>(GetByteFromPC());
-    u16 potential_pc = pc + offset;
-    LTRACE("JR C, 0x{:04X}", potential_pc);
-
-    if (HasFlag(Flags::Carry)) {
-        pc = potential_pc;
-        timer.AdvanceCycles(4);
+    if constexpr (cond == Conditions::None) {
+        LTRACE("JR 0x{:04X}", new_pc);
+    } else {
+        LTRACE("JR {}, 0x{:04X}", GetConditionString<cond>(), new_pc);
     }
-}
 
-void SM83::jr_nc_r8() {
-    s8 offset = static_cast<s8>(GetByteFromPC());
-    u16 potential_pc = pc + offset;
-    LTRACE("JR NC, 0x{:04X}", potential_pc);
-
-    if (!HasFlag(Flags::Carry)) {
-        pc = potential_pc;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::jr_nz_r8() {
-    s8 offset = static_cast<s8>(GetByteFromPC());
-    u16 potential_pc = pc + offset;
-    LTRACE("JR NZ, 0x{:04X}", potential_pc);
-
-    if (!HasFlag(Flags::Zero)) {
-        pc = potential_pc;
-        timer.AdvanceCycles(4);
-    }
-}
-
-void SM83::jr_z_r8() {
-    s8 offset = static_cast<u8>(GetByteFromPC());
-    u16 potential_pc = pc + offset;
-    LTRACE("JR Z, 0x{:04X}", potential_pc);
-
-    if (HasFlag(Flags::Zero)) {
-        pc = potential_pc;
+    if (MeetsCondition<cond>()) {
+        pc = new_pc;
         timer.AdvanceCycles(4);
     }
 }
