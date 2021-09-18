@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include "bus.h"
 #include "types.h"
 
@@ -27,9 +28,11 @@ public:
 
     void DumpRegisters();
 private:
+    static_assert(std::endian::native == std::endian::little, "Only little-endian hosts are supported at the moment");
+
     union {
         u16 af = 0x0000;
-        struct { u8 f; u8 a; }; // little endian
+        struct { u8 f; u8 a; };
     };
 
     union {
