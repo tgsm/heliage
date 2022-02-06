@@ -150,7 +150,8 @@ private:
     void and_d8();
     void and_r(u8 reg);
 
-    void bit(u8 bit, u8* reg);
+    template <u8 Bit, Registers Register>
+    void bit();
     void bit_dhl(u8 bit);
 
     template <Conditions cond>
@@ -235,7 +236,8 @@ private:
     void push_de();
     void push_hl();
 
-    void res(u8 bit, u8* reg);
+    template <u8 Bit, Registers Register>
+    void res();
     void res_dhl(u8 bit);
 
     template <Conditions cond>
@@ -272,7 +274,8 @@ private:
     void scf();
 
     void set_dhl(u8 bit);
-    void set(u8 bit, u8* reg);
+    template <u8 Bit, Registers Register>
+    void set();
 
     void sla_dhl();
     void sla_r(u8* reg);
