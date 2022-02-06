@@ -464,11 +464,11 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xBE, cp_dhl());
         INSTR(0xBF, LTRACE("CP A"); cp_r(a));
         INSTR(0xC0, ret<Conditions::NZ>());
-        INSTR(0xC1, pop_bc());
+        INSTR(0xC1, pop_rr<Registers::BC>());
         INSTR(0xC2, jp_a16<Conditions::NZ>());
         INSTR(0xC3, jp_a16<Conditions::None>());
         INSTR(0xC4, call_a16<Conditions::NZ>());
-        INSTR(0xC5, push_bc());
+        INSTR(0xC5, push_rr<Registers::BC>());
         INSTR(0xC6, add_a_d8());
         INSTR(0xC7, rst(0x00));
         INSTR(0xC8, ret<Conditions::Z>());
@@ -480,11 +480,11 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xCE, adc_a_d8());
         INSTR(0xCF, rst(0x08));
         INSTR(0xD0, ret<Conditions::NC>());
-        INSTR(0xD1, pop_de());
+        INSTR(0xD1, pop_rr<Registers::DE>());
         INSTR(0xD2, jp_a16<Conditions::NC>());
         INSTR(0xD3, ill(opcode); return false);
         INSTR(0xD4, call_a16<Conditions::NC>());
-        INSTR(0xD5, push_de());
+        INSTR(0xD5, push_rr<Registers::DE>());
         INSTR(0xD6, sub_d8());
         INSTR(0xD7, rst(0x10));
         INSTR(0xD8, ret<Conditions::C>());
@@ -496,11 +496,11 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xDE, sbc_a_d8());
         INSTR(0xDF, rst(0x18));
         INSTR(0xE0, ldh_da8_a());
-        INSTR(0xE1, pop_hl());
+        INSTR(0xE1, pop_rr<Registers::HL>());
         INSTR(0xE2, ld_dc_a());
         INSTR(0xE3, ill(opcode); return false);
         INSTR(0xE4, ill(opcode); return false);
-        INSTR(0xE5, push_hl());
+        INSTR(0xE5, push_rr<Registers::HL>());
         INSTR(0xE6, and_d8());
         INSTR(0xE7, rst(0x20));
         INSTR(0xE8, add_sp_d8());
@@ -512,11 +512,11 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xEE, xor_d8());
         INSTR(0xEF, rst(0x28));
         INSTR(0xF0, ldh_a_da8());
-        INSTR(0xF1, pop_af());
+        INSTR(0xF1, pop_rr<Registers::AF>());
         INSTR(0xF2, ld_a_dc());
         INSTR(0xF3, di());
         INSTR(0xF4, ill(opcode); return false);
-        INSTR(0xF5, push_af());
+        INSTR(0xF5, push_rr<Registers::AF>());
         INSTR(0xF6, or_d8());
         INSTR(0xF7, rst(0x30));
         INSTR(0xF8, ld_hl_sp_d8());
@@ -1457,53 +1457,21 @@ void SM83::or_r(u8 reg) {
     SetCarryFlag(false);
 }
 
-void SM83::pop_af() {
-    LTRACE("POP AF");
-    StackPop(&af);
+template <SM83::Registers Register>
+void SM83::pop_rr() {
+    LTRACE("POP {}", Get16bitRegisterName<Register>());
+    StackPop(Get16bitRegisterPointer<Register>());
 
-    // Reset the lower 4 bits if necessary
-    f &= 0xF0;
+    if constexpr (Register == Registers::AF) {
+        // Lowest 4 bits are always 0
+        f &= ~0x0F;
+    }
 }
 
-void SM83::pop_bc() {
-    LTRACE("POP BC");
-    StackPop(&bc);
-}
-
-void SM83::pop_de() {
-    LTRACE("POP DE");
-    StackPop(&de);
-}
-
-void SM83::pop_hl() {
-    LTRACE("POP HL");
-    StackPop(&hl);
-}
-
-void SM83::push_af() {
-    LTRACE("PUSH AF");
-    StackPush(af);
-
-    timer.AdvanceCycles(4);
-}
-
-void SM83::push_bc() {
-    LTRACE("PUSH BC");
-    StackPush(bc);
-
-    timer.AdvanceCycles(4);
-}
-
-void SM83::push_de() {
-    LTRACE("PUSH DE");
-    StackPush(de);
-
-    timer.AdvanceCycles(4);
-}
-
-void SM83::push_hl() {
-    LTRACE("PUSH HL");
-    StackPush(hl);
+template <SM83::Registers Register>
+void SM83::push_rr() {
+    LTRACE("PUSH {}", Get16bitRegisterName<Register>());
+    StackPush(Get16bitRegister<Register>());
 
     timer.AdvanceCycles(4);
 }

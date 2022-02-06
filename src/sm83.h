@@ -226,15 +226,11 @@ private:
     void or_dhl();
     void or_r(u8 reg);
 
-    void pop_af();
-    void pop_bc();
-    void pop_de();
-    void pop_hl();
+    template <Registers Register>
+    void pop_rr();
 
-    void push_af();
-    void push_bc();
-    void push_de();
-    void push_hl();
+    template <Registers Register>
+    void push_rr();
 
     template <u8 Bit, Registers Register>
     void res();
