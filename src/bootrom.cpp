@@ -1,7 +1,7 @@
 #include <fstream>
 #include "bootrom.h"
+#include "common/types.h"
 #include "logging.h"
-#include "types.h"
 
 BootROM::BootROM(std::filesystem::path& bootrom_path) {
     bootrom.fill(0xFF);

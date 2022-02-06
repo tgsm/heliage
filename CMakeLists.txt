@@ -35,6 +35,7 @@ set(SOURCES
 )
 
 set(HEADERS
+    src/common/types.h
     src/bootrom.h
     src/bus.h
     src/cartridge.h
@@ -44,7 +45,6 @@ set(HEADERS
     src/ppu.h
     src/sm83.h
     src/timer.h
-    src/types.h
 )
 
 if (${HELIAGE_FRONTEND} MATCHES "SDL2")

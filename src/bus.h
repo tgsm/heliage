@@ -3,10 +3,10 @@
 #include <array>
 #include "bootrom.h"
 #include "cartridge.h"
+#include "common/types.h"
 #include "joypad.h"
 #include "ppu.h"
 #include "timer.h"
-#include "types.h"
 
 class Bus {
 public:

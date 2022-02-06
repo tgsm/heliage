@@ -2,7 +2,7 @@
 
 #include <array>
 #include <filesystem>
-#include "types.h"
+#include "common/types.h"
 
 // TODO: CGB?
 constexpr u32 BOOTROM_SIZE = 256; // 256 bytes

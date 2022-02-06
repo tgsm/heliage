@@ -4,7 +4,7 @@
 #include <thread>
 #include "../joypad.h"
 #include "../ppu.h"
-#include "../types.h"
+#include "../common/types.h"
 
 void DrawFramebuffer(std::array<PPU::Color, 160 * 144>& framebuffer);
 void HandleEvents(Joypad* joypad);

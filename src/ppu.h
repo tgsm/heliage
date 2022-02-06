@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include "types.h"
+#include "common/types.h"
 
 class Bus;
 

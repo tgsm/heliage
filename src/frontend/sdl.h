@@ -2,7 +2,7 @@
 
 #include "../gb.h"
 #include "../ppu.h"
-#include "../types.h"
+#include "../common/types.h"
 
 void HandleEvents(Joypad* joypad);
 u32 GetARGBColor(PPU::Color pixel);

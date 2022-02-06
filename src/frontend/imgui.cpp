@@ -10,7 +10,6 @@
 #include "../joypad.h"
 #include "../logging.h"
 #include "../ppu.h"
-#include "../types.h"
 
 std::thread emu_thread;
 std::array<u32, 160 * 144> fb;

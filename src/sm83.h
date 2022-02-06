@@ -3,7 +3,7 @@
 #include <bit>
 #include <string_view>
 #include "bus.h"
-#include "types.h"
+#include "common/types.h"
 
 class SM83 {
 public:
