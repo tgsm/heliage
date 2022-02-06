@@ -88,7 +88,7 @@ private:
     bool MeetsCondition() const;
 
     template <Conditions cond>
-    constexpr std::string GetConditionString() const;
+    constexpr std::string_view GetConditionString() const;
 
     enum class Registers {
         A,

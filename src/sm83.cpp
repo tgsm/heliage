@@ -94,7 +94,7 @@ bool SM83::MeetsCondition() const {
 }
 
 template <SM83::Conditions cond>
-constexpr std::string SM83::GetConditionString() const {
+constexpr std::string_view SM83::GetConditionString() const {
     static_assert(cond != Conditions::None);
 
     switch (cond) {
