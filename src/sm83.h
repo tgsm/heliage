@@ -208,7 +208,8 @@ private:
     void ld_hl_d16();
     void ld_hl_sp_d8();
 
-    void ld_r_r(u8* dst, u8* src);
+    template <Registers DestRegister, Registers SrcRegister>
+    void ld_r_r();
     template <Registers Register>
     void ld_r_d8();
     void ld_r_dhl(u8* reg);
