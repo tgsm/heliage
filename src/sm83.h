@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bit>
+#include <string_view>
 #include "bus.h"
 #include "types.h"
 
@@ -88,6 +89,41 @@ private:
 
     template <Conditions cond>
     constexpr std::string GetConditionString() const;
+
+    enum class Registers {
+        A,
+        F,
+        B,
+        C,
+        D,
+        E,
+        H,
+        L,
+
+        AF,
+        BC,
+        DE,
+        HL,
+        SP,
+    };
+
+    template <Registers Register>
+    constexpr char Get8bitRegisterName() const;
+
+    template <Registers Register>
+    u8* Get8bitRegisterPointer();
+
+    template <Registers Register>
+    u8 Get8bitRegister() const;
+
+    template <Registers Register>
+    constexpr std::string_view Get16bitRegisterName() const;
+
+    template <Registers Register>
+    u16* Get16bitRegisterPointer();
+
+    template <Registers Register>
+    u16 Get16bitRegister() const;
 
     void StackPush(u16 word_reg);
     void StackPop(u16* word_reg);

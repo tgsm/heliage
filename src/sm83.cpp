@@ -111,6 +111,144 @@ constexpr std::string SM83::GetConditionString() const {
     }
 }
 
+template <SM83::Registers Register>
+constexpr char SM83::Get8bitRegisterName() const {
+    static_assert(Register < Registers::AF, "Use Get16bitRegisterName for 16bit registers");
+
+    switch (Register) {
+        case Registers::A:
+            return 'A';
+        case Registers::F:
+            return 'F';
+        case Registers::B:
+            return 'B';
+        case Registers::C:
+            return 'C';
+        case Registers::D:
+            return 'D';
+        case Registers::E:
+            return 'E';
+        case Registers::H:
+            return 'H';
+        case Registers::L:
+            return 'L';
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Registers Register>
+u8* SM83::Get8bitRegisterPointer() {
+    static_assert(Register < Registers::AF, "Use Get16bitRegisterPointer for 16bit registers");
+
+    switch (Register) {
+        case Registers::A:
+            return &a;
+        case Registers::F:
+            return &f;
+        case Registers::B:
+            return &b;
+        case Registers::C:
+            return &c;
+        case Registers::D:
+            return &d;
+        case Registers::E:
+            return &e;
+        case Registers::H:
+            return &h;
+        case Registers::L:
+            return &l;
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Registers Register>
+u8 SM83::Get8bitRegister() const {
+    static_assert(Register < Registers::AF, "Use Get16bitRegister for 16bit registers");
+
+    switch (Register) {
+        case Registers::A:
+            return a;
+        case Registers::F:
+            return f;
+        case Registers::B:
+            return b;
+        case Registers::C:
+            return c;
+        case Registers::D:
+            return d;
+        case Registers::E:
+            return e;
+        case Registers::H:
+            return h;
+        case Registers::L:
+            return l;
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Registers Register>
+constexpr std::string_view SM83::Get16bitRegisterName() const {
+    static_assert(Register >= Registers::AF, "Use Get8bitRegisterName for 8bit registers");
+
+    switch (Register) {
+        case Registers::AF:
+            return "AF";
+        case Registers::BC:
+            return "BC";
+        case Registers::DE:
+            return "DE";
+        case Registers::HL:
+            return "HL";
+        case Registers::SP:
+            return "SP";
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Registers Register>
+u16* SM83::Get16bitRegisterPointer() {
+    static_assert(Register >= Registers::AF, "Use Get8bitRegisterPointer for 8bit registers");
+
+    switch (Register) {
+        case Registers::AF:
+            return &af;
+        case Registers::BC:
+            return &bc;
+        case Registers::DE:
+            return &de;
+        case Registers::HL:
+            return &hl;
+        case Registers::SP:
+            return &sp;
+        default:
+            UNREACHABLE();
+    }
+}
+
+template <SM83::Registers Register>
+u16 SM83::Get16bitRegister() const {
+    static_assert(Register >= Registers::AF, "Use Get8bitRegister for 8bit registers");
+
+    switch (Register) {
+        case Registers::AF:
+            return af;
+        case Registers::BC:
+            return bc;
+        case Registers::DE:
+            return de;
+        case Registers::HL:
+            return hl;
+        case Registers::SP:
+            return sp;
+        default:
+            UNREACHABLE();
+    }
+}
+
 void SM83::StackPush(u16 word_reg) {
     bus.Write8(--sp, static_cast<u8>((word_reg >> 8) & 0xFF));
     bus.Write8(--sp, static_cast<u8>(word_reg & 0xFF));
