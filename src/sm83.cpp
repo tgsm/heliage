@@ -277,7 +277,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x03, LTRACE("INC BC"); inc_rr(&bc));
         INSTR(0x04, LTRACE("INC B"); inc_r(&b));
         INSTR(0x05, LTRACE("DEC B"); dec_r(&b));
-        INSTR(0x06, ld_b_d8());
+        INSTR(0x06, ld_r_d8<Registers::B>());
         INSTR(0x07, rlca());
         INSTR(0x08, ld_da16_sp());
         INSTR(0x09, add_hl_bc());
@@ -285,7 +285,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x0B, LTRACE("DEC BC"); dec_rr(&bc));
         INSTR(0x0C, LTRACE("INC C"); inc_r(&c));
         INSTR(0x0D, LTRACE("DEC C"); dec_r(&c));
-        INSTR(0x0E, ld_c_d8());
+        INSTR(0x0E, ld_r_d8<Registers::C>());
         INSTR(0x0F, rrca());
         // 0x10 STOP
         INSTR(0x11, ld_de_d16());
@@ -293,7 +293,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x13, LTRACE("INC DE"); inc_rr(&de));
         INSTR(0x14, LTRACE("INC D"); inc_r(&d));
         INSTR(0x15, LTRACE("DEC D"); dec_r(&d));
-        INSTR(0x16, ld_d_d8());
+        INSTR(0x16, ld_r_d8<Registers::D>());
         INSTR(0x17, rla());
         INSTR(0x18, jr_r8<Conditions::None>());
         INSTR(0x19, add_hl_de());
@@ -301,7 +301,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x1B, LTRACE("DEC DE"); dec_rr(&de));
         INSTR(0x1C, LTRACE("INC E"); inc_r(&e));
         INSTR(0x1D, LTRACE("DEC E"); dec_r(&e));
-        INSTR(0x1E, ld_e_d8());
+        INSTR(0x1E, ld_r_d8<Registers::E>());
         INSTR(0x1F, rra());
         INSTR(0x20, jr_r8<Conditions::NZ>());
         INSTR(0x21, ld_hl_d16());
@@ -309,7 +309,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x23, LTRACE("INC HL"); inc_rr(&hl));
         INSTR(0x24, LTRACE("INC H"); inc_r(&h));
         INSTR(0x25, LTRACE("DEC H"); dec_r(&h));
-        INSTR(0x26, ld_h_d8());
+        INSTR(0x26, ld_r_d8<Registers::H>());
         INSTR(0x27, daa());
         INSTR(0x28, jr_r8<Conditions::Z>());
         INSTR(0x29, add_hl_hl());
@@ -317,7 +317,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x2B, LTRACE("DEC HL"); dec_rr(&hl));
         INSTR(0x2C, LTRACE("INC L"); inc_r(&l));
         INSTR(0x2D, LTRACE("DEC L"); dec_r(&l));
-        INSTR(0x2E, ld_l_d8());
+        INSTR(0x2E, ld_r_d8<Registers::L>());
         INSTR(0x2F, cpl());
         INSTR(0x30, jr_r8<Conditions::NC>());
         INSTR(0x31, ld_sp_d16());
@@ -333,7 +333,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0x3B, LTRACE("DEC SP"); dec_rr(&sp));
         INSTR(0x3C, LTRACE("INC A"); inc_r(&a));
         INSTR(0x3D, LTRACE("DEC A"); dec_r(&a));
-        INSTR(0x3E, ld_a_d8());
+        INSTR(0x3E, ld_r_d8<Registers::A>());
         INSTR(0x3F, ccf());
         INSTR(0x40, LTRACE("LD B, B"); ld_r_r(&b, &b));
         INSTR(0x41, LTRACE("LD B, C"); ld_r_r(&b, &c));
@@ -1240,13 +1240,6 @@ void SM83::jr_r8() {
     }
 }
 
-void SM83::ld_d_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD D, 0x{:02X}", value);
-
-    d = value;
-}
-
 void SM83::ld_da16_a() {
     u16 address = GetWordFromPC();
     LTRACE("LD (0x{:04X}), A", address);
@@ -1318,13 +1311,6 @@ void SM83::ld_a_da16() {
     a = bus.Read8(addr);
 }
 
-void SM83::ld_a_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD A, 0x{:02X}", value);
-
-    a = value;
-}
-
 void SM83::ld_a_dbc() {
     LTRACE("LD A, (BC)");
     a = bus.Read8(bc);
@@ -1350,39 +1336,11 @@ void SM83::ld_a_dhli() {
     a = bus.Read8(hl++);
 }
 
-void SM83::ld_b_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD B, 0x{:02X}", value);
-
-    b = value;
-}
-
 void SM83::ld_bc_d16() {
     u16 value = GetWordFromPC();
     LTRACE("LD BC, 0x{:04X}", value);
 
     bc = value;
-}
-
-void SM83::ld_c_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD C, 0x{:02X}", value);
-
-    c = value;
-}
-
-void SM83::ld_e_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD E, 0x{:02X}", value);
-
-    e = value;
-}
-
-void SM83::ld_h_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD H, 0x{:02X}", value);
-
-    h = value;
 }
 
 void SM83::ld_hl_d16() {
@@ -1392,15 +1350,17 @@ void SM83::ld_hl_d16() {
     hl = value;
 }
 
-void SM83::ld_l_d8() {
-    u8 value = GetByteFromPC();
-    LTRACE("LD L, 0x{:02X}", value);
-
-    l = value;
-}
-
 void SM83::ld_r_r(u8* dst, u8* src) {
     *dst = *src;
+}
+
+template <SM83::Registers Register>
+void SM83::ld_r_d8() {
+    const u8 value = GetByteFromPC();
+    LTRACE("LD {}, 0x{:02X}", Get8bitRegisterName<Register>(), value);
+
+    u8* dest = Get8bitRegisterPointer<Register>();
+    *dest = value;
 }
 
 void SM83::ld_r_dhl(u8* reg) {

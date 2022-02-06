@@ -188,17 +188,13 @@ private:
     template <Conditions cond>
     void jr_r8();
 
-    void ld_a_d8();
     void ld_a_da16();
     void ld_a_dbc();
     void ld_a_dc();
     void ld_a_dde();
     void ld_a_dhld();
     void ld_a_dhli();
-    void ld_b_d8();
     void ld_bc_d16();
-    void ld_c_d8();
-    void ld_d_d8();
     void ld_da16_a();
     void ld_da16_sp();
     void ld_dbc_a();
@@ -209,13 +205,14 @@ private:
     void ld_dhl_r(u8 reg);
     void ld_dhld_a();
     void ld_dhli_a();
-    void ld_e_d8();
-    void ld_h_d8();
     void ld_hl_d16();
     void ld_hl_sp_d8();
-    void ld_l_d8();
+
     void ld_r_r(u8* dst, u8* src);
+    template <Registers Register>
+    void ld_r_d8();
     void ld_r_dhl(u8* reg);
+
     void ld_sp_d16();
     void ld_sp_hl();
     void ldh_a_da8();
