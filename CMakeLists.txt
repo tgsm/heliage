@@ -35,6 +35,7 @@ set(SOURCES
 )
 
 set(HEADERS
+    src/common/bits.h
     src/common/types.h
     src/bootrom.h
     src/bus.h
