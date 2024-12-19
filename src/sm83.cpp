@@ -605,7 +605,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x43, (bit<0, Registers::E>()));
         INSTR(0x44, (bit<0, Registers::H>()));
         INSTR(0x45, (bit<0, Registers::L>()));
-        INSTR(0x46, bit_dhl(0));
+        INSTR(0x46, bit_dhl<0>());
         INSTR(0x47, (bit<0, Registers::A>()));
         INSTR(0x48, (bit<1, Registers::B>()));
         INSTR(0x49, (bit<1, Registers::C>()));
@@ -613,7 +613,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x4B, (bit<1, Registers::E>()));
         INSTR(0x4C, (bit<1, Registers::H>()));
         INSTR(0x4D, (bit<1, Registers::L>()));
-        INSTR(0x4E, bit_dhl(1));
+        INSTR(0x4E, bit_dhl<1>());
         INSTR(0x4F, (bit<1, Registers::A>()));
         INSTR(0x50, (bit<2, Registers::B>()));
         INSTR(0x51, (bit<2, Registers::C>()));
@@ -621,7 +621,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x53, (bit<2, Registers::E>()));
         INSTR(0x54, (bit<2, Registers::H>()));
         INSTR(0x55, (bit<2, Registers::L>()));
-        INSTR(0x56, bit_dhl(2));
+        INSTR(0x56, bit_dhl<2>());
         INSTR(0x57, (bit<2, Registers::A>()));
         INSTR(0x58, (bit<3, Registers::B>()));
         INSTR(0x59, (bit<3, Registers::C>()));
@@ -629,7 +629,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x5B, (bit<3, Registers::E>()));
         INSTR(0x5C, (bit<3, Registers::H>()));
         INSTR(0x5D, (bit<3, Registers::L>()));
-        INSTR(0x5E, bit_dhl(3));
+        INSTR(0x5E, bit_dhl<3>());
         INSTR(0x5F, (bit<3, Registers::A>()));
         INSTR(0x60, (bit<4, Registers::B>()));
         INSTR(0x61, (bit<4, Registers::C>()));
@@ -637,7 +637,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x63, (bit<4, Registers::E>()));
         INSTR(0x64, (bit<4, Registers::H>()));
         INSTR(0x65, (bit<4, Registers::L>()));
-        INSTR(0x66, bit_dhl(4));
+        INSTR(0x66, bit_dhl<4>());
         INSTR(0x67, (bit<4, Registers::A>()));
         INSTR(0x68, (bit<5, Registers::B>()));
         INSTR(0x69, (bit<5, Registers::C>()));
@@ -645,7 +645,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x6B, (bit<5, Registers::E>()));
         INSTR(0x6C, (bit<5, Registers::H>()));
         INSTR(0x6D, (bit<5, Registers::L>()));
-        INSTR(0x6E, bit_dhl(5));
+        INSTR(0x6E, bit_dhl<5>());
         INSTR(0x6F, (bit<5, Registers::A>()));
         INSTR(0x70, (bit<6, Registers::B>()));
         INSTR(0x71, (bit<6, Registers::C>()));
@@ -653,7 +653,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x73, (bit<6, Registers::E>()));
         INSTR(0x74, (bit<6, Registers::H>()));
         INSTR(0x75, (bit<6, Registers::L>()));
-        INSTR(0x76, bit_dhl(6));
+        INSTR(0x76, bit_dhl<6>());
         INSTR(0x77, (bit<6, Registers::A>()));
         INSTR(0x78, (bit<7, Registers::B>()));
         INSTR(0x79, (bit<7, Registers::C>()));
@@ -661,7 +661,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0x7B, (bit<7, Registers::E>()));
         INSTR(0x7C, (bit<7, Registers::H>()));
         INSTR(0x7D, (bit<7, Registers::L>()));
-        INSTR(0x7E, bit_dhl(7));
+        INSTR(0x7E, bit_dhl<7>());
         INSTR(0x7F, (bit<7, Registers::A>()));
         INSTR(0x80, (res<0, Registers::B>()));
         INSTR(0x81, (res<0, Registers::C>()));
@@ -733,7 +733,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xC3, (set<0, Registers::E>()));
         INSTR(0xC4, (set<0, Registers::H>()));
         INSTR(0xC5, (set<0, Registers::L>()));
-        INSTR(0xC6, set_dhl(0));
+        INSTR(0xC6, set_dhl<0>());
         INSTR(0xC7, (set<0, Registers::A>()));
         INSTR(0xC8, (set<1, Registers::B>()));
         INSTR(0xC9, (set<1, Registers::C>()));
@@ -741,7 +741,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xCB, (set<1, Registers::E>()));
         INSTR(0xCC, (set<1, Registers::H>()));
         INSTR(0xCD, (set<1, Registers::L>()));
-        INSTR(0xCE, set_dhl(1));
+        INSTR(0xCE, set_dhl<1>());
         INSTR(0xCF, (set<1, Registers::A>()));
         INSTR(0xD0, (set<2, Registers::B>()));
         INSTR(0xD1, (set<2, Registers::C>()));
@@ -749,7 +749,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xD3, (set<2, Registers::E>()));
         INSTR(0xD4, (set<2, Registers::H>()));
         INSTR(0xD5, (set<2, Registers::L>()));
-        INSTR(0xD6, set_dhl(2));
+        INSTR(0xD6, set_dhl<2>());
         INSTR(0xD7, (set<2, Registers::A>()));
         INSTR(0xD8, (set<3, Registers::B>()));
         INSTR(0xD9, (set<3, Registers::C>()));
@@ -757,7 +757,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xDB, (set<3, Registers::E>()));
         INSTR(0xDC, (set<3, Registers::H>()));
         INSTR(0xDD, (set<3, Registers::L>()));
-        INSTR(0xDE, set_dhl(3));
+        INSTR(0xDE, set_dhl<3>());
         INSTR(0xDF, (set<3, Registers::A>()));
         INSTR(0xE0, (set<4, Registers::B>()));
         INSTR(0xE1, (set<4, Registers::C>()));
@@ -765,7 +765,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xE3, (set<4, Registers::E>()));
         INSTR(0xE4, (set<4, Registers::H>()));
         INSTR(0xE5, (set<4, Registers::L>()));
-        INSTR(0xE6, set_dhl(4));
+        INSTR(0xE6, set_dhl<4>());
         INSTR(0xE7, (set<4, Registers::A>()));
         INSTR(0xE8, (set<5, Registers::B>()));
         INSTR(0xE9, (set<5, Registers::C>()));
@@ -773,7 +773,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xEB, (set<5, Registers::E>()));
         INSTR(0xEC, (set<5, Registers::H>()));
         INSTR(0xED, (set<5, Registers::L>()));
-        INSTR(0xEE, set_dhl(5));
+        INSTR(0xEE, set_dhl<5>());
         INSTR(0xEF, (set<5, Registers::A>()));
         INSTR(0xF0, (set<6, Registers::B>()));
         INSTR(0xF1, (set<6, Registers::C>()));
@@ -781,7 +781,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xF3, (set<6, Registers::E>()));
         INSTR(0xF4, (set<6, Registers::H>()));
         INSTR(0xF5, (set<6, Registers::L>()));
-        INSTR(0xF6, set_dhl(6));
+        INSTR(0xF6, set_dhl<6>());
         INSTR(0xF7, (set<6, Registers::A>()));
         INSTR(0xF8, (set<7, Registers::B>()));
         INSTR(0xF9, (set<7, Registers::C>()));
@@ -789,7 +789,7 @@ bool SM83::ExecuteCBOpcode(const u8 opcode) {
         INSTR(0xFB, (set<7, Registers::E>()));
         INSTR(0xFC, (set<7, Registers::H>()));
         INSTR(0xFD, (set<7, Registers::L>()));
-        INSTR(0xFE, set_dhl(7));
+        INSTR(0xFE, set_dhl<7>());
         INSTR(0xFF, (set<7, Registers::A>()));
 #undef INSTR
         default:
@@ -1024,11 +1024,12 @@ void SM83::bit() {
     SetHalfCarryFlag(true);
 }
 
-void SM83::bit_dhl(u8 bit) {
-    LTRACE("BIT {}, (HL)", bit);
-    u8 value = bus.Read8(hl);
+template <u8 Bit>
+void SM83::bit_dhl() {
+    LTRACE("BIT {}, (HL)", Bit);
+    const u8 value = bus.Read8(hl);
 
-    SetZeroFlag(!(value & (1 << bit)));
+    SetZeroFlag(!Common::IsBitSet<Bit>(value));
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
 }
@@ -1785,11 +1786,12 @@ void SM83::scf() {
     SetCarryFlag(true);
 }
 
-void SM83::set_dhl(u8 bit) {
-    LTRACE("SET {}, (HL)", bit);
+template <u8 Bit>
+void SM83::set_dhl() {
+    LTRACE("SET {}, (HL)", Bit);
     u8 value = bus.Read8(hl);
 
-    value |= (1 << bit);
+    Common::SetBits<Bit>(value);
     bus.Write8(hl, value);
 }
 

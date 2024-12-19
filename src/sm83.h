@@ -152,7 +152,8 @@ private:
 
     template <u8 Bit, Registers Register>
     void bit();
-    void bit_dhl(u8 bit);
+    template <u8 Bit>
+    void bit_dhl();
 
     template <Conditions cond>
     void call_a16();
@@ -269,7 +270,8 @@ private:
 
     void scf();
 
-    void set_dhl(u8 bit);
+    template <u8 Bit>
+    void set_dhl();
     template <u8 Bit, Registers Register>
     void set();
 
