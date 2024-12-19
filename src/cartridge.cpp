@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include "cartridge.h"
@@ -56,13 +57,9 @@ void Cartridge::PrintMetadata() {
 }
 
 std::string Cartridge::GetGameTitle() {
-    std::array<char, 0x10> title;
-
-    for (int i = 0; i < 0x10; i++) {
-        title[i] = rom.at(0x134 + i);
-    }
-
-    return std::string(title.data());
+    std::string title(12, '\0');
+    std::copy_n(rom.begin() + 0x134, 12, std::back_inserter(title));
+    return title;
 }
 
 u8 Cartridge::GetMBCType() {
