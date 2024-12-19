@@ -264,12 +264,6 @@ void SM83::StackPop(u16* word_reg) {
 
 bool SM83::ExecuteOpcode(const u8 opcode) {
     switch (opcode) {
-        case 0xCB:
-            if (!ExecuteCBOpcode(GetByteFromPC())) {
-                return false;
-            }
-            break;
-
 #define INSTR(opcode, instr, ...) case opcode: instr; break
         INSTR(0x00, nop());
         INSTR(0x01, ld_bc_d16());
@@ -474,7 +468,7 @@ bool SM83::ExecuteOpcode(const u8 opcode) {
         INSTR(0xC8, ret<Conditions::Z>());
         INSTR(0xC9, ret<Conditions::None>());
         INSTR(0xCA, jp_a16<Conditions::Z>());
-        // INSTR(0xCB) is handled above
+        case  0xCB: return ExecuteCBOpcode(GetByteFromPC());
         INSTR(0xCC, call_a16<Conditions::Z>());
         INSTR(0xCD, call_a16<Conditions::None>());
         INSTR(0xCE, adc_a_d8());
