@@ -9,16 +9,16 @@ public:
     Cartridge(std::filesystem::path& cartridge_path);
 
     void PrintMetadata();
-    std::string GetGameTitle();
-    u8 GetMBCType();
-    const char* GetMBCTypeString();
-    const char* GetROMSizeString();
-    const char* GetRAMSizeString();
-    bool CheckNintendoLogo();
-    u8 CalculateHeaderChecksum();
-    u16 CalculateROMChecksum();
+    std::string GetGameTitle() const;
+    u8 GetMBCType() const;
+    const char* GetMBCTypeString() const;
+    const char* GetROMSizeString() const;
+    const char* GetRAMSizeString() const;
+    bool CheckNintendoLogo() const;
+    u8 CalculateHeaderChecksum() const;
+    u16 CalculateROMChecksum() const;
 
-    u8 Read(u32 addr);
+    u8 Read(u32 addr) const;
 private:
     void LoadCartridge(std::filesystem::path& cartridge_path);
     std::vector<u8> rom;

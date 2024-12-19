@@ -56,17 +56,17 @@ void Cartridge::PrintMetadata() {
     LINFO("  ROM checksum: 0x{:04X}", rom.at(0x14E), rom.at(0x14F));
 }
 
-std::string Cartridge::GetGameTitle() {
+std::string Cartridge::GetGameTitle() const {
     std::string title(12, '\0');
     std::copy_n(rom.begin() + 0x134, 12, std::back_inserter(title));
     return title;
 }
 
-u8 Cartridge::GetMBCType() {
+u8 Cartridge::GetMBCType() const {
     return rom.at(0x147);
 }
 
-const char* Cartridge::GetMBCTypeString() {
+const char* Cartridge::GetMBCTypeString() const {
     u8 value = GetMBCType();
 
     switch (value) {
@@ -105,7 +105,7 @@ const char* Cartridge::GetMBCTypeString() {
     }
 }
 
-const char* Cartridge::GetROMSizeString() {
+const char* Cartridge::GetROMSizeString() const {
     u8 value = rom.at(0x148);
 
     switch (value) {
@@ -128,7 +128,7 @@ const char* Cartridge::GetROMSizeString() {
     }
 }
 
-const char* Cartridge::GetRAMSizeString() {
+const char* Cartridge::GetRAMSizeString() const {
     u8 value = rom.at(0x149);
 
     switch (value) {
@@ -145,7 +145,7 @@ const char* Cartridge::GetRAMSizeString() {
     }
 }
 
-bool Cartridge::CheckNintendoLogo() {
+bool Cartridge::CheckNintendoLogo() const {
     const std::array<u8, 0x30> nintendo_logo = {
         0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
         0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
@@ -164,7 +164,7 @@ bool Cartridge::CheckNintendoLogo() {
     return true;
 }
 
-u8 Cartridge::CalculateHeaderChecksum() {
+u8 Cartridge::CalculateHeaderChecksum() const {
     u8 result = 0x00;
     for (u16 i = 0x0134; i <= 0x014C; i++) {
         result -= rom.at(i);
@@ -174,7 +174,7 @@ u8 Cartridge::CalculateHeaderChecksum() {
     return result;
 }
 
-u16 Cartridge::CalculateROMChecksum() {
+u16 Cartridge::CalculateROMChecksum() const {
     u16 result = 0x0000;
 
     for (u32 i = 0x00000000; i < rom_size; i++) {
@@ -188,6 +188,6 @@ u16 Cartridge::CalculateROMChecksum() {
     return result;
 }
 
-u8 Cartridge::Read(u32 addr) {
+u8 Cartridge::Read(u32 addr) const {
     return rom.at(addr);
 }
