@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include "common/bits.h"
 #include "common/types.h"
 
 class Bus;
@@ -30,41 +31,41 @@ public:
 
     void UpdateSprite(u16 addr);
 
-    u8 GetLCDC() { return lcdc; }
+    u8 GetLCDC() const { return lcdc; }
     void SetLCDC(u8 value) { lcdc = value; }
 
-    u8 GetSTAT() { return stat; }
+    u8 GetSTAT() const { return stat; }
     void SetSTAT(u8 value) { stat = value; }
 
-    u8 GetSCY() { return scy; }
+    u8 GetSCY() const { return scy; }
     void SetSCY(u8 value) { scy = value; }
 
-    u8 GetSCX() { return scx; }
+    u8 GetSCX() const { return scx; }
     void SetSCX(u8 value) { scx = value; }
 
-    u8 GetLY() { return ly; }
+    u8 GetLY() const { return ly; }
 
-    u8 GetLYC() { return lyc; }
+    u8 GetLYC() const { return lyc; }
     void SetLYC(u8 value) { lyc = value; }
 
     void SetBGWindowPalette(u8 value);
     void SetOBP0(u8 value);
     void SetOBP1(u8 value);
 
-    u8 GetWY() { return wy; }
+    u8 GetWY() const { return wy; }
     void SetWY(u8 value) { wy = value; }
 
-    u8 GetWX() { return wx; }
+    u8 GetWX() const { return wx; }
     void SetWX(u8 value) { wx = value; }
 
-    bool IsLCDEnabled();
-    u16 GetWindowTileMapDisplayOffset();
-    bool IsWindowDisplayEnabled();
-    u16 GetBGWindowTileDataOffset();
-    u16 GetBGTileMapDisplayOffset();
-    bool AreSpritesDoubleHeight();
-    bool IsSpriteDisplayEnabled();
-    bool IsBGDisplayEnabled();
+    bool IsLCDEnabled() const { return Common::IsBitSet<7>(lcdc); }
+    u16 GetWindowTileMapDisplayOffset() const { return (Common::IsBitSet<6>(lcdc)) ? 0x9C00 : 0x9800; }
+    bool IsWindowDisplayEnabled() const { return Common::IsBitSet<5>(lcdc); }
+    u16 GetBGWindowTileDataOffset() const { return Common::IsBitSet<4>(lcdc) ? 0x8000 : 0x8800; }
+    u16 GetBGTileMapDisplayOffset() const { return Common::IsBitSet<3>(lcdc) ? 0x9C00 : 0x9800; }
+    bool AreSpritesDoubleHeight() const { return Common::IsBitSet<2>(lcdc); }
+    bool IsSpriteDisplayEnabled() const { return Common::IsBitSet<1>(lcdc); }
+    bool IsBGDisplayEnabled() const { return Common::IsBitSet<0>(lcdc); }
 
     void SetBGDrawingEnabled(bool enabled) { background_drawing_enabled = enabled; }
     void SetWindowDrawingEnabled(bool enabled) { window_drawing_enabled = enabled; }

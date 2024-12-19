@@ -356,35 +356,3 @@ PPU::Color PPU::GetColorFromSpritePalette(Color color, bool use_obp1) {
             UNREACHABLE_MSG("invalid PPU color {}", static_cast<u8>(color));
     }
 }
-
-bool PPU::IsLCDEnabled() {
-    return lcdc & (1 << 7);
-}
-
-u16 PPU::GetWindowTileMapDisplayOffset() {
-    return (lcdc & (1 << 6)) ? 0x9C00 : 0x9800;
-}
-
-bool PPU::IsWindowDisplayEnabled() {
-    return lcdc & (1 << 5);
-}
-
-u16 PPU::GetBGWindowTileDataOffset() {
-    return (lcdc & (1 << 4)) ? 0x8000 : 0x8800;
-}
-
-u16 PPU::GetBGTileMapDisplayOffset() {
-    return (lcdc & (1 << 3)) ? 0x9C00 : 0x9800;
-}
-
-bool PPU::AreSpritesDoubleHeight() {
-    return lcdc & (1 << 2);
-}
-
-bool PPU::IsSpriteDisplayEnabled() {
-    return lcdc & (1 << 1);
-}
-
-bool PPU::IsBGDisplayEnabled() {
-    return lcdc & (1 << 0);
-}
