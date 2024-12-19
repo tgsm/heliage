@@ -4,7 +4,7 @@ project(heliage CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -pg")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 option(HELIAGE_PRINT_SERIAL_BYTES "If enabled, any bytes sent to serial (0xFF01) will be printed to stdout" OFF)
 
