@@ -1,4 +1,5 @@
 #include "sm83.h"
+#include "common/bits.h"
 #include "logging.h"
 
 SM83::SM83(Bus& bus, Timer& timer)
@@ -1018,7 +1019,7 @@ void SM83::bit() {
     LTRACE("BIT {}, {}", Bit, Get8bitRegisterName<Register>());
     const u8 reg = Get8bitRegister<Register>();
 
-    SetZeroFlag(!(reg & (1 << Bit)));
+    SetZeroFlag(!Common::IsBitSet<Bit>(reg));
     SetNegateFlag(false);
     SetHalfCarryFlag(true);
 }
@@ -1124,8 +1125,8 @@ void SM83::daa() {
 
     SetZeroFlag((result & 0xFF) == 0);
     SetHalfCarryFlag(false);
-    if ((result & 0x100) == 0x100) {
-        // don't set carry flag to false if the result isn't 16 bit
+    if (Common::IsBitSet<8>(result)) {
+        // Set the carry flag if the result is 16 bit
         SetCarryFlag(true);
     }
 
@@ -1475,7 +1476,7 @@ void SM83::res() {
     LTRACE("RES {}, {}", Bit, Get8bitRegisterName<Register>());
 
     u8* reg = Get8bitRegisterPointer<Register>();
-    *reg &= ~(1 << Bit);
+    Common::ResetBits<Bit>(*reg);
 }
 
 void SM83::res_dhl(u8 bit) {
@@ -1797,14 +1798,14 @@ void SM83::set() {
     LTRACE("SET {}, {}", Bit, Get8bitRegisterName<Register>());
 
     u8* reg = Get8bitRegisterPointer<Register>();
-    *reg |= (1 << Bit);
+    Common::SetBits<Bit>(*reg);
 }
 
 void SM83::sla_dhl() {
     LTRACE("SLA (HL)");
 
     u8 value = bus.Read8(hl);
-    bool should_carry = value & (1 << 7);
+    bool should_carry = Common::IsBitSet<7>(value);
     u8 result = value << 1;
 
     SetZeroFlag(result == 0);
@@ -1816,7 +1817,7 @@ void SM83::sla_dhl() {
 }
 
 void SM83::sla_r(u8* reg) {
-    bool should_carry = *reg & (1 << 7);
+    bool should_carry = Common::IsBitSet<7>(*reg);
     u8 result = *reg << 1;
 
     SetZeroFlag(result == 0);
