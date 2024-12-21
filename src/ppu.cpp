@@ -4,12 +4,18 @@
 #include "ppu.h"
 #include "frontend/frontend.h"
 
+#define HELIAGE_USE_PIXEL_FIFO 0
+
+static constexpr u32 TemporaryCycleAdjustment = 30; // No more than 117
+
 PPU::PPU(Bus& bus)
     : bus(bus) {
 }
 
 void PPU::AdvanceCycles(u64 cycles) {
-    vcycles += cycles;
+    for (u64 i = 0; i < cycles; i++) {
+        Tick();
+    }
 }
 
 void PPU::CheckForLYCoincidence() {
@@ -31,19 +37,42 @@ void PPU::Tick() {
     switch (mode) {
         case Mode::AccessOAM:
             // TODO: block memory access to VRAM and OAM during this mode
+            vcycles++;
             if (vcycles < 80) {
                 return;
             }
 
             vcycles %= 80;
+
             stat |= 0x3;
             mode = Mode::AccessVRAM;
+#if HELIAGE_USE_PIXEL_FIFO
+            bg_fifo.Reset();
+#endif
 
             CheckForLYCoincidence();
             break;
-        case Mode::AccessVRAM: {
+        case Mode::AccessVRAM: { // 172-289 dots
+#if HELIAGE_USE_PIXEL_FIFO
+            RunFIFO(bg_fifo);
+
+            if (bg_fifo.size != 0) {
+                if (IsBGDisplayEnabled()) {
+                    framebuffer[ly * 160 + bg_fifo.draw_x] = GetColorFromBGWindowPalette(bg_fifo.data[0]);
+                }
+                bg_fifo.draw_x++;
+
+                bg_fifo.size--;
+                for (int i = 0; i < bg_fifo.size; i++) {
+                    bg_fifo.data[i] = bg_fifo.data[i + 1];
+                }
+            }
+#endif
+
+            vcycles++;
+
             // TODO: block memory access to VRAM during this mode
-            if (vcycles < 172) {
+            if (vcycles < (172 + TemporaryCycleAdjustment)) {
                 return;
             }
 
@@ -52,21 +81,24 @@ void PPU::Tick() {
                 bus.Write8(0xFF0F, bus.Read8(0xFF0F, false) | 0x2, false);
             }
 
-            vcycles %= 172;
+            bg_fifo.draw_x = 0;
+
+            vcycles %= (172 + TemporaryCycleAdjustment);
             stat &= ~0x3;
             mode = Mode::HBlank;
             CheckForLYCoincidence();
         }
             break;
-        case Mode::HBlank:
-            if (vcycles < 204) {
+        case Mode::HBlank: // 87-204 dots
+            vcycles++;
+            if (vcycles < (204 - TemporaryCycleAdjustment)) {
                 return;
             }
 
             RenderScanline();
 
             ly++;
-            vcycles %= 204;
+            vcycles %= (204 - TemporaryCycleAdjustment);
 
             CheckForLYCoincidence();
 
@@ -91,6 +123,7 @@ void PPU::Tick() {
 
             break;
         case Mode::VBlank:
+            vcycles++;
             if (vcycles < 456) {
                 return;
             }
@@ -165,9 +198,11 @@ void PPU::UpdateSprite(u16 addr) {
 }
 
 void PPU::RenderScanline() {
+#if !HELIAGE_USE_PIXEL_FIFO
     if (IsBGDisplayEnabled() && background_drawing_enabled) {
         RenderBackgroundScanline();
     }
+#endif
 
     if (IsWindowDisplayEnabled() && window_drawing_enabled) {
         RenderWindowScanline();
@@ -354,5 +389,78 @@ PPU::Color PPU::GetColorFromSpritePalette(Color color, bool use_obp1) {
             return palette.three;
         default:
             UNREACHABLE_MSG("invalid PPU color {}", static_cast<u8>(color));
+    }
+}
+
+void PPU::RunFIFO(PixelFIFO& fifo) {
+    switch (fifo.state) {
+        case PixelFIFO::State::GetTile_Cycle1: {
+            fifo.fetcher_x = ((fifo.draw_x + scx + 8) / 8) % 32;
+            fifo.fetcher_y = ly + scy;
+            u16 tilemap_address = 0x9800;
+            if (Common::IsBitSet<3>(lcdc) && fifo.draw_x < wx) {
+                tilemap_address = 0x9C00;
+            }
+            if (Common::IsBitSet<6>(lcdc) && fifo.draw_x >= wx) {
+                tilemap_address = 0x9C00;
+            }
+
+            // fifo.fetcher_x = scx + ((fifo.draw_x + 8) / 8) % 32;
+
+            fifo.tile_index_address = tilemap_address + ((fifo.fetcher_y / 8) * 32) + fifo.fetcher_x;
+            fifo.state = PixelFIFO::State::GetTile_Cycle2;
+            break;
+        }
+        case PixelFIFO::State::GetTile_Cycle2:
+            fifo.tile_index = bus.Read8(fifo.tile_index_address, false);
+            fifo.state = PixelFIFO::State::GetTileDataLow_Cycle1;
+            break;
+
+        case PixelFIFO::State::GetTileDataLow_Cycle1:
+            fifo.tile_data_address = GetBGWindowTileDataOffset();
+            if (fifo.tile_data_address == 0x8800) {
+                if (fifo.tile_index < 0x80) {
+                    fifo.tile_data_address += 0x800;
+                } else {
+                    fifo.tile_index -= 0x80;
+                }
+            }
+            fifo.tile_data_address += (fifo.tile_index * 16) + ((fifo.fetcher_y % 8) * 2);
+            fifo.state = PixelFIFO::State::GetTileDataLow_Cycle2;
+            break;
+        case PixelFIFO::State::GetTileDataLow_Cycle2:
+            fifo.tile_data[0] = bus.Read8(fifo.tile_data_address, false);
+            fifo.state = PixelFIFO::State::GetTileDataHigh_Cycle1;
+            break;
+
+        case PixelFIFO::State::GetTileDataHigh_Cycle1:
+            fifo.tile_data_address++;
+            fifo.state = PixelFIFO::State::GetTileDataHigh_Cycle2;
+            break;
+        case PixelFIFO::State::GetTileDataHigh_Cycle2:
+            fifo.tile_data[1] = bus.Read8(fifo.tile_data_address, false);
+            fifo.state = PixelFIFO::State::Sleep_Cycle1;
+            break;
+
+        case PixelFIFO::State::Sleep_Cycle1:
+            fifo.state = PixelFIFO::State::Sleep_Cycle2;
+            break;
+        case PixelFIFO::State::Sleep_Cycle2:
+            fifo.state = PixelFIFO::State::Push;
+            break;
+
+        case PixelFIFO::State::Push:
+            if (fifo.size != 0) {
+                break;
+            }
+            fifo.size = 8;
+            for (int i = 0; i < 8; i++) {
+                fifo.data[i] = Color((fifo.tile_data[1] >> 7) << 1 | (fifo.tile_data[0] >> 7));
+                fifo.tile_data[0] <<= 1;
+                fifo.tile_data[1] <<= 1;
+            }
+
+            fifo.state = PixelFIFO::State::GetTile_Cycle1;
+            break;
     }
 }

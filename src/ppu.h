@@ -125,6 +125,44 @@ private:
     void RenderWindowScanline();
     void RenderSpriteScanline();
 
+    struct PixelFIFO {
+        std::array<Color, 8> data {};
+        u8 size {};
+        u8 fetcher_x {};
+        u8 fetcher_y {};
+        u16 tile_index {};
+        u16 cycles {};
+        u16 tile_index_address {};
+        u16 tile_data_address {};
+        u8 tile_data[2] = {};
+
+        u16 draw_x {};
+
+        enum class State {
+            GetTile_Cycle1,
+            GetTile_Cycle2,
+            GetTileDataLow_Cycle1,
+            GetTileDataLow_Cycle2,
+            GetTileDataHigh_Cycle1,
+            GetTileDataHigh_Cycle2,
+            Sleep_Cycle1,
+            Sleep_Cycle2,
+            Push,
+        } state;
+
+        void Reset() {
+            data = {};
+            size = 0;
+            state = State::GetTile_Cycle1;
+            draw_x = 0;
+        }
+    };
+
+    PixelFIFO bg_fifo {};
+    PixelFIFO obj_fifo {};
+
+    void RunFIFO(PixelFIFO& fifo);
+
     u8 window_line_counter = 0;
 
     bool background_drawing_enabled = true;
