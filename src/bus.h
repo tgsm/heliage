@@ -22,6 +22,10 @@ public:
     void DumpMemoryToFile();
 
     Joypad* GetJoypad();
+
+    bool IsOAMDMAActive() const { return oam_dma.active; }
+    void RunOAMDMATransferCycle();
+
 private:
     void LoadInitialValues();
 
@@ -43,6 +47,15 @@ private:
     u8 mbc1_ram_bank = 0;
 
     u8 mbc3_rom_bank = 0x01;
+
+    struct {
+        u8 source_address;
+        bool active;
+        bool start_delay;
+        u8 byte_index;
+    } oam_dma {};
+
+    void StartOAMDMATransfer(u8 source_address);
 
     BootROM bootrom;
     Cartridge cartridge;

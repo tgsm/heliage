@@ -74,6 +74,12 @@ void Timer::AdvanceCycles(u64 cycles) {
         tima_cycles += cycles;
     }
 
+    for (u64 i = 0; i < cycles / 4; i++) {
+        if (bus.IsOAMDMAActive()) {
+            bus.RunOAMDMATransferCycle();
+        }
+    }
+
     for (u64 i = 0; i < cycles; i++) {
         Tick();
     }

@@ -71,6 +71,10 @@ u8 Bus::Read8(u16 addr, bool affect_timer) {
             return wram[addr - 0xE000];
 
         case 0xFE00 ... 0xFE9F:
+            if (oam_dma.active) {
+                return 0xFF;
+            }
+
             // LDEBUG("bus: reading 0x{:02X} to 0x{:04X} (OAM / Sprite Attribute Table)", oam[0xFE00], addr);
             return oam[addr - 0xFE00];
 
@@ -137,6 +141,10 @@ void Bus::Write8(u16 addr, u8 value, bool affect_timer) {
             break;
 
         case 0xFE00 ... 0xFE9F:
+            if (oam_dma.active) {
+                return;
+            }
+
             // LDEBUG("bus: writing 0x{:02X} to 0x{:04X} (OAM / Sprite Attribute Table)", value, addr);
             oam[addr - 0xFE00] = value;
             ppu.UpdateSprite(addr);
@@ -512,7 +520,7 @@ void Bus::WriteIO(u8 addr, u8 value) {
             ppu.SetLYC(value);
             io[0x45] = value;
             return;
-        case 0x46: {
+        case 0x46:
             LDEBUG("bus: writing 0x{:02X} to DMA transfer location (0xFF46)", value);
             io[0x46] = value;
 
@@ -520,11 +528,7 @@ void Bus::WriteIO(u8 addr, u8 value) {
             // source is determined by (value << 8)
             // for example, if `value` was 0xC3, 160 bytes would be copied
             // from 0xC300 - 0xC39F to OAM.
-            u16 source = (value << 8);
-            for (u8 i = 0; i < 0xA0; i++) {
-                Write8(0xFE00 + i, Read8(source + i, false));
-            }
-        }
+            StartOAMDMATransfer(value);
             return;
         case 0x47:
             LDEBUG("bus: writing 0x{:02X} to Background palette data (0xFF47)", value);
@@ -582,4 +586,27 @@ void Bus::DumpMemoryToFile() {
 
 Joypad* Bus::GetJoypad() {
     return &joypad;
+}
+
+void Bus::StartOAMDMATransfer(const u8 source_address) {
+    oam_dma.source_address = source_address;
+    oam_dma.active = true;
+    // There is a 1 M-cycle delay when starting OAM DMA.
+    oam_dma.start_delay = true;
+}
+
+void Bus::RunOAMDMATransferCycle() {
+    if (oam_dma.start_delay) {
+        oam_dma.start_delay = false;
+        return;
+    }
+
+    const u16 source_address = oam_dma.source_address << 8 | oam_dma.byte_index;
+    oam[oam_dma.byte_index] = Read8(source_address, false);
+
+    oam_dma.byte_index++;
+    if (oam_dma.byte_index >= 160) {
+        oam_dma.active = false;
+        oam_dma.byte_index = 0;
+    }
 }
