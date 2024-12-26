@@ -12,7 +12,7 @@ void Timer::Tick() {
             tima_cycles -= GetTACFrequency();
             tima++;
         }
-            
+
         // overflow
         if (tima == 0) {
             tima = tma;
@@ -73,7 +73,10 @@ void Timer::AdvanceCycles(u64 cycles) {
     if (timer_enable) {
         tima_cycles += cycles;
     }
-    Tick();
+
+    for (u64 i = 0; i < cycles; i++) {
+        Tick();
+    }
 
     ppu.AdvanceCycles(cycles);
 }
